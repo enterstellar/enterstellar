@@ -1,0 +1,11 @@
+packages:
+  - packages/*
+  - apps/*
+  - examples/*
+
+onlyBuiltDependencies:
+  - '@firebase/util'
+  - esbuild
+  - protobufjs
+  - sharp
+  - workerd

@@ -1,0 +1,5 @@
+# Enterstellar — Husky commit-msg hook
+# Validates commit messages against conventional commit rules.
+# See: agent/05-enterstellar-coding-rules.md — Commit Convention
+
+npx --no -- commitlint --edit "$1"

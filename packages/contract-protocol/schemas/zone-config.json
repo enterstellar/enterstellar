@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "./zone-config.json",
+  "title": "Enterstellar ZoneConfig",
+  "description": "Configuration for an EnterstellarZone instance. The determinism dial (0.0–1.0) controls AI influence over the zone.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "determinism": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "allowedComponents": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "fallbackComponent": {
+      "type": "string",
+      "minLength": 1
+    },
+    "agentTimeoutMs": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "cache": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "ttl": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": ["enabled", "ttl"],
+      "additionalProperties": false
+    },
+    "activateOn": {
+      "type": "string",
+      "enum": ["mount", "visible", "manual"]
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "determinism",
+    "allowedComponents",
+    "fallbackComponent",
+    "agentTimeoutMs",
+    "cache",
+    "activateOn"
+  ],
+  "additionalProperties": false
+}

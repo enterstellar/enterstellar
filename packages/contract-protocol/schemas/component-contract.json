@@ -1,0 +1,193 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "./component-contract.json",
+  "title": "Enterstellar ComponentContract",
+  "description": "The canonical data shape for a registered Enterstellar component. Defines schema, metadata, accessibility, design tokens, and lifecycle states.",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "category": {
+      "type": "string",
+      "minLength": 1
+    },
+    "tags": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "props": {},
+    "tokens": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "accessibility": {
+      "type": "object",
+      "properties": {
+        "role": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ariaLabel": {
+          "type": "string",
+          "minLength": 1
+        },
+        "announceOnUpdate": {
+          "type": "boolean"
+        }
+      },
+      "required": ["role", "ariaLabel", "announceOnUpdate"],
+      "additionalProperties": false
+    },
+    "states": {
+      "type": "object",
+      "properties": {
+        "loading": {
+          "type": "string",
+          "minLength": 1
+        },
+        "error": {
+          "type": "string",
+          "minLength": 1
+        },
+        "empty": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ready": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["loading", "error", "empty", "ready"],
+      "additionalProperties": false
+    },
+    "examples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "intent": {
+            "type": "string",
+            "minLength": 1
+          },
+          "props": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          }
+        },
+        "required": ["intent", "props"],
+        "additionalProperties": false
+      }
+    },
+    "dataSource": {
+      "type": "object",
+      "properties": {
+        "adapter": {
+          "type": "string",
+          "minLength": 1
+        },
+        "resource": {
+          "type": "string",
+          "minLength": 1
+        },
+        "params": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        }
+      },
+      "required": ["adapter", "resource"],
+      "additionalProperties": false
+    },
+    "auth": {
+      "type": "object",
+      "properties": {
+        "required": {
+          "type": "boolean"
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": ["required", "roles"],
+      "additionalProperties": false
+    },
+    "origin": {
+      "type": "object",
+      "properties": {
+        "registryUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "publisher": {
+          "type": "string",
+          "minLength": 1
+        },
+        "verifiedAt": {
+          "type": "string"
+        }
+      },
+      "required": ["registryUrl", "publisher"],
+      "additionalProperties": false
+    },
+    "_meta": {
+      "type": "object",
+      "properties": {
+        "forged": {
+          "type": "boolean"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "createdAt": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["forged", "version", "createdAt"],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "name",
+    "id",
+    "description",
+    "category",
+    "tags",
+    "props",
+    "tokens",
+    "accessibility",
+    "states",
+    "examples",
+    "_meta"
+  ],
+  "additionalProperties": false
+}

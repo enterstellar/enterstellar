@@ -1,0 +1,29 @@
+{
+  "component": "PatientVitals",
+  "props": {
+    "patientId": "P-12345",
+    "heartRate": 72,
+    "bloodPressure": {
+      "systolic": 120,
+      "diastolic": 80
+    },
+    "temperature": 36.8,
+    "spO2": 98
+  },
+  "confidence": 0.94,
+  "layout": "single",
+  "mode": "snapshot",
+  "interaction": "read-only",
+  "_source": {
+    "protocol": "ag-ui",
+    "rawEventId": "evt_abc123def456",
+    "correlationId": "corr_78901234-abcd-5678-efgh-ijkl90123456",
+    "raw": {
+      "type": "lifecycle.updated",
+      "payload": {
+        "component": "PatientVitals",
+        "confidence": 0.94
+      }
+    }
+  }
+}

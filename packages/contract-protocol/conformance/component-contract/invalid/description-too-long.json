@@ -1,0 +1,31 @@
+{
+  "name": "DescriptionTooLong",
+  "id": "description-too-long",
+  "description": "This description is intentionally longer than the 120-character maximum allowed by the Enterstellar ComponentContract schema definition to trigger a maxLength validation error.",
+  "category": "utility",
+  "tags": ["test"],
+  "props": {},
+  "tokens": {},
+  "accessibility": {
+    "role": "region",
+    "ariaLabel": "Test component",
+    "announceOnUpdate": false
+  },
+  "states": {
+    "loading": "LoadingSkeleton",
+    "error": "ErrorFallback",
+    "empty": "EmptyState",
+    "ready": "ReadyState"
+  },
+  "examples": [
+    {
+      "intent": "Show test component",
+      "props": {}
+    }
+  ],
+  "_meta": {
+    "forged": false,
+    "version": "1.0.0",
+    "createdAt": "2026-01-01T00:00:00.000Z"
+  }
+}

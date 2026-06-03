@@ -1,0 +1,16 @@
+{
+  "type": "click",
+  "zone": "patient-sidebar",
+  "component": "PatientVitals",
+  "payload": {
+    "action": "expand-details",
+    "vitalType": "bloodPressure",
+    "currentValue": {
+      "systolic": 120,
+      "diastolic": 80
+    },
+    "uiState": "collapsed"
+  },
+  "timestamp": "2026-02-26T14:30:12.456Z",
+  "correlationId": "corr_78901234-abcd-5678-efgh-ijkl90123456"
+}

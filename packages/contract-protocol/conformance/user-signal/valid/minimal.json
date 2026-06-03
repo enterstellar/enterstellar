@@ -1,0 +1,11 @@
+{
+  "type": "submit",
+  "zone": "form-section",
+  "component": "MedicationForm",
+  "payload": {
+    "formId": "med-form-001",
+    "medicationName": "Metformin",
+    "dosage": "500mg"
+  },
+  "timestamp": "2026-02-26T16:15:00.000Z"
+}

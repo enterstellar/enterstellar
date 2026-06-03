@@ -1,0 +1,46 @@
+{
+  "name": "@enterstellar-ai/test",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Intent-based testing framework for Enterstellar GenUI — deterministic harness, assertion helpers, Vitest matchers, VCR fixtures.",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "peerDependencies": {
+    "@enterstellar-ai/types": "workspace:*",
+    "@enterstellar-ai/registry": "workspace:*",
+    "@enterstellar-ai/compiler": "workspace:*",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@enterstellar-ai/types": "workspace:*",
+    "@enterstellar-ai/registry": "workspace:*",
+    "@enterstellar-ai/compiler": "workspace:*",
+    "@types/node": "^25.3.0",
+    "vitest": "^4.0.18",
+    "zod": "^4.3.6"
+  }
+}

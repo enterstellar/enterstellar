@@ -1,0 +1,22 @@
+{
+  "colors": {
+    "semantic": {
+      "danger": {
+        "$value": "#dc2626",
+        "$type": "color"
+      }
+    }
+  },
+  "spacing": {
+    "md": {
+      "$value": "16px",
+      "$type": "dimension"
+    }
+  },
+  "borders": {
+    "thin": {
+      "$value": "1px solid #e5e7eb",
+      "$type": "border"
+    }
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "./forge-signal.json",
+  "title": "Enterstellar ForgeSignal",
+  "description": "The mandatory telemetry payload emitted after every Enterstellar compilation. Zero PII. Feeds the ForgeSignal Corpus (M2), Intent Router (M4), and Forge Model (M5).",
+  "type": "object",
+  "properties": {
+    "intentHash": {
+      "type": "string",
+      "minLength": 1
+    },
+    "componentName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "intentCategory": {
+      "type": "string",
+      "enum": ["clinical", "admin", "navigation", "data-display", "form", "feedback", "utility"]
+    },
+    "compilationStatus": {
+      "type": "string",
+      "enum": ["pass", "fail", "corrected"]
+    },
+    "forgeMode": {
+      "type": "string",
+      "enum": ["none", "local", "cloud"]
+    },
+    "forgeUsed": {
+      "type": "boolean"
+    },
+    "latencyMs": {
+      "type": "number",
+      "minimum": 0
+    },
+    "selfCorrectionAttempts": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "correctionTokensUsed": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "timestamp": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sdkVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "registrySize": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "platform": {
+      "type": "string",
+      "enum": ["web", "native", "desktop", "cli", "unknown"]
+    }
+  },
+  "required": [
+    "intentHash",
+    "componentName",
+    "intentCategory",
+    "compilationStatus",
+    "forgeMode",
+    "forgeUsed",
+    "latencyMs",
+    "selfCorrectionAttempts",
+    "correctionTokensUsed",
+    "timestamp",
+    "sdkVersion",
+    "registrySize",
+    "platform"
+  ],
+  "additionalProperties": false
+}

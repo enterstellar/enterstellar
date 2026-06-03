@@ -1,0 +1,121 @@
+{
+  "colors": {
+    "semantic": {
+      "danger": {
+        "$value": "#dc2626",
+        "$type": "color",
+        "$description": "Destructive actions and critical alerts"
+      },
+      "warning": {
+        "$value": "#f59e0b",
+        "$type": "color",
+        "$description": "Caution states and non-critical alerts"
+      },
+      "success": {
+        "$value": "#16a34a",
+        "$type": "color",
+        "$description": "Positive outcomes and confirmations"
+      },
+      "info": {
+        "$value": "#2563eb",
+        "$type": "color"
+      },
+      "muted": {
+        "$value": "#6b7280",
+        "$type": "color"
+      },
+      "foreground": {
+        "$value": "#111827",
+        "$type": "color"
+      },
+      "surface": {
+        "$value": "#ffffff",
+        "$type": "color"
+      }
+    }
+  },
+  "spacing": {
+    "xs": {
+      "$value": "4px",
+      "$type": "dimension"
+    },
+    "sm": {
+      "$value": "8px",
+      "$type": "dimension"
+    },
+    "md": {
+      "$value": "16px",
+      "$type": "dimension"
+    },
+    "lg": {
+      "$value": "24px",
+      "$type": "dimension"
+    },
+    "xl": {
+      "$value": "32px",
+      "$type": "dimension"
+    }
+  },
+  "typography": {
+    "fontFamily": {
+      "sans": {
+        "$value": "Inter, system-ui, sans-serif",
+        "$type": "fontFamily"
+      },
+      "mono": {
+        "$value": "JetBrains Mono, monospace",
+        "$type": "fontFamily"
+      }
+    },
+    "fontSize": {
+      "sm": {
+        "$value": "14px",
+        "$type": "dimension"
+      },
+      "base": {
+        "$value": "16px",
+        "$type": "dimension"
+      },
+      "lg": {
+        "$value": "18px",
+        "$type": "dimension"
+      }
+    }
+  },
+  "radii": {
+    "none": {
+      "$value": "0px",
+      "$type": "dimension"
+    },
+    "sm": {
+      "$value": "4px",
+      "$type": "dimension"
+    },
+    "md": {
+      "$value": "8px",
+      "$type": "dimension"
+    },
+    "lg": {
+      "$value": "12px",
+      "$type": "dimension"
+    },
+    "full": {
+      "$value": "9999px",
+      "$type": "dimension"
+    }
+  },
+  "shadows": {
+    "sm": {
+      "$value": "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+      "$type": "shadow"
+    },
+    "md": {
+      "$value": "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+      "$type": "shadow"
+    },
+    "lg": {
+      "$value": "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+      "$type": "shadow"
+    }
+  }
+}

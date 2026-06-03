@@ -1,0 +1,80 @@
+# =============================================================================
+# Enterstellar Docs — robots.txt
+# =============================================================================
+#
+# Controls crawler access for the Enterstellar documentation site.
+# Designed for maximum SEO + AI crawler visibility.
+#
+# Strategy:
+# - Allow all well-behaved crawlers full access
+# - Explicitly allow AI/LLM crawlers (GPTBot, Google-Extended, etc.)
+# - Expose LLM-friendly endpoints (llms.txt, llms-full.txt)
+# - Reference sitemap for discovery
+#
+# @see app/sitemap.ts — Dynamic sitemap generator
+# @see app/llms.txt/route.ts — LLMs.txt index
+# @see app/llms-full.txt/route.ts — Full documentation export
+# =============================================================================
+
+# --- Default: Allow Everything ---
+User-agent: *
+Allow: /
+Disallow: /api/
+
+# --- Search Engines ---
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Baiduspider
+Allow: /
+
+User-agent: YandexBot
+Allow: /
+
+# --- AI Crawlers ---
+# Explicitly allow AI/LLM crawlers for maximum documentation discoverability.
+# These crawlers index content for AI training and retrieval-augmented generation.
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Anthropic-AI
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Cohere-AI
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# --- Canonical Host ---
+Host: https://enterstellar.dev
+
+# --- Sitemap ---
+Sitemap: https://enterstellar.dev/sitemap.xml
+
+# --- LLM-Friendly Endpoints ---
+# These are not standard robots.txt directives, but some AI crawlers
+# check for them. They point to structured documentation exports.
+# See: https://llmstxt.org

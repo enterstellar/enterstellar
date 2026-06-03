@@ -1,0 +1,50 @@
+{
+  "name": "@enterstellar-ai/agent-sdk",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "AI agent SDK with MCP server — 7 tools (6 atomic + 1 composite) for component search, compose, validate, analyze, forge, schema, and build.",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "peerDependencies": {
+    "@enterstellar-ai/types": "workspace:*",
+    "@enterstellar-ai/registry": "workspace:*",
+    "@enterstellar-ai/compiler": "workspace:*",
+    "@enterstellar-ai/semantic-index": "workspace:*",
+    "@enterstellar-ai/forge": "workspace:*",
+    "@enterstellar-ai/state": "workspace:*",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@enterstellar-ai/types": "workspace:*",
+    "@enterstellar-ai/registry": "workspace:*",
+    "@enterstellar-ai/compiler": "workspace:*",
+    "@enterstellar-ai/semantic-index": "workspace:*",
+    "@enterstellar-ai/forge": "workspace:*",
+    "@enterstellar-ai/state": "workspace:*",
+    "zod": "^4.3.6"
+  }
+}

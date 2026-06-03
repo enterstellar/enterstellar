@@ -1,0 +1,35 @@
+{
+  "id": "trace_minimal_001",
+  "timestamp": "2026-02-26T16:00:00.000Z",
+  "intent": {
+    "raw": "Show alert banner",
+    "component": "AlertBanner",
+    "confidence": 0.88
+  },
+  "resolution": {
+    "strategy": "exact",
+    "resolvedComponent": "AlertBanner",
+    "candidatesConsidered": 1
+  },
+  "compilation": {
+    "status": "pass",
+    "errorCount": 0,
+    "selfCorrectionAttempts": 0,
+    "tokensValidated": true,
+    "accessibilityInjected": false
+  },
+  "determinism": {
+    "level": 1.0,
+    "cacheHit": false,
+    "zone": "main-content"
+  },
+  "metrics": {
+    "totalMs": 15.2,
+    "resolutionMs": 1.0,
+    "compilationMs": 12.1,
+    "renderMs": 2.1
+  },
+  "consent": {
+    "anonymizedAggregation": false
+  }
+}

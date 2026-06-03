@@ -1,0 +1,9 @@
+{
+  "type": "hover",
+  "zone": "patient-sidebar",
+  "component": "PatientVitals",
+  "payload": {
+    "target": "heartRate"
+  },
+  "timestamp": "2026-02-26T16:25:00.000Z"
+}

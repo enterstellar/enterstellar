@@ -1,0 +1,64 @@
+# ==========================================
+# Enterstellar Monorepo — .gitignore
+#
+# Prevents build artifacts, secrets, tooling caches,
+# and OS-specific files from being committed.
+#
+# @see agent/05-enterstellar-coding-rules.md — Per-PR Checklist
+# @see agent/06-enterstellar-setup.md — Environment Variables
+# ==========================================
+
+# === Documentation ===
+agent/
+agile/
+
+# === Dependencies ===
+node_modules/
+.pnpm-store/
+
+# === Build outputs ===
+dist/
+*.tsbuildinfo
+.source/
+
+# === Next.js ===
+.next/
+
+# === Velite (blog content build cache) ===
+.velite/
+
+# === OpenNext (Cloudflare Workers build output) ===
+.open-next/
+
+# === Turborepo ===
+.turbo/
+
+# === Wrangler (Cloudflare local dev) ===
+.wrangler/
+.dev.vars
+
+# === Vitest ===
+__snapshots__/
+
+# === Test coverage ===
+coverage/
+
+# === Environment variables (secrets — never committed) ===
+.env
+.env.*
+!.env.example
+.env.local
+.env.*.local
+
+# === OS files ===
+.DS_Store
+Thumbs.db
+
+# === IDE ===
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# === Changesets (generated during release, not artifacts) ===
+# .changeset/ directory IS committed — it contains config.json

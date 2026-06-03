@@ -1,0 +1,48 @@
+{
+  "componentName": "PatientVitals",
+  "props": {
+    "patientId": "P-12345",
+    "heartRate": 72,
+    "bloodPressure": {
+      "systolic": 120,
+      "diastolic": 80
+    },
+    "temperature": 36.8,
+    "spO2": 98,
+    "aria-label": "Patient vital signs monitor",
+    "role": "region"
+  },
+  "status": "pass",
+  "provenance": {
+    "agent": "gpt-4o",
+    "registry": "local",
+    "compiledAt": "2026-02-26T14:30:00.123Z",
+    "compilerVersion": "0.1.0"
+  },
+  "errors": [],
+  "selfCorrectionAttempts": 0,
+  "diff": {
+    "raw": {
+      "patientId": "P-12345",
+      "heartRate": 72,
+      "bloodPressure": {
+        "systolic": 120,
+        "diastolic": 80
+      },
+      "temperature": 36.8,
+      "spO2": 98
+    },
+    "compiled": {
+      "patientId": "P-12345",
+      "heartRate": 72,
+      "bloodPressure": {
+        "systolic": 120,
+        "diastolic": 80
+      },
+      "temperature": 36.8,
+      "spO2": 98,
+      "aria-label": "Patient vital signs monitor",
+      "role": "region"
+    }
+  }
+}

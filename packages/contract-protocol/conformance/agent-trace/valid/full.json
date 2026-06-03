@@ -1,0 +1,39 @@
+{
+  "id": "trace_full_001",
+  "timestamp": "2026-02-26T14:30:00.123Z",
+  "correlationId": "corr_full_001",
+  "intent": {
+    "raw": "Show vital signs for patient 12345",
+    "component": "PatientVitals",
+    "confidence": 0.94,
+    "mode": "snapshot",
+    "interaction": "read-only"
+  },
+  "resolution": {
+    "strategy": "semantic",
+    "resolvedComponent": "PatientVitals",
+    "similarityScore": 0.97,
+    "candidatesConsidered": 5
+  },
+  "compilation": {
+    "status": "corrected",
+    "errorCount": 1,
+    "selfCorrectionAttempts": 1,
+    "tokensValidated": true,
+    "accessibilityInjected": true
+  },
+  "determinism": {
+    "level": 0.7,
+    "cacheHit": false,
+    "zone": "patient-sidebar"
+  },
+  "metrics": {
+    "totalMs": 48.6,
+    "resolutionMs": 8.3,
+    "compilationMs": 35.2,
+    "renderMs": 5.1
+  },
+  "consent": {
+    "anonymizedAggregation": true
+  }
+}

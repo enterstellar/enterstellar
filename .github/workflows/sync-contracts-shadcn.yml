@@ -1,0 +1,325 @@
+# @enterstellar-ai/contracts-shadcn — CI Sync Pipeline
+#
+# Correction 7 Decision 3: Weekly CI job that re-runs `enterstellar migrate`
+# against upstream shadcn/ui source components and opens a human-gated
+# PR if contract changes are detected.
+#
+# ┌─────────────────────────────────────────────────────────────────────┐
+# │ ARCHITECTURE                                                       │
+# │                                                                     │
+# │  Step 0: Environment — checkout, Node 20, pnpm 10, build CLI       │
+# │  Step 1: Fetch — scaffold temp Next.js + `npx shadcn add --all`    │
+# │  Step 2: Migrate — `enterstellar migrate` → generate contracts              │
+# │  Step 3: Diff — compare generated vs published contracts             │
+# │  Step 4: Classify — label as minor/major-candidate/deprecation       │
+# │  Step 5: PR — open human-gated PR with changelog body                │
+# └─────────────────────────────────────────────────────────────────────┘
+#
+# Human gate: The PR is never auto-merged. A maintainer must review
+# the diff, validate the generated contracts, and merge manually.
+#
+# @see Correction 7 Decision 3 — CI Sync Pipeline
+# @see @enterstellar-ai/contracts-shadcn/README.md — package documentation
+# @see Implementation Plan §Workstream B — sync pipeline specification
+
+name: 'Sync: @enterstellar-ai/contracts-shadcn'
+
+on:
+  schedule:
+    # Weekly: Monday 06:00 UTC
+    - cron: '0 6 * * 1'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  # Shared paths used across multiple steps.
+  SHADCN_TEMP_DIR: ${{ runner.temp }}/shadcn-sync
+  GENERATED_DIR: ${{ runner.temp }}/generated-contracts
+  CONTRACTS_SRC: packages/contracts-shadcn/src/contracts
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      # =====================================================================
+      # Step 0: Environment
+      #
+      # Sets up the build toolchain and builds the CLI with all transitive
+      # dependencies. The `--filter=@enterstellar/cli...` syntax (note the `...`)
+      # ensures @enterstellar/migration, @enterstellar/types, @enterstellar/registry, etc. are
+      # all built first (Audit M8).
+      # =====================================================================
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm 10
+        uses: pnpm/action-setup@v4
+        with:
+          version: '10'
+
+      - name: Install dependencies (frozen lockfile)
+        run: pnpm install --frozen-lockfile
+
+      - name: Build CLI and transitive dependencies
+        run: pnpm turbo run build --filter=@enterstellar/cli...
+        # Audit M8: `...` suffix builds all workspace dependencies of @enterstellar/cli,
+        # including @enterstellar/migration (which provides extractManifest, assembleContract, etc.)
+
+      # =====================================================================
+      # Step 1: Fetch upstream shadcn/ui source
+      #
+      # Scaffolds a temporary Next.js project in ${{ runner.temp }} (Audit M3)
+      # and installs ALL shadcn/ui components. This gives us the latest
+      # upstream source files to migrate.
+      # =====================================================================
+
+      - name: Scaffold temp project and fetch shadcn components
+        run: |
+          mkdir -p "$SHADCN_TEMP_DIR" && cd "$SHADCN_TEMP_DIR"
+          npx -y create-next-app@latest . \
+            --ts --tailwind --eslint --app \
+            --no-src-dir --import-alias '@/*' --yes
+          npx -y shadcn@latest init --yes --defaults
+          npx -y shadcn@latest add --all --yes
+
+      - name: Record upstream shadcn version
+        id: shadcn-version
+        run: |
+          # Extract the shadcn CLI version used for this sync.
+          SHADCN_VERSION=$(npx -y shadcn@latest --version 2>/dev/null || echo "unknown")
+          echo "version=$SHADCN_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Shadcn CLI version: $SHADCN_VERSION"
+
+      # =====================================================================
+      # Step 2: Run Enterstellar migration against fetched components
+      #
+      # Uses `node packages/cli/dist/bin.js` (Audit M9) instead of
+      # `pnpm exec -- enterstellar` to ensure correct binary resolution in the
+      # monorepo workspace context.
+      #
+      # `continue-on-error: true` allows partial failures — some shadcn
+      # components may fail extraction (complex patterns, re-exports) but
+      # we still want the successfully migrated contracts.
+      # =====================================================================
+
+      - name: Generate contracts via enterstellar migrate
+        id: migrate
+        continue-on-error: true
+        run: |
+          mkdir -p "$GENERATED_DIR"
+          node packages/cli/dist/bin.js migrate \
+            "$SHADCN_TEMP_DIR/components/ui/" \
+            --out "$GENERATED_DIR" \
+            --format json \
+            --force \
+            2>&1 | tee "${{ runner.temp }}/migrate-output.log"
+
+          # Capture the exit code for reporting in the PR body.
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Parse migration results
+        id: migrate-results
+        run: |
+          # Extract counts from the JSON output if available.
+          LOG_FILE="${{ runner.temp }}/migrate-output.log"
+          if [ -f "$LOG_FILE" ]; then
+            # Try to parse JSON output (last line of stdout).
+            TOTAL=$(grep -o '"totalFiles":[0-9]*' "$LOG_FILE" | head -1 | cut -d: -f2 || echo "0")
+            CLEAN=$(grep -o '"cleanCount":[0-9]*' "$LOG_FILE" | head -1 | cut -d: -f2 || echo "0")
+            SKIP=$(grep -o '"skipCount":[0-9]*' "$LOG_FILE" | head -1 | cut -d: -f2 || echo "0")
+            echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
+            echo "clean=$CLEAN" >> "$GITHUB_OUTPUT"
+            echo "skip=$SKIP" >> "$GITHUB_OUTPUT"
+          else
+            echo "total=0" >> "$GITHUB_OUTPUT"
+            echo "clean=0" >> "$GITHUB_OUTPUT"
+            echo "skip=0" >> "$GITHUB_OUTPUT"
+          fi
+
+      # =====================================================================
+      # Step 3: Diff generated contracts against published
+      #
+      # Compares the newly generated contracts with the currently committed
+      # contracts in packages/contracts-shadcn/src/contracts/.
+      #
+      # Outputs:
+      #   CHANGED — 'true' if any contracts differ
+      #   NEW_COUNT — number of new contract files
+      #   MODIFIED_COUNT — number of modified contract files
+      #   REMOVED_COUNT — number of contracts present in published but not generated
+      # =====================================================================
+
+      - name: Copy generated contracts to workspace
+        run: |
+          # Copy .contract.ts files from generated output to the contracts directory.
+          # Preserve directory structure but flatten to the contracts/ dir.
+          mkdir -p "$CONTRACTS_SRC"
+          if [ -d "$GENERATED_DIR" ]; then
+            find "$GENERATED_DIR" -name '*.contract.ts' -exec cp {} "$CONTRACTS_SRC/" \;
+          fi
+
+      - name: Diff contracts
+        id: diff
+        run: |
+          cd "$GITHUB_WORKSPACE"
+
+          # Check if there are any changes in the contracts directory.
+          DIFF_OUTPUT=$(git diff --stat -- "$CONTRACTS_SRC/" 2>/dev/null || echo "")
+          UNTRACKED=$(git ls-files --others --exclude-standard -- "$CONTRACTS_SRC/" 2>/dev/null || echo "")
+
+          if [ -z "$DIFF_OUTPUT" ] && [ -z "$UNTRACKED" ]; then
+            echo "CHANGED=false" >> "$GITHUB_OUTPUT"
+            echo "NEW_COUNT=0" >> "$GITHUB_OUTPUT"
+            echo "MODIFIED_COUNT=0" >> "$GITHUB_OUTPUT"
+            echo "REMOVED_COUNT=0" >> "$GITHUB_OUTPUT"
+            echo "No contract changes detected."
+            exit 0
+          fi
+
+          echo "CHANGED=true" >> "$GITHUB_OUTPUT"
+
+          # Count new files (untracked).
+          NEW_COUNT=$(echo "$UNTRACKED" | grep -c '\.contract\.ts$' || echo "0")
+          echo "NEW_COUNT=$NEW_COUNT" >> "$GITHUB_OUTPUT"
+
+          # Count modified files (tracked + changed).
+          MODIFIED_COUNT=$(echo "$DIFF_OUTPUT" | grep -c '\.contract\.ts' || echo "0")
+          echo "MODIFIED_COUNT=$MODIFIED_COUNT" >> "$GITHUB_OUTPUT"
+
+          # Count removed files: contracts in git that are NOT in generated output.
+          REMOVED_COUNT=0
+          if [ -d "$GENERATED_DIR" ]; then
+            for existing in $(git ls-files -- "$CONTRACTS_SRC/*.contract.ts" 2>/dev/null); do
+              BASENAME=$(basename "$existing")
+              if [ ! -f "$GENERATED_DIR/$BASENAME" ]; then
+                REMOVED_COUNT=$((REMOVED_COUNT + 1))
+              fi
+            done
+          fi
+          echo "REMOVED_COUNT=$REMOVED_COUNT" >> "$GITHUB_OUTPUT"
+
+          echo "Changes detected: new=$NEW_COUNT, modified=$MODIFIED_COUNT, removed=$REMOVED_COUNT"
+
+      # =====================================================================
+      # Step 4: Classify changes
+      #
+      # Assigns a version label based on the type of changes:
+      #   - New contracts only → 'minor' (additive, non-breaking)
+      #   - Modified contracts → 'major-candidate' (schema changes may break)
+      #   - Removed contracts → 'deprecation' (breaking removal)
+      #   - Mixed → uses the highest severity label
+      # =====================================================================
+
+      - name: Classify changes
+        if: steps.diff.outputs.CHANGED == 'true'
+        id: classify
+        run: |
+          NEW_COUNT="${{ steps.diff.outputs.NEW_COUNT }}"
+          MODIFIED_COUNT="${{ steps.diff.outputs.MODIFIED_COUNT }}"
+          REMOVED_COUNT="${{ steps.diff.outputs.REMOVED_COUNT }}"
+
+          # Default label: minor (new contracts only).
+          LABEL="minor"
+
+          # Escalate to major-candidate if any contracts were modified.
+          if [ "$MODIFIED_COUNT" != "0" ]; then
+            LABEL="major-candidate"
+          fi
+
+          # Escalate to deprecation if any contracts were removed.
+          if [ "$REMOVED_COUNT" != "0" ]; then
+            LABEL="deprecation"
+          fi
+
+          echo "label=$LABEL" >> "$GITHUB_OUTPUT"
+          echo "Classification: $LABEL (new=$NEW_COUNT, modified=$MODIFIED_COUNT, removed=$REMOVED_COUNT)"
+
+      # =====================================================================
+      # Step 5: Open human-gated PR
+      #
+      # Creates a pull request with:
+      #   - Descriptive title including the sync date
+      #   - Structured changelog body (new/modified/removed + migration stats)
+      #   - Classification label for review triage
+      #   - contracts-sync label for publish-on-merge workflow
+      #
+      # The PR is NEVER auto-merged. A maintainer must:
+      #   1. Review the generated contract diffs
+      #   2. Validate prop schemas against upstream shadcn docs
+      #   3. Manually merge when satisfied
+      # =====================================================================
+
+      - name: Stage contract changes
+        if: steps.diff.outputs.CHANGED == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "sync/shadcn-contracts-$(date +%Y%m%d-%H%M)"
+          git add "$CONTRACTS_SRC/"
+          git commit -m "sync: update shadcn/ui contracts — $(date +%Y-%m-%d)"
+
+      - name: Push branch
+        if: steps.diff.outputs.CHANGED == 'true'
+        run: |
+          git push origin HEAD
+
+      - name: Create sync PR
+        if: steps.diff.outputs.CHANGED == 'true'
+        run: |
+          NEW_COUNT="${{ steps.diff.outputs.NEW_COUNT }}"
+          MODIFIED_COUNT="${{ steps.diff.outputs.MODIFIED_COUNT }}"
+          REMOVED_COUNT="${{ steps.diff.outputs.REMOVED_COUNT }}"
+          LABEL="${{ steps.classify.outputs.label }}"
+          SHADCN_VERSION="${{ steps.shadcn-version.outputs.version }}"
+          MIGRATE_TOTAL="${{ steps.migrate-results.outputs.total }}"
+          MIGRATE_CLEAN="${{ steps.migrate-results.outputs.clean }}"
+          MIGRATE_SKIP="${{ steps.migrate-results.outputs.skip }}"
+
+          BODY="## shadcn/ui Contract Sync — $(date +%Y-%m-%d)
+
+          **Upstream version:** \`shadcn@${SHADCN_VERSION}\`
+          **Classification:** \`${LABEL}\`
+
+          ### Changes
+
+          | Type | Count |
+          |:---|:---|
+          | ✨ New contracts | ${NEW_COUNT} |
+          | 📝 Modified contracts | ${MODIFIED_COUNT} |
+          | 🗑️ Removed contracts | ${REMOVED_COUNT} |
+
+          ### Migration Stats
+
+          | Metric | Value |
+          |:---|:---|
+          | Total files scanned | ${MIGRATE_TOTAL} |
+          | ✅ Clean migrations | ${MIGRATE_CLEAN} |
+          | ⏭️ Skipped | ${MIGRATE_SKIP} |
+
+          ### Review Checklist
+
+          - [ ] Verify new contract prop schemas match upstream shadcn docs
+          - [ ] Confirm modified contracts don't break existing consumer code
+          - [ ] Review any removed contracts for deprecation notices
+          - [ ] Run \`pnpm --filter @enterstellar-ai/contracts-shadcn test\` locally
+
+          ---
+          *Auto-generated by [sync-contracts-shadcn.yml](/.github/workflows/sync-contracts-shadcn.yml)*"
+
+          gh pr create \
+            --title "sync: shadcn/ui contracts — $(date +%Y-%m-%d)" \
+            --body "$BODY" \
+            --label "$LABEL,contracts-sync" \
+            --reviewer "$(gh repo view --json owner -q .owner.login)" \
+            || echo "PR creation failed — branch may already have an open PR."
+        env:
+          GH_TOKEN: ${{ github.token }}

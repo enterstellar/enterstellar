@@ -1,0 +1,46 @@
+{
+  "name": "@enterstellar-ai/migration",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Enterstellar migration pipeline — AST extraction, LLM enrichment, and contract assembly for component migration.",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "ts-morph": "^28.0.0"
+  },
+  "peerDependencies": {
+    "@enterstellar-ai/types": "workspace:*",
+    "@enterstellar-ai/compiler": "workspace:*",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@enterstellar-ai/types": "workspace:*",
+    "@enterstellar-ai/compiler": "workspace:*",
+    "@types/node": "^22.15.0",
+    "zod": "^4.3.6"
+  }
+}

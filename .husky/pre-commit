@@ -1,0 +1,5 @@
+# Enterstellar — Husky pre-commit hook
+# Runs lint-staged on staged files for fast, focused commits.
+# See: agent/06-enterstellar-setup.md — DX Tooling Chain
+
+npx lint-staged

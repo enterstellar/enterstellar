@@ -1,0 +1,36 @@
+/**
+ * VitalSync — Healthcare Theme
+ *
+ * Teal + white, clean, high-contrast, a11y-first palette.
+ * Designed for clinical environments where readability and
+ * immediate visual parsing are critical. WCAG AA compliant
+ * contrast ratios on all text-on-surface combinations.
+ *
+ * Applied via `.enterstellar-scene-medical` class on the demo zone container.
+ *
+ * @see implementation_plan.md §3.7 — Scene Token System
+ * @see scene-medical.ts — VitalSync dashboard definition
+ */
+
+.enterstellar-scene-medical {
+  /* ── Brand Accent — Clinical Teal ── */
+  --token-primary: oklch(0.55 0.15 195);
+  --token-primary-light: oklch(0.75 0.10 195);
+
+  /* ── Surfaces — Near-white with cool undertone ── */
+  --token-surface: oklch(0.22 0.02 195);
+  --token-card-bg: oklch(0.19 0.02 195);
+  --token-card-border: oklch(0.32 0.03 195);
+
+  /* ── Text — High contrast for clinical readability ── */
+  --token-text-primary: oklch(0.96 0.01 195);
+  --token-text-secondary: oklch(0.65 0.03 195);
+
+  /* ── Interactive — Teal accent ── */
+  --token-accent: oklch(0.60 0.15 195);
+
+  /* ── Semantic — Clear clinical indicators ── */
+  --token-success: oklch(0.72 0.19 155);
+  --token-danger: oklch(0.65 0.25 25);
+  --token-warning: oklch(0.75 0.18 75);
+}

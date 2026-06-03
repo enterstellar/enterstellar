@@ -1,0 +1,37 @@
+/**
+ * Cortex Learn — EdTech Theme
+ *
+ * Warm orange + cream, friendly, approachable aesthetic.
+ * Designed for learning environments where warmth and
+ * encouragement matter more than clinical precision.
+ * Softer contrast ratios than medical, brighter accents
+ * than finance.
+ *
+ * Applied via `.enterstellar-scene-education` class on the demo zone container.
+ *
+ * @see implementation_plan.md §3.7 — Scene Token System
+ * @see scene-education.ts — Cortex Learn dashboard definition
+ */
+
+.enterstellar-scene-education {
+  /* ── Brand Accent — Warm Orange ── */
+  --token-primary: oklch(0.60 0.18 50);
+  --token-primary-light: oklch(0.75 0.14 50);
+
+  /* ── Surfaces — Warm dark with amber undertone ── */
+  --token-surface: oklch(0.20 0.02 50);
+  --token-card-bg: oklch(0.18 0.02 50);
+  --token-card-border: oklch(0.30 0.03 50);
+
+  /* ── Text — Cream white, friendly warmth ── */
+  --token-text-primary: oklch(0.94 0.02 60);
+  --token-text-secondary: oklch(0.63 0.03 50);
+
+  /* ── Interactive — Bright orange accent ── */
+  --token-accent: oklch(0.68 0.20 50);
+
+  /* ── Semantic — Warm, encouraging tones ── */
+  --token-success: oklch(0.72 0.18 150);
+  --token-danger: oklch(0.62 0.20 25);
+  --token-warning: oklch(0.74 0.17 75);
+}

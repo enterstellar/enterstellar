@@ -1,0 +1,13 @@
+{
+  "id": "zone_compliance-banner_001",
+  "name": "compliance-banner",
+  "determinism": 0.0,
+  "allowedComponents": [],
+  "fallbackComponent": "StaticComplianceNotice",
+  "agentTimeoutMs": 3000,
+  "cache": {
+    "enabled": false,
+    "ttl": 1800
+  },
+  "activateOn": "visible"
+}

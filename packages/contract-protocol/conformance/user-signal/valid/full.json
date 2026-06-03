@@ -1,0 +1,12 @@
+{
+  "type": "input",
+  "zone": "search-panel",
+  "component": "PatientSearch",
+  "payload": {
+    "field": "searchQuery",
+    "value": "John Doe",
+    "debounced": true
+  },
+  "timestamp": "2026-02-26T16:20:00.000Z",
+  "correlationId": "corr_search_001"
+}

@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "./component-intent.json",
+  "title": "Enterstellar ComponentIntent",
+  "description": "The normalized message from an AI agent to the Enterstellar rendering pipeline. Produced by the normalizer from any supported protocol.",
+  "type": "object",
+  "properties": {
+    "component": {
+      "type": "string",
+      "minLength": 1
+    },
+    "props": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "layout": {
+      "type": "string",
+      "enum": ["single", "split", "grid", "stack", "tabs"]
+    },
+    "mode": {
+      "type": "string"
+    },
+    "interaction": {
+      "type": "string",
+      "enum": ["read-only", "editable", "actionable"]
+    },
+    "_source": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "type": "string",
+          "enum": ["ag-ui", "a2ui", "mcp", "websocket", "sse", "custom"]
+        },
+        "rawEventId": {
+          "type": "string"
+        },
+        "correlationId": {
+          "type": "string"
+        },
+        "raw": {}
+      },
+      "required": ["protocol"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["component", "props", "confidence"],
+  "additionalProperties": false
+}

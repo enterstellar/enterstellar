@@ -1,0 +1,107 @@
+{
+  "name": "PatientVitals",
+  "id": "patient-vitals",
+  "description": "Displays real-time patient vital signs including heart rate, blood pressure, temperature, and SpO2.",
+  "category": "clinical",
+  "tags": ["vitals", "patient", "monitoring", "clinical", "real-time"],
+  "props": {
+    "type": "object",
+    "properties": {
+      "patientId": {
+        "type": "string"
+      },
+      "heartRate": {
+        "type": "number"
+      },
+      "bloodPressure": {
+        "type": "object",
+        "properties": {
+          "systolic": {
+            "type": "number"
+          },
+          "diastolic": {
+            "type": "number"
+          }
+        }
+      },
+      "temperature": {
+        "type": "number"
+      },
+      "spO2": {
+        "type": "number"
+      },
+      "riskLevel": {
+        "type": "string",
+        "enum": ["low", "moderate", "high", "critical"]
+      }
+    },
+    "required": ["patientId", "heartRate", "bloodPressure", "temperature", "spO2"]
+  },
+  "tokens": {
+    "background": "token:colors.semantic.surface",
+    "borderColor": "token:colors.semantic.muted",
+    "dangerColor": "token:colors.semantic.danger",
+    "warningColor": "token:colors.semantic.warning",
+    "successColor": "token:colors.semantic.success",
+    "textPrimary": "token:colors.semantic.foreground",
+    "spacing": "token:spacing.md",
+    "borderRadius": "token:radii.md"
+  },
+  "accessibility": {
+    "role": "region",
+    "ariaLabel": "Patient vital signs monitor",
+    "announceOnUpdate": true
+  },
+  "states": {
+    "loading": "VitalsLoadingSkeleton",
+    "error": "VitalsErrorCard",
+    "empty": "NoVitalsAvailable",
+    "ready": "PatientVitalsDisplay"
+  },
+  "examples": [
+    {
+      "intent": "Show vital signs for patient 12345",
+      "props": {
+        "patientId": "P-12345",
+        "heartRate": 72,
+        "bloodPressure": {
+          "systolic": 120,
+          "diastolic": 80
+        },
+        "temperature": 36.8,
+        "spO2": 98
+      }
+    },
+    {
+      "intent": "Display critical vitals for ICU patient",
+      "props": {
+        "patientId": "P-67890",
+        "heartRate": 142,
+        "bloodPressure": {
+          "systolic": 85,
+          "diastolic": 55
+        },
+        "temperature": 39.4,
+        "spO2": 89,
+        "riskLevel": "critical"
+      }
+    }
+  ],
+  "dataSource": {
+    "adapter": "supabase",
+    "resource": "patient_vitals",
+    "params": {
+      "orderBy": "recorded_at",
+      "limit": 1
+    }
+  },
+  "auth": {
+    "required": true,
+    "roles": ["physician", "nurse", "admin"]
+  },
+  "_meta": {
+    "forged": false,
+    "version": "1.0.0",
+    "createdAt": "2026-02-26T00:00:00.000Z"
+  }
+}

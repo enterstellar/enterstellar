@@ -1,0 +1,13 @@
+{
+  "id": "zone_patient-sidebar_001",
+  "name": "patient-sidebar",
+  "determinism": 0.7,
+  "allowedComponents": ["PatientVitals", "PatientMedications", "PatientAlerts", "ClinicalNotes"],
+  "fallbackComponent": "PatientSummaryCard",
+  "agentTimeoutMs": 5000,
+  "cache": {
+    "enabled": true,
+    "ttl": 3600
+  },
+  "activateOn": "mount"
+}

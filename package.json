@@ -1,0 +1,69 @@
+{
+  "name": "enterstellar",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Enterstellar — The TypeScript of Generative UI. The operating system for GenUI.",
+  "author": "Enterstellar",
+  "license": "MIT",
+  "packageManager": "pnpm@11.5.1",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=11.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "format": "prettier --write \"packages/*/src/**/*.{ts,tsx}\" \"apps/*/src/**/*.{ts,tsx}\"",
+    "format:check": "prettier --check \"packages/*/src/**/*.{ts,tsx}\" \"apps/*/src/**/*.{ts,tsx}\"",
+    "syncpack:check": "syncpack list-mismatches",
+    "syncpack:fix": "syncpack fix-mismatches",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:publish": "changeset publish",
+    "prepare": "husky",
+    "env": "dotenvx run --",
+    "switch-enterstellar-web:file": "tsx scripts/switch-enterstellar-web-deps.ts --mode=file",
+    "switch-enterstellar-web:semver": "tsx scripts/switch-enterstellar-web-deps.ts --mode=semver"
+  },
+  "devDependencies": {
+    "@changesets/changelog-github": "^0.5.2",
+    "@changesets/cli": "^2.29.8",
+    "@commitlint/cli": "^20.4.2",
+    "@commitlint/config-conventional": "^20.4.2",
+    "@dotenvx/dotenvx": "^1.52.0",
+    "@typescript-eslint/eslint-plugin": "^8.56.0",
+    "@typescript-eslint/parser": "^8.56.0",
+    "eslint": "^10.0.0",
+    "eslint-plugin-unused-imports": "^4.4.1",
+    "globals": "^17.3.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.8.1",
+    "syncpack": "^15.3.1",
+    "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
+    "turbo": "^2.9.16",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18",
+    "zod": "^4.3.6"
+  },
+  "pnpm": {
+    "overrides": {
+      "@enterstellar-ai/web-assets": "file:../enterstellar-web/packages/assets",
+      "@enterstellar-ai/web-core": "file:../enterstellar-web/packages/core",
+      "@enterstellar-ai/web-tokens": "file:../enterstellar-web/packages/tokens",
+      "@enterstellar-ai/web-ui": "file:../enterstellar-web/packages/ui"
+    },
+    "onlyBuiltDependencies": [
+      "@firebase/util",
+      "esbuild",
+      "msw",
+      "protobufjs",
+      "sharp",
+      "workerd"
+    ]
+  }
+}

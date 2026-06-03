@@ -1,0 +1,166 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "./agent-trace.json",
+  "title": "Enterstellar AgentTrace",
+  "description": "The complete observability record for a single Enterstellar pipeline execution. Powers DevTools timeline, validation log, and performance profiler.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "timestamp": {
+      "type": "string",
+      "minLength": 1
+    },
+    "correlationId": {
+      "type": "string"
+    },
+    "intent": {
+      "type": "object",
+      "properties": {
+        "raw": {
+          "type": "string"
+        },
+        "component": {
+          "type": "string",
+          "minLength": 1
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "mode": {
+          "type": "string"
+        },
+        "interaction": {
+          "type": "string"
+        }
+      },
+      "required": ["raw", "component", "confidence"],
+      "additionalProperties": false
+    },
+    "resolution": {
+      "type": "object",
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": ["exact", "semantic", "forge", "fallback"]
+        },
+        "resolvedComponent": {
+          "type": "string",
+          "minLength": 1
+        },
+        "similarityScore": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "candidatesConsidered": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": ["strategy", "resolvedComponent", "candidatesConsidered"],
+      "additionalProperties": false
+    },
+    "compilation": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["pass", "fail", "corrected"]
+        },
+        "errorCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "selfCorrectionAttempts": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "tokensValidated": {
+          "type": "boolean"
+        },
+        "accessibilityInjected": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "status",
+        "errorCount",
+        "selfCorrectionAttempts",
+        "tokensValidated",
+        "accessibilityInjected"
+      ],
+      "additionalProperties": false
+    },
+    "determinism": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "cacheHit": {
+          "type": "boolean"
+        },
+        "zone": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["level", "cacheHit", "zone"],
+      "additionalProperties": false
+    },
+    "metrics": {
+      "type": "object",
+      "properties": {
+        "totalMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "resolutionMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "compilationMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "renderMs": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": ["totalMs", "resolutionMs", "compilationMs", "renderMs"],
+      "additionalProperties": false
+    },
+    "consent": {
+      "type": "object",
+      "properties": {
+        "anonymizedAggregation": {
+          "type": "boolean"
+        }
+      },
+      "required": ["anonymizedAggregation"],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "id",
+    "timestamp",
+    "intent",
+    "resolution",
+    "compilation",
+    "determinism",
+    "metrics",
+    "consent"
+  ],
+  "additionalProperties": false
+}

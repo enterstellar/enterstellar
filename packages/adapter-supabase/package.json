@@ -1,0 +1,41 @@
+{
+  "name": "@enterstellar-ai/adapter-supabase",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Supabase adapter — Auth + Data adapters for Supabase (Bible §4.15, P0 priority).",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "peerDependencies": {
+    "@enterstellar-ai/types": "workspace:*",
+    "@supabase/supabase-js": "^2.99.0"
+  },
+  "devDependencies": {
+    "@enterstellar-ai/types": "workspace:*",
+    "@enterstellar-ai/adapters": "workspace:*",
+    "@supabase/supabase-js": "^2.99.0"
+  }
+}

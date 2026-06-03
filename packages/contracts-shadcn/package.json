@@ -1,0 +1,45 @@
+{
+  "name": "@enterstellar-ai/contracts-shadcn",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Pre-converted Enterstellar ComponentContracts for shadcn/ui components.",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "peerDependencies": {
+    "@enterstellar-ai/react": "workspace:*",
+    "@enterstellar-ai/registry": "workspace:*",
+    "@enterstellar-ai/types": "workspace:*",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@enterstellar-ai/react": "workspace:*",
+    "@enterstellar-ai/registry": "workspace:*",
+    "@enterstellar-ai/types": "workspace:*",
+    "@types/react": "^19.2.14",
+    "zod": "^4.3.6"
+  }
+}

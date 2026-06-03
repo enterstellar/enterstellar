@@ -1,0 +1,19 @@
+{
+  "customTypes": {},
+  "dependencyTypes": ["dev", "overrides", "peer", "pnpmOverrides", "prod", "resolutions"],
+  "filter": ".",
+  "indent": "  ",
+  "semverGroups": [],
+  "semverRange": "",
+  "sortAz": ["contributors", "dependencies", "devDependencies", "keywords", "peerDependencies"],
+  "sortFirst": ["name", "description", "version", "private", "type", "main", "module", "types", "exports"],
+  "source": ["package.json", "packages/*/package.json", "apps/*/package.json", "examples/*/package.json"],
+  "versionGroups": [
+    {
+      "label": "@enterstellar-ai/web-* packages are cross-repo (Enterstellar WEB monorepo) — consumed via file: (dev) or private npm (prod). Not managed by workspace: protocol. Syncpack must not enforce version consistency for these.",
+      "packages": ["**"],
+      "dependencies": ["@enterstellar-ai/web-**"],
+      "policy": "ignored"
+    }
+  ]
+}

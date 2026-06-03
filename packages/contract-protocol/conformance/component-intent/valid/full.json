@@ -1,0 +1,22 @@
+{
+  "component": "PatientVitals",
+  "props": {
+    "patientId": "P-99999",
+    "heartRate": 80
+  },
+  "confidence": 0.92,
+  "layout": "split",
+  "mode": "real-time",
+  "interaction": "editable",
+  "_source": {
+    "protocol": "mcp",
+    "rawEventId": "evt_mcp_001",
+    "correlationId": "corr_mcp_001",
+    "raw": {
+      "toolName": "render_vitals",
+      "arguments": {
+        "patientId": "P-99999"
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "id": "zone_invalid_001",
+  "name": "invalid-zone",
+  "determinism": 0.5,
+  "allowedComponents": [],
+  "fallbackComponent": "FallbackCard",
+  "agentTimeoutMs": 0,
+  "cache": {
+    "enabled": true,
+    "ttl": 3600
+  },
+  "activateOn": "mount"
+}

@@ -1,0 +1,35 @@
+/**
+ * Meridian Pay — Financial Services Theme
+ *
+ * Deep navy + gold palette with high-contrast data emphasis.
+ * Evokes institutional trust, precision, and premium financial UX.
+ * Serif-friendly token set — renderers may use font-serif for headings.
+ *
+ * Applied via `.enterstellar-scene-finance` class on the demo zone container.
+ *
+ * @see implementation_plan.md §3.7 — Scene Token System
+ * @see scene-finance.ts — Meridian Pay dashboard definition
+ */
+
+.enterstellar-scene-finance {
+  /* ── Brand Accent — Deep Navy + Gold ── */
+  --token-primary: oklch(0.30 0.08 260);
+  --token-primary-light: oklch(0.45 0.06 260);
+
+  /* ── Surfaces — Near-black with navy undertone ── */
+  --token-surface: oklch(0.16 0.03 260);
+  --token-card-bg: oklch(0.14 0.03 260);
+  --token-card-border: oklch(0.25 0.04 260);
+
+  /* ── Text — High contrast for financial data readability ── */
+  --token-text-primary: oklch(0.95 0.00 0);
+  --token-text-secondary: oklch(0.65 0.02 260);
+
+  /* ── Interactive — Gold accent ── */
+  --token-accent: oklch(0.72 0.15 85);
+
+  /* ── Semantic — Muted, professional tones ── */
+  --token-success: oklch(0.68 0.16 155);
+  --token-danger: oklch(0.60 0.20 25);
+  --token-warning: oklch(0.72 0.15 85);
+}

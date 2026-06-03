@@ -1,0 +1,191 @@
+/**
+ * Enterstellar Docs — Design System Swatches
+ *
+ * Extracted swatches from `@enterstellar-ai/web-tokens/site.css` representing
+ * the raw visual colors and opacity layers. Enables light/dark mode theme
+ * mapping without importing the disruptive layout and component resets.
+ */
+
+/* =========================================================================
+   1. Enterstellar Brand Typography (@font-face)
+   ========================================================================= */
+
+@font-face {
+  font-family: 'PP Neue Montreal';
+  src: url('/fonts/NeueMontreal-Italic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'PP Neue Montreal';
+  src: url('/fonts/NeueMontreal-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'PP Neue Montreal';
+  src: url('/fonts/NeueMontreal-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'PP Mondwest';
+  src: url('/fonts/PPMondwest-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/JetBrainsMono-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* =========================================================================
+   2. Design Tokens & Swatches
+   ========================================================================= */
+
+:root {
+  /* Typography Families */
+  --font-family-primary: "PP Neue Montreal", Arial, sans-serif;
+  --font-family-secondary: "PP Mondwest", Arial, sans-serif;
+  --font-family-mono: "JetBrains Mono", "Fira Code", "Courier New", Courier, monospace;
+
+  /* Core Colors */
+  --swatch--transparent: transparent;
+  --swatch--text-white: white;
+  --swatch--bg-white: white;
+  --swatch--black: #080808;
+
+  /* Opacity Layers */
+  --swatch--text-white-60: color-mix(in srgb, var(--swatch--text-white) 60%, transparent);
+  --swatch--bg-white-40: color-mix(in srgb, var(--swatch--bg-white) 40%, transparent);
+  --swatch--bg-black-10: color-mix(in srgb, var(--swatch--black) 10%, transparent);
+  --swatch--bg-white-10: color-mix(in srgb, var(--swatch--bg-white) 10%, transparent);
+  --swatch--bg-white-6: color-mix(in srgb, var(--swatch--bg-white) 6%, transparent);
+  --swatch--bg-white-20: color-mix(in srgb, var(--swatch--bg-white) 20%, transparent);
+  --swatch--bg-black-40: color-mix(in srgb, var(--swatch--black) 40%, transparent);
+  --swatch--text-black-60: color-mix(in srgb, var(--swatch--black) 60%, transparent);
+
+  /* Surfaces & Greys */
+  --swatch--bg-fade-grey: #b4b7b8;
+  --swatch--bg-black-grey: #191919;
+  --swatch--text-brand: #080808;
+  --swatch--bg-whte-smoke: #f6f7f8;
+  --swatch--bg-grey-light: #d9d9d9;
+
+  /* Enterstellar Brand Theme Colors */
+  --swatch--text-emerald: #557099;
+  --swatch--bg-emerald: #557099;
+  --swatch--bg-emerald-dark: #436597;
+
+  /* Danger & Status States */
+  --swatch--text-danger: #ef4444;
+  --swatch--bg-danger: #ef4444;
+  --swatch--bg-danger-dark: #b91c1c;
+
+  /* Span Font Colors */
+  --span-font-color: var(--swatch--black);
+  --span-font-muted-color: var(--swatch--text-black-60);
+
+  /* Loader Subtitle Gradient */
+  --loader-subtitle-gradient: linear-gradient(225deg, var(--swatch--text-emerald), var(--swatch--black) 14%, var(--swatch--text-emerald) 30%, #191919 59%, var(--swatch--black) 81%, var(--swatch--text-emerald) 99%);
+}
+
+/* Dark Mode Variables for Swatches */
+.dark {
+  --span-font-color: var(--swatch--text-white);
+  --span-font-muted-color: var(--swatch--text-white-60);
+
+  /* Loader Subtitle Gradient */
+  --loader-subtitle-gradient: linear-gradient(225deg, var(--swatch--text-emerald), #fff 14%, var(--swatch--text-emerald) 30%, #f0f0f0 59%, #fff 81%, var(--swatch--text-emerald) 99%);
+}
+
+/* =========================================================================
+   3. Enterstellar Brand Span Font Classes
+   ========================================================================= */
+
+.span-font-m-60px {
+  font-family: var(--font-family-secondary);
+  color: var(--span-font-muted-color);
+  font-size: clamp(2.5rem, 5vw, 3.75rem);
+  line-height: 1.1;
+}
+
+.span-font-m-30px {
+  font-family: var(--font-family-secondary);
+  color: var(--span-font-muted-color);
+  font-size: clamp(1.75rem, 3.5vw, 2rem);
+  line-height: 1;
+}
+
+.span-font-m-25px {
+  font-family: var(--font-family-secondary);
+  color: var(--span-font-muted-color);
+  font-size: clamp(1.375rem, 2.5vw, 1.5rem);
+  line-height: 1;
+}
+
+.span-font-m {
+  font-family: var(--font-family-secondary);
+  color: var(--span-font-muted-color);
+  line-height: 1;
+}
+
+.span-font {
+  font-family: var(--font-family-secondary);
+  color: var(--span-font-color);
+}
+
+/* =========================================================================
+   4. Enterstellar Brand Loader Classes
+   ========================================================================= */
+
+.s_loader_title {
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 1.25rem;
+  font-weight: 500;
+  font-family: var(--font-family-primary);
+}
+
+.s_loader_subtitle {
+  -webkit-text-fill-color: transparent;
+  background-image: var(--loader-subtitle-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: clamp(2.5rem, 2.13rem + 1.56vw, 4rem);
+  line-height: 1;
+  font-family: var(--font-family-primary);
+}
+
+.s_loader_title_wrap {
+  grid-column-gap: .25rem;
+  grid-row-gap: .25rem;
+  text-align: center;
+  flex-flow: column;
+  justify-content: flex-start;
+  align-items: center;
+  margin-top: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  display: flex;
+}
+
+@media screen and (max-width: 479px) {
+  .s_loader_title_wrap {
+    grid-column-gap: .5rem;
+    grid-row-gap: .5rem;
+  }
+}

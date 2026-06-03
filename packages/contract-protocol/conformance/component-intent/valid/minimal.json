@@ -1,0 +1,7 @@
+{
+  "component": "AlertBanner",
+  "props": {
+    "message": "System update scheduled"
+  },
+  "confidence": 0.85
+}

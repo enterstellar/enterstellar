@@ -1,0 +1,7 @@
+{
+  "component": "AlertBanner",
+  "props": {
+    "message": "Test"
+  },
+  "confidence": 1.5
+}

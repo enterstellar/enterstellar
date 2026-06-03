@@ -1,0 +1,227 @@
+/**
+ * Enterstellar Docs — Global CSS & Tailwind Settings
+ *
+ * This file serves as the styling backbone for the documentation app.
+ * It strictly utilizes Tailwind CSS v4 patterns:
+ *
+ * 1. **Tooling Imports**: Hooks up Tailwind, Fumadocs UI base presets,
+ *    and `@fumadocs/story` interactive component previews.
+ * 2. **Enterstellar Brand Tokens**: Registers semantic Enterstellar variables into the
+ *    Tailwind theme for unified color interpolation.
+ * 3. **Utilities & Animations**: Registers explicit keyframes for landing
+ *    page elements (marquee, circuits).
+ * 4. **Layout Contexts**: Maps `content/meta.json` structural sections
+ *    (`ui`, `headless`, `framework`) to primary brand colors.
+ *
+ * @module
+ */
+
+/* =========================================================================
+   1. Tooling Imports
+   ========================================================================= */
+
+@import 'tailwindcss';
+@import './swatches.css';
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
+@import 'fumadocs-twoslash/twoslash.css';
+@import '@fumadocs/story/css/preset.css';
+
+@plugin 'tailwindcss-animate';
+
+/* =========================================================================
+   2. Enterstellar Brand Tokens
+   ========================================================================= */
+
+@theme {
+  --spacing-page: 1436px;
+
+  /* Font Families — Mapped from `@enterstellar-ai/web-tokens` typography */
+  --font-sans: var(--font-family-primary);
+  --font-mono: var(--font-family-mono);
+  --font-secondary: var(--font-family-secondary);
+
+  /* Global Border Radius Scale Overrides (Sharp brutalist theme) */
+  --radius: 0px;
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-full: 0px;
+
+  /* Light Mode (Base) — Mapped from `@enterstellar-ai/web-tokens` swatches */
+  --color-fd-background: var(--swatch--bg-white);
+  --color-fd-card: var(--swatch--bg-whte-smoke);
+
+  --color-brand: var(--swatch--bg-emerald);
+  --color-brand-foreground: var(--swatch--text-white);
+  --color-brand-secondary: var(--swatch--bg-black-10);
+  --color-brand-secondary-foreground: var(--swatch--black);
+  --color-brand-200: var(--swatch--bg-emerald-dark);
+
+  --color-landing-foreground: var(--swatch--black);
+  --color-landing-foreground-200: var(--swatch--text-black-60);
+
+  /* Section Layout Colors (Mapped from `@enterstellar-ai/web-tokens` swatches) */
+  --color-headless: var(--swatch--bg-emerald);
+  --color-framework: var(--swatch--bg-emerald-dark);
+  --color-ui: var(--swatch--bg-danger);
+}
+
+/* Dark Mode Tokens — Mapped from `@enterstellar-ai/web-tokens` swatches */
+.dark {
+  --color-fd-background: var(--swatch--black);
+  --color-fd-card: var(--swatch--bg-black-grey);
+
+  --color-landing-foreground: var(--swatch--text-white);
+  --color-landing-foreground-200: var(--swatch--text-white-60);
+
+  --color-brand: var(--swatch--bg-emerald);
+  --color-brand-secondary: var(--swatch--bg-white-10);
+  --color-brand-secondary-foreground: var(--swatch--text-white);
+  --color-brand-foreground: var(--swatch--text-white);
+  --color-brand-200: var(--swatch--bg-emerald-dark);
+
+  /* Section Layout Colors (Mapped from `@enterstellar-ai/web-tokens` swatches) */
+  --color-headless: var(--swatch--bg-emerald);
+  --color-framework: var(--swatch--bg-emerald-dark);
+  --color-ui: var(--swatch--text-danger);
+}
+
+/* =========================================================================
+   3. Utilities & Animations
+   ========================================================================= */
+
+@theme inline {
+  --default-mono-font-family: var(--font-mono);
+
+  /* Animations */
+  --animate-marquee: marquee var(--duration) infinite linear;
+  --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
+  --animate-stroke: stroke 5s linear infinite;
+
+  /* Gradients */
+  --color-gradient-radial: radial-gradient(circle, var(--tw-gradient-stops));
+  --color-repeat-gradient-to-r: repeating-linear-gradient(to right, var(--tw-gradient-stops));
+  --color-repeat-gradient-to-br: repeating-linear-gradient(to bottom right, var(--tw-gradient-stops));
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+
+    to {
+      transform: translateX(calc(-100% - var(--gap)));
+    }
+  }
+
+  @keyframes marquee-vertical {
+    from {
+      transform: translateY(0);
+    }
+
+    to {
+      transform: translateY(calc(-100% - var(--gap)));
+    }
+  }
+
+  @keyframes stroke {
+    from {
+      stroke-dasharray: 1000;
+    }
+
+    to {
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 2000;
+    }
+  }
+}
+
+/* =========================================================================
+   4. Base HTML & Layout Elements
+   ========================================================================= */
+
+html {
+  /* Prevent layout shift when scrollbars appear/disappear */
+  scrollbar-gutter: stable;
+}
+
+/* Global Border Radius Reset — Enforces completely flat, sharp brutalist edges */
+*,
+::before,
+::after {
+  border-radius: 0px !important;
+}
+
+body {
+  background-color: var(--color-fd-background);
+  font-family: var(--font-sans);
+  letter-spacing: 0.02em;
+  /* elegant spacious tracking for body text */
+}
+
+/* Crisp Enterstellar Native Typography Overrides */
+h1 {
+  font-family: var(--font-family-secondary) !important;
+  font-size: clamp(2.5rem, 5vw, 3.75rem) !important;
+  line-height: 1.1 !important;
+  background-image: var(--loader-subtitle-gradient) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  font-weight: 400 !important;
+  letter-spacing: normal !important;
+  display: inline-block;
+  /* ensures the background clip text behaves correctly on wrapping */
+}
+
+h2 {
+  background-image: var(--loader-subtitle-gradient) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 600 !important;
+  /* Locks weight to our native medium font-face */
+  letter-spacing: 0.02em !important;
+  /* Elegant spacious tracking for premium headings */
+}
+
+strong,
+b {
+  font-weight: 500 !important;
+  /* Locks bold body text to crisp native medium weight */
+}
+
+/* Radix/Fumadocs Scroll Lock Override - Prevents margin jumping on modals */
+html>body[data-scroll-locked] {
+  margin-right: 0px !important;
+  --removed-body-scroll-bar-size: 0px !important;
+}
+
+/* =========================================================================
+   5. Fumadocs Section Layout Colors
+   Mapped to specific UI sections extracted from MDX URLs
+   ========================================================================= */
+
+/* Overrides Fumadocs UI primary color based on active layout section */
+.ui {
+  --color-fd-primary: var(--color-ui);
+}
+
+.headless {
+  --color-fd-primary: var(--color-headless);
+}
+
+.framework {
+  --color-fd-primary: var(--color-framework);
+}

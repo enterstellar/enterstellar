@@ -1,0 +1,48 @@
+{
+  "componentName": "PatientVitals",
+  "props": {
+    "patientId": "P-12345",
+    "heartRate": 72,
+    "aria-label": "Patient vital signs monitor",
+    "role": "region"
+  },
+  "status": "corrected",
+  "provenance": {
+    "agent": "gpt-4o",
+    "registry": "local",
+    "compiledAt": "2026-02-26T14:30:00.123Z",
+    "compilerVersion": "0.1.0",
+    "forgeMode": "local",
+    "contractOrigin": {
+      "registryUrl": "https://registry.enterstellar.dev/components/patient-vitals",
+      "publisher": "@enterstellar-ai/clinical-components"
+    }
+  },
+  "errors": [
+    {
+      "code": "ENS-3001",
+      "path": "props.aria-label",
+      "message": "Missing required accessibility attribute 'aria-label'.",
+      "received": null,
+      "expected": "string",
+      "fix": {
+        "field": "props.aria-label",
+        "was": null,
+        "shouldBe": "Patient vital signs monitor"
+      }
+    }
+  ],
+  "selfCorrectionAttempts": 1,
+  "diff": {
+    "raw": {
+      "patientId": "P-12345",
+      "heartRate": 72
+    },
+    "compiled": {
+      "patientId": "P-12345",
+      "heartRate": 72,
+      "aria-label": "Patient vital signs monitor",
+      "role": "region"
+    }
+  }
+}

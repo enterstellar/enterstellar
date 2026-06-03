@@ -1,0 +1,135 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "./compilation-result.json",
+  "title": "Enterstellar CompilationResult",
+  "description": "The output of the Enterstellar UI Compiler after validating a ComponentIntent against its ComponentContract.",
+  "type": "object",
+  "properties": {
+    "componentName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "props": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pass", "fail", "corrected"]
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "agent": {
+          "type": "string",
+          "minLength": 1
+        },
+        "registry": {
+          "type": "string",
+          "minLength": 1
+        },
+        "compiledAt": {
+          "type": "string",
+          "minLength": 1
+        },
+        "compilerVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "forgeMode": {
+          "type": "string",
+          "enum": ["local", "cloud"]
+        },
+        "contractOrigin": {
+          "type": "object",
+          "properties": {
+            "registryUrl": {
+              "type": "string"
+            },
+            "publisher": {
+              "type": "string"
+            }
+          },
+          "required": ["registryUrl", "publisher"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["agent", "registry", "compiledAt", "compilerVersion"],
+      "additionalProperties": false
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 1
+          },
+          "path": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          },
+          "received": {},
+          "expected": {},
+          "fix": {
+            "type": "object",
+            "properties": {
+              "field": {
+                "type": "string",
+                "minLength": 1
+              },
+              "was": {},
+              "shouldBe": {}
+            },
+            "required": ["field", "was", "shouldBe"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["code", "path", "message"],
+        "additionalProperties": false
+      }
+    },
+    "selfCorrectionAttempts": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "diff": {
+      "type": "object",
+      "properties": {
+        "raw": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        },
+        "compiled": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        }
+      },
+      "required": ["raw", "compiled"],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "componentName",
+    "props",
+    "status",
+    "provenance",
+    "errors",
+    "selfCorrectionAttempts"
+  ],
+  "additionalProperties": false
+}

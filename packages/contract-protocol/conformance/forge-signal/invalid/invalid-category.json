@@ -1,0 +1,15 @@
+{
+  "intentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "componentName": "MedicationSchedule",
+  "intentCategory": "medical",
+  "compilationStatus": "pass",
+  "forgeMode": "none",
+  "forgeUsed": false,
+  "latencyMs": 20.0,
+  "selfCorrectionAttempts": 0,
+  "correctionTokensUsed": 0,
+  "timestamp": "2026-02-26T15:00:00.000Z",
+  "sdkVersion": "0.1.0",
+  "registrySize": 52,
+  "platform": "web"
+}

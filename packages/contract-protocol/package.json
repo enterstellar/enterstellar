@@ -1,0 +1,33 @@
+{
+  "name": "@enterstellar-ai/contract-protocol",
+  "version": "0.0.0",
+  "private": false,
+  "type": "module",
+  "description": "Language-agnostic JSON Schema definitions of Enterstellar's core data contracts — ComponentContract, ComponentIntent, CompilationResult, AgentTrace, ForgeSignal, UserSignal, ZoneConfig, and DesignTokens. The Enterstellar Protocol Spec for non-TypeScript renderers.",
+  "bin": {
+    "enterstellar-protocol-validate": "./bin/validate.ts"
+  },
+  "files": [
+    "schemas",
+    "examples",
+    "conformance",
+    "bin",
+    "PROTOCOL_VERSION.md"
+  ],
+  "scripts": {
+    "generate": "tsx scripts/generate.ts",
+    "validate": "tsx bin/validate.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint __tests__/",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@enterstellar-ai/types": "workspace:*",
+    "@types/node": "^25.3.0",
+    "ajv": "^8.18.0",
+    "tsx": "^4.21.0",
+    "vitest": "latest",
+    "zod": "^4.3.6"
+  }
+}

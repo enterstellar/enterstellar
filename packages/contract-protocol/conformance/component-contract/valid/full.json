@@ -1,0 +1,92 @@
+{
+  "name": "MedicationSchedule",
+  "id": "medication-schedule",
+  "description": "Displays the patient's medication schedule with dosage, frequency, and compliance tracking for clinical review.",
+  "category": "clinical",
+  "tags": ["medication", "schedule", "clinical", "compliance"],
+  "props": {
+    "type": "object",
+    "properties": {
+      "patientId": {
+        "type": "string"
+      },
+      "medications": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "dosage": {
+              "type": "string"
+            },
+            "frequency": {
+              "type": "string"
+            },
+            "compliant": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    }
+  },
+  "tokens": {
+    "background": "token:colors.semantic.surface",
+    "textPrimary": "token:colors.semantic.foreground",
+    "compliantColor": "token:colors.semantic.success",
+    "nonCompliantColor": "token:colors.semantic.danger",
+    "spacing": "token:spacing.md",
+    "borderRadius": "token:radii.sm"
+  },
+  "accessibility": {
+    "role": "table",
+    "ariaLabel": "Patient medication schedule",
+    "announceOnUpdate": true
+  },
+  "states": {
+    "loading": "MedicationLoadingSkeleton",
+    "error": "MedicationErrorCard",
+    "empty": "NoMedicationsFound",
+    "ready": "MedicationScheduleTable"
+  },
+  "examples": [
+    {
+      "intent": "Show medications for patient P-12345",
+      "props": {
+        "patientId": "P-12345",
+        "medications": [
+          {
+            "name": "Metformin",
+            "dosage": "500mg",
+            "frequency": "twice daily",
+            "compliant": true
+          }
+        ]
+      }
+    }
+  ],
+  "dataSource": {
+    "adapter": "supabase",
+    "resource": "patient_medications",
+    "params": {
+      "orderBy": "next_dose_at",
+      "status": "active"
+    }
+  },
+  "auth": {
+    "required": true,
+    "roles": ["physician", "nurse", "pharmacist"]
+  },
+  "origin": {
+    "registryUrl": "https://registry.enterstellar.dev/components/medication-schedule",
+    "publisher": "@enterstellar-ai/clinical-components",
+    "verifiedAt": "2026-02-01T00:00:00.000Z"
+  },
+  "_meta": {
+    "forged": false,
+    "version": "2.1.0",
+    "createdAt": "2026-01-15T00:00:00.000Z"
+  }
+}

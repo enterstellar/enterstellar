@@ -1,0 +1,115 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "./design-tokens-dtcg.json",
+  "title": "Enterstellar Design Tokens (W3C DTCG Subset)",
+  "description": "Enterstellar-specific subset of the W3C Design Tokens Community Group specification. Validates only the exact token groups and paths that Enterstellar's TokenResolver interface supports. Non-TS renderers validate their token files against this schema.",
+  "$comment": "This schema is an Enterstellar-specific subset of the W3C DTCG v2 spec (https://design-tokens.github.io/community-group/format/). It is hand-crafted per design choice CP9 — we do NOT require full W3C DTCG compliance from renderers. Only the token groups that Enterstellar's TokenResolver.validate() recognizes are included. See @enterstellar-ai/types/token.ts for the canonical TypeScript interface.",
+  "type": "object",
+  "properties": {
+    "colors": {
+      "type": "object",
+      "description": "Color tokens. Enterstellar requires the 'semantic' sub-group at minimum.",
+      "properties": {
+        "semantic": {
+          "type": "object",
+          "description": "Semantic color tokens (e.g., danger, warning, success, info, muted).",
+          "patternProperties": {
+            "^[a-zA-Z][a-zA-Z0-9-]*$": {
+              "$ref": "#/definitions/tokenValue"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": {
+        "type": "object",
+        "description": "Additional color groups beyond 'semantic' (e.g., 'brand', 'surface').",
+        "patternProperties": {
+          "^[a-zA-Z][a-zA-Z0-9-]*$": {
+            "$ref": "#/definitions/tokenValue"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "spacing": {
+      "type": "object",
+      "description": "Spacing tokens (e.g., xs, sm, md, lg, xl).",
+      "patternProperties": {
+        "^[a-zA-Z][a-zA-Z0-9-]*$": {
+          "$ref": "#/definitions/tokenValue"
+        }
+      },
+      "additionalProperties": false
+    },
+    "typography": {
+      "type": "object",
+      "description": "Typography tokens. May contain nested groups (e.g., 'fontFamily', 'fontSize', 'fontWeight', 'lineHeight').",
+      "patternProperties": {
+        "^[a-zA-Z][a-zA-Z0-9-]*$": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/tokenValue"
+            },
+            {
+              "type": "object",
+              "description": "Nested typography token group.",
+              "patternProperties": {
+                "^[a-zA-Z][a-zA-Z0-9-]*$": {
+                  "$ref": "#/definitions/tokenValue"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "radii": {
+      "type": "object",
+      "description": "Border radius tokens (e.g., none, sm, md, lg, full).",
+      "patternProperties": {
+        "^[a-zA-Z][a-zA-Z0-9-]*$": {
+          "$ref": "#/definitions/tokenValue"
+        }
+      },
+      "additionalProperties": false
+    },
+    "shadows": {
+      "type": "object",
+      "description": "Shadow tokens (e.g., sm, md, lg, xl).",
+      "patternProperties": {
+        "^[a-zA-Z][a-zA-Z0-9-]*$": {
+          "$ref": "#/definitions/tokenValue"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "tokenValue": {
+      "type": "object",
+      "description": "A single design token in W3C DTCG format. The '$value' field contains the resolved value; '$type' classifies the token kind.",
+      "properties": {
+        "$value": {
+          "type": "string",
+          "description": "The resolved token value (e.g., '#ff0000', '16px', '400'). Must be a non-empty string.",
+          "minLength": 1
+        },
+        "$type": {
+          "type": "string",
+          "description": "W3C DTCG token type (e.g., 'color', 'dimension', 'fontFamily', 'fontWeight', 'number', 'shadow').",
+          "minLength": 1
+        },
+        "$description": {
+          "type": "string",
+          "description": "Human-readable description of the token's purpose."
+        }
+      },
+      "required": ["$value"],
+      "additionalProperties": false
+    }
+  }
+}

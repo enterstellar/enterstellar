@@ -1,0 +1,31 @@
+{
+  "name": "MinimalComponent",
+  "id": "minimal-component",
+  "description": "A minimal component for conformance testing.",
+  "category": "utility",
+  "tags": ["test"],
+  "props": {},
+  "tokens": {},
+  "accessibility": {
+    "role": "region",
+    "ariaLabel": "Minimal component",
+    "announceOnUpdate": false
+  },
+  "states": {
+    "loading": "LoadingSkeleton",
+    "error": "ErrorFallback",
+    "empty": "EmptyState",
+    "ready": "MinimalComponentReady"
+  },
+  "examples": [
+    {
+      "intent": "Show minimal component",
+      "props": {}
+    }
+  ],
+  "_meta": {
+    "forged": false,
+    "version": "1.0.0",
+    "createdAt": "2026-01-01T00:00:00.000Z"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "name": "@enterstellar-ai/normalizer",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Protocol-agnostic intake — normalizes AG-UI, A2UI, MCP, and custom protocols to ComponentIntent.",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "peerDependencies": {
+    "@enterstellar-ai/types": "workspace:*",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@enterstellar-ai/types": "workspace:*",
+    "zod": "^4.3.6"
+  }
+}

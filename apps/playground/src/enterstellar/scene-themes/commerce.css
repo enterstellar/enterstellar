@@ -1,0 +1,36 @@
+/**
+ * ARC Store — E-Commerce Theme
+ *
+ * Bold black + white, editorial, product-focused aesthetic.
+ * High contrast with warm neutral undertones. Designed for
+ * retail dashboards where product imagery and order data
+ * share visual prominence.
+ *
+ * Applied via `.enterstellar-scene-commerce` class on the demo zone container.
+ *
+ * @see implementation_plan.md §3.7 — Scene Token System
+ * @see scene-commerce.ts — ARC Store dashboard definition
+ */
+
+.enterstellar-scene-commerce {
+  /* ── Brand Accent — Warm Black ── */
+  --token-primary: oklch(0.20 0.02 50);
+  --token-primary-light: oklch(0.40 0.02 50);
+
+  /* ── Surfaces — Deep warm neutrals ── */
+  --token-surface: oklch(0.17 0.01 50);
+  --token-card-bg: oklch(0.15 0.01 50);
+  --token-card-border: oklch(0.28 0.02 50);
+
+  /* ── Text — Clean white hierarchy ── */
+  --token-text-primary: oklch(0.95 0.00 0);
+  --token-text-secondary: oklch(0.62 0.01 50);
+
+  /* ── Interactive — Warm rose accent ── */
+  --token-accent: oklch(0.65 0.18 15);
+
+  /* ── Semantic — Retail-appropriate tones ── */
+  --token-success: oklch(0.70 0.17 155);
+  --token-danger: oklch(0.62 0.22 25);
+  --token-warning: oklch(0.73 0.16 75);
+}

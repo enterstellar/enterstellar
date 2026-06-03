@@ -1,0 +1,35 @@
+/**
+ * Enterstellar Default Theme — Cloud Blue
+ *
+ * The default design token set for Quick demo scenes.
+ * Uses Enterstellar Playground's enterprise blue palette with dark-mode-first
+ * surface colors. This is the "neutral" baseline that other
+ * domain themes override.
+ *
+ * Applied via `.enterstellar-scene-aura` class on the demo zone container.
+ *
+ * @see implementation_plan.md §3.7 — Scene Token System
+ */
+
+.enterstellar-scene-aura {
+  /* ── Brand Accent ── */
+  --token-primary: oklch(0.55 0.20 260);
+  --token-primary-light: oklch(0.70 0.15 260);
+
+  /* ── Surfaces ── */
+  --token-surface: oklch(0.20 0.01 260);
+  --token-card-bg: oklch(0.18 0.01 260);
+  --token-card-border: oklch(0.28 0.02 260);
+
+  /* ── Text ── */
+  --token-text-primary: oklch(0.93 0.01 260);
+  --token-text-secondary: oklch(0.60 0.02 260);
+
+  /* ── Interactive ── */
+  --token-accent: oklch(0.60 0.20 260);
+
+  /* ── Semantic ── */
+  --token-success: oklch(0.72 0.19 155);
+  --token-danger: oklch(0.63 0.24 25);
+  --token-warning: oklch(0.75 0.18 75);
+}

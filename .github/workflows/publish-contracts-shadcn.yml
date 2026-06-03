@@ -1,0 +1,60 @@
+# @enterstellar-ai/contracts-shadcn — Publish on Merge
+#
+# Triggered when a contracts-sync PR is merged. Builds and publishes
+# the @enterstellar-ai/contracts-shadcn package to the configured npm registry.
+#
+# This workflow is the second half of the sync pipeline:
+#   1. sync-contracts-shadcn.yml → generates contracts, opens PR
+#   2. (this file) → publishes after human review + merge
+#
+# @see sync-contracts-shadcn.yml — upstream sync pipeline
+# @see Correction 7 Decision 3 — CI Sync Pipeline architecture
+
+name: 'Publish: @enterstellar-ai/contracts-shadcn'
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    # Only run when the PR was merged (not just closed) AND has the
+    # contracts-sync label (applied by the sync workflow).
+    if: >-
+      github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.labels.*.name, 'contracts-sync')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup pnpm 10
+        uses: pnpm/action-setup@v4
+        with:
+          version: '10'
+
+      - name: Install dependencies (frozen lockfile)
+        run: pnpm install --frozen-lockfile
+
+      - name: Build @enterstellar-ai/contracts-shadcn
+        run: pnpm turbo run build --filter=@enterstellar-ai/contracts-shadcn...
+
+      - name: Run tests
+        run: pnpm --filter @enterstellar-ai/contracts-shadcn test
+
+      - name: Typecheck
+        run: pnpm --filter @enterstellar-ai/contracts-shadcn typecheck
+
+      - name: Publish to npm
+        run: pnpm --filter @enterstellar-ai/contracts-shadcn publish --no-git-checks --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

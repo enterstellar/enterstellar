@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    // ==========================================
+    // Tier 1 — Core Strict
+    // Standard TypeScript strict mode. Non-negotiable baseline.
+    // ==========================================
+    "strict": true,
+    "strictNullChecks": true,
+    "strictBindCallApply": true,
+    "strictFunctionTypes": true,
+    "strictPropertyInitialization": true,
+    // ==========================================
+    // Tier 2 — Extended (Enterprise-Grade)
+    // Catches implicit patterns that lead to runtime bugs.
+    // ==========================================
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    // ==========================================
+    // Tier 3 — Ultra-Strict (Compiler-Grade)
+    // Enterstellar-specific: these flags enforce the same rigor
+    // we apply to AI-generated UI in our own codebase.
+    //
+    // noUncheckedIndexedAccess — forces `T | undefined` on index signatures.
+    // exactOptionalPropertyTypes — `{ x?: string }` means `string`, NOT `string | undefined`.
+    // noPropertyAccessFromIndexSignature — forces bracket notation for dynamic keys.
+    // noFallthroughCasesInSwitch — every case must break/return.
+    // useUnknownInCatchVariables — `catch(e)` types `e` as `unknown`, not `any`.
+    // ==========================================
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noFallthroughCasesInSwitch": true,
+    "useUnknownInCatchVariables": true,
+    // ==========================================
+    // Build Flags
+    // ==========================================
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    // ==========================================
+    // Output
+    // ==========================================
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "composite": true,
+    "incremental": true
+  },
+  "exclude": ["node_modules", "dist", "coverage", "**/*.test.ts", "**/*.test-d.ts"]
+}
