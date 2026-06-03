@@ -1,5 +1,5 @@
 {
-  "name": "docs",
+  "name": "@enterstellar-ai/docs",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -18,10 +18,6 @@
     "cf-typegen": "wrangler types --env-interface CloudflareEnv ./cloudflare-env.d.ts"
   },
   "dependencies": {
-    "@enterstellar-ai/web-assets": "file:../../../enterstellar-web/packages/assets",
-    "@enterstellar-ai/web-core": "file:../../../enterstellar-web/packages/core",
-    "@enterstellar-ai/web-tokens": "file:../../../enterstellar-web/packages/tokens",
-    "@enterstellar-ai/web-ui": "file:../../../enterstellar-web/packages/ui",
     "@ai-sdk/google": "^3.0.55",
     "@ai-sdk/google-vertex": "^4.0.99",
     "@ai-sdk/groq": "^3.0.32",

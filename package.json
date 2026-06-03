@@ -24,9 +24,7 @@
     "changeset:version": "changeset version",
     "changeset:publish": "changeset publish",
     "prepare": "husky",
-    "env": "dotenvx run --",
-    "switch-enterstellar-web:file": "tsx scripts/switch-enterstellar-web-deps.ts --mode=file",
-    "switch-enterstellar-web:semver": "tsx scripts/switch-enterstellar-web-deps.ts --mode=semver"
+    "env": "dotenvx run --"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.5.2",
@@ -49,21 +47,5 @@
     "typescript": "^5.9.3",
     "vitest": "^4.0.18",
     "zod": "^4.3.6"
-  },
-  "pnpm": {
-    "overrides": {
-      "@enterstellar-ai/web-assets": "file:../enterstellar-web/packages/assets",
-      "@enterstellar-ai/web-core": "file:../enterstellar-web/packages/core",
-      "@enterstellar-ai/web-tokens": "file:../enterstellar-web/packages/tokens",
-      "@enterstellar-ai/web-ui": "file:../enterstellar-web/packages/ui"
-    },
-    "onlyBuiltDependencies": [
-      "@firebase/util",
-      "esbuild",
-      "msw",
-      "protobufjs",
-      "sharp",
-      "workerd"
-    ]
   }
 }

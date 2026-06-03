@@ -12,9 +12,11 @@ export default defineConfig({
   clean: true,
   sourcemap: true,
   splitting: false,
-  treeshake: true,
   external: ['react', 'react-dom'],
   esbuildOptions(options) {
     options.jsx = 'automatic';
+    options.banner = {
+      js: '"use client";',
+    };
   },
 });

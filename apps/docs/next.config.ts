@@ -96,42 +96,6 @@ const nextConfig: NextConfig = {
     '@takumi-rs/image-response',
   ],
 
-  /**
-   * Transpile `@enterstellar-web/*` cross-repo shared packages.
-   *
-   * These packages live in the Enterstellar WEB monorepo and are consumed here
-   * via the `file:` protocol (development) or published npm versions
-   * (production). Next.js's bundler treats external packages as opaque
-   * by default — adding them to `transpilePackages` forces the bundler
-   * to include them in the same compilation pass as this app, which is
-   * required for two reasons:
-   *
-   * 1. **CSS processing:** `@enterstellar-web/tokens` and `@enterstellar-web/ui` ship
-   *    CSS files (`base.css`, `globals.css`, Tailwind `@theme` blocks)
-   *    that must pass through PostCSS / Tailwind v4 to be processed
-   *    correctly. Without transpilation, the bundler treats these as
-   *    opaque binary blobs and skips the CSS pipeline.
-   *
-   * 2. **HMR / live reload:** Including them in the module graph means
-   *    Hot Module Replacement picks up changes from the Enterstellar WEB source
-   *    during `file:` linked development sessions without requiring a
-   *    full server restart.
-   *
-   * Note: `@enterstellar-web/assets` exports only typed path manifests (no CSS,
-   * no JSX). It is included here for completeness and future-proofing —
-   * if the assets package ever ships JSX components or CSS, the bundler
-   * will already handle them correctly.
-   *
-   * @see https://nextjs.org/docs/app/api-reference/next-config-js/transpilePackages
-   * @see apps/docs/package.json — `@enterstellar-web/*` file: dependencies
-   */
-  transpilePackages: [
-    '@enterstellar-web/assets',
-    '@enterstellar-web/core',
-    '@enterstellar-web/tokens',
-    '@enterstellar-web/ui',
-  ],
-
   /** Log full fetch URLs in the dev server console for debugging. */
   logging: {
     fetches: {

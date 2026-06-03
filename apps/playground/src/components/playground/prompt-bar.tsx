@@ -175,7 +175,6 @@ function useTypewriter(
     setCharIndex(0);
     setTextIndex(0);
     setText('');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [texts]);
 
   return { text, snapshot, resume };
