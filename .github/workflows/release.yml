@@ -1,0 +1,120 @@
+# Enterstellar — Changesets Release Automation
+#
+# Implements the two-phase Changesets workflow for automated npm publishing:
+#
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │  PHASE A — Version PR (triggered by developer changeset .md files)    │
+# │                                                                         │
+# │  Developer merges PR with .changeset/*.md → this workflow runs →        │
+# │  changeset version bumps package.json files, writes CHANGELOGs,        │
+# │  deletes consumed .md files → opens/updates "Version Packages" PR.     │
+# │                                                                         │
+# │  PHASE B — Publish (triggered when Version Packages PR is merged)      │
+# │                                                                         │
+# │  Maintainer merges the "Version Packages" PR → this workflow runs →    │
+# │  pnpm changeset:publish → turbo build → changeset publish --provenance │
+# │  → all changed packages published to npm with provenance attestation.  │
+# └─────────────────────────────────────────────────────────────────────────┘
+#
+# Secrets required:
+#   NPM_TOKEN — npm Automation token scoped to @enterstellar-ai/* packages.
+#               Must be added manually: Settings → Secrets → Actions → NPM_TOKEN
+#   GITHUB_TOKEN — provided automatically by GitHub Actions.
+#
+# @see Implementation Plan — Track 3: Changesets Release Automation
+# @see agent/05-enterstellar-coding-rules.md — Package Versioning (X4)
+# @see https://github.com/changesets/action — changesets/action documentation
+
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+# No concurrency cancellation — a release in progress must complete.
+# Two concurrent releases would create conflicting git tags and npm publishes.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  # contents: write — required to commit version bumps and create git tags.
+  contents: write
+  # pull-requests: write — required to open and update the "Version Packages" PR.
+  pull-requests: write
+  # id-token: write — required for npm provenance attestation.
+  # Links each published package to the exact GitHub Actions run that built it.
+  id-token: write
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+
+    steps:
+      # -----------------------------------------------------------------------
+      # Environment setup
+      # fetch-depth: 0 → full git history required for changeset version to
+      # correctly determine which packages changed since the last release tag.
+      # -----------------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          # Configure npm registry for publishing.
+          # NODE_AUTH_TOKEN (set to NPM_TOKEN below) is used by npm publish.
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup pnpm 11
+        uses: pnpm/action-setup@v4
+        with:
+          version: '11'
+
+      # -----------------------------------------------------------------------
+      # Install all workspace dependencies.
+      # --frozen-lockfile: consistent environment — no surprise lockfile changes
+      # during a release run.
+      # -----------------------------------------------------------------------
+      - name: Install dependencies (frozen lockfile)
+        run: pnpm install --frozen-lockfile
+
+      # -----------------------------------------------------------------------
+      # Changesets Action — orchestrates both Phase A and Phase B automatically.
+      #
+      # Phase A (changeset .md files present):
+      #   - Runs `pnpm changeset:version` (resolves to `changeset version`)
+      #   - Bumps package.json versions, writes CHANGELOG.md files
+      #   - Deletes consumed .changeset/*.md files
+      #   - Opens or updates the "Version Packages" pull request
+      #
+      # Phase B (Version Packages PR was just merged — no .md files, versions bumped):
+      #   - Runs `pnpm changeset:publish`
+      #   - pnpm changeset:publish = `turbo run build && changeset publish --provenance`
+      #   - turbo run build: builds all packages in dependency order, copies LICENSE/NOTICE
+      #   - changeset publish: resolves workspace:* deps to real semver, publishes
+      #     only changed packages to npm, creates git tags for each release
+      #   - --provenance: attaches npm provenance attestation (requires id-token: write)
+      #
+      # The `title` and `commit` fields set the PR title and version-bump commit
+      # message to match our conventional commit convention (chore: type).
+      # -----------------------------------------------------------------------
+      - name: Create Release PR or Publish to npm
+        uses: changesets/action@v1
+        with:
+          version: pnpm changeset:version
+          publish: pnpm changeset:publish
+          title: 'chore: version packages'
+          commit: 'chore: version packages'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # NPM_TOKEN must be set as a repository secret:
+          # GitHub → Settings → Secrets and variables → Actions → New secret
+          # Name: NPM_TOKEN
+          # Value: npm Automation token with write access to @enterstellar-ai/* scope
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

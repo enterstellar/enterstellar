@@ -1,6 +1,6 @@
 {
   "name": "@enterstellar-ai/compiler",
-  "description": "Deterministic GenUI compiler — Zod validation, design token enforcement, accessibility audits, and self-correction.",
+  "description": "Deterministic GenUI compiler — schema validation, design token enforcement, accessibility audits, and self-correction.",
   "version": "0.0.0",
   "author": "Enterstellar",
   "license": "Apache-2.0",
@@ -43,6 +43,8 @@
     }
   },
   "files": [
+    "LICENSE",
+    "NOTICE",
     "dist"
   ],
   "scripts": {

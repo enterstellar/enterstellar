@@ -1,0 +1,120 @@
+# Enterstellar — CI Quality Gate
+#
+# Runs the full validation pipeline on every push to main and every pull
+# request targeting main. This is the mandatory quality gate — no code merges
+# without passing all five stages.
+#
+# Pipeline order (matches CI Pipeline Order in agent/06-enterstellar-setup.md):
+#   syncpack list-mismatches
+#     → turbo run lint
+#     → turbo run typecheck
+#     → turbo run test
+#     → turbo run build
+#
+# Design notes:
+#   - pnpm 11 matches the `packageManager` field in root package.json.
+#   - fetch-depth: 0 provides full git history required for Changesets base-branch
+#     diffing and accurate `turbo` affected-package detection.
+#   - --frozen-lockfile enforced — any lockfile drift is a hard failure.
+#   - turbo run build transitively runs `//#copy-licenses` (see turbo.json).
+#   - No matrix strategy: single ubuntu-latest / Node 20 per setup guide spec.
+#
+# @see agent/06-enterstellar-setup.md — CI Pipeline Order
+# @see agent/05-enterstellar-coding-rules.md — Per-PR Checklist
+
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+# Cancel in-progress runs for the same branch on new pushes.
+# Prevents wasted runner minutes when developers push rapidly.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+
+    steps:
+      # -----------------------------------------------------------------------
+      # Environment setup
+      # fetch-depth: 0 → full history required for Changesets base-branch diffing
+      # and accurate Turborepo affected-package detection on pull requests.
+      # -----------------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm 11
+        uses: pnpm/action-setup@v4
+        with:
+          version: '11'
+
+      # -----------------------------------------------------------------------
+      # Install all workspace dependencies.
+      # --frozen-lockfile: fails if pnpm-lock.yaml is out of sync with
+      # package.json files. Prevents lockfile drift from silently entering main.
+      # -----------------------------------------------------------------------
+      - name: Install dependencies (frozen lockfile)
+        run: pnpm install --frozen-lockfile
+
+      # -----------------------------------------------------------------------
+      # Stage 1 — Dependency version consistency (syncpack)
+      # Fails if any two packages depend on different versions of the same library.
+      # This enforces the L15 "no version drift" invariant across the monorepo.
+      # -----------------------------------------------------------------------
+      - name: Check dependency version consistency (syncpack)
+        run: pnpm syncpack:check
+
+      # -----------------------------------------------------------------------
+      # Stage 2 — Lint
+      # Runs ESLint across all packages via Turborepo.
+      # Enforces: L15 (no engine → framework imports), @typescript-eslint/no-explicit-any,
+      # eslint-plugin-unused-imports (auto-catches dead import type statements).
+      # -----------------------------------------------------------------------
+      - name: Lint all packages
+        run: pnpm turbo run lint
+
+      # -----------------------------------------------------------------------
+      # Stage 3 — Type check
+      # Runs tsc --noEmit across all packages. Enforces all 15 strictness flags
+      # defined in tsconfig.base.json (Tier 1 Core Strict, Tier 2 Extended,
+      # Tier 3 Ultra-Strict). Zero errors required.
+      # -----------------------------------------------------------------------
+      - name: Type check all packages
+        run: pnpm turbo run typecheck
+
+      # -----------------------------------------------------------------------
+      # Stage 4 — Test
+      # Runs Vitest across all packages. Coverage threshold ≥90% per coding rules.
+      # Turbo caches test results — only re-runs tests for changed packages.
+      # -----------------------------------------------------------------------
+      - name: Run tests
+        run: pnpm turbo run test
+
+      # -----------------------------------------------------------------------
+      # Stage 5 — Build
+      # Builds all packages in dependency order via Turborepo.
+      # This step also runs //#copy-licenses (see turbo.json) which copies the
+      # canonical LICENSE and NOTICE files into each package directory.
+      # A failing build here blocks the release workflow from running.
+      # -----------------------------------------------------------------------
+      - name: Build all packages
+        run: pnpm turbo run build

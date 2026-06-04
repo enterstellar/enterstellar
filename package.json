@@ -35,9 +35,10 @@
     "format:check": "prettier --check \"packages/*/src/**/*.{ts,tsx}\" \"apps/*/src/**/*.{ts,tsx}\"",
     "syncpack:check": "syncpack list-mismatches",
     "syncpack:fix": "syncpack fix-mismatches",
+    "copy-licenses": "node scripts/copy-licenses.mjs",
     "changeset": "changeset",
     "changeset:version": "changeset version",
-    "changeset:publish": "changeset publish",
+    "changeset:publish": "turbo run build && changeset publish --provenance",
     "prepare": "husky",
     "env": "dotenvx run --"
   },

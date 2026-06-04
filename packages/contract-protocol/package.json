@@ -30,6 +30,8 @@
     "enterstellar-protocol-validate": "./bin/validate.ts"
   },
   "files": [
+    "LICENSE",
+    "NOTICE",
     "schemas",
     "examples",
     "conformance",

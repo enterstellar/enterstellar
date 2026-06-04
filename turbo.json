@@ -3,8 +3,13 @@
   "globalDependencies": ["tsconfig.base.json"],
   "ui": "stream",
   "tasks": {
+    "//#copy-licenses": {
+      "cache": true,
+      "inputs": ["LICENSE", "NOTICE"],
+      "outputs": ["packages/*/LICENSE", "packages/*/NOTICE"]
+    },
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "//#copy-licenses"],
       "inputs": ["src/**", "tsconfig.json", "tsup.config.ts", "package.json"],
       "outputs": ["dist/**"],
       "outputLogs": "new-only"

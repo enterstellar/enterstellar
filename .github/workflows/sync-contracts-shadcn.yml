@@ -7,7 +7,7 @@
 # ┌─────────────────────────────────────────────────────────────────────┐
 # │ ARCHITECTURE                                                       │
 # │                                                                     │
-# │  Step 0: Environment — checkout, Node 20, pnpm 10, build CLI       │
+# │  Step 0: Environment — checkout, Node 20, pnpm 11, build CLI       │
 # │  Step 1: Fetch — scaffold temp Next.js + `npx shadcn add --all`    │
 # │  Step 2: Migrate — `enterstellar migrate` → generate contracts              │
 # │  Step 3: Diff — compare generated vs published contracts             │
@@ -34,16 +34,16 @@ permissions:
   contents: write
   pull-requests: write
 
-env:
-  # Shared paths used across multiple steps.
-  SHADCN_TEMP_DIR: ${{ runner.temp }}/shadcn-sync
-  GENERATED_DIR: ${{ runner.temp }}/generated-contracts
-  CONTRACTS_SRC: packages/contracts-shadcn/src/contracts
-
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
+      - name: Setup environment variables
+        run: |
+          echo "SHADCN_TEMP_DIR=$RUNNER_TEMP/shadcn-sync" >> $GITHUB_ENV
+          echo "GENERATED_DIR=$RUNNER_TEMP/generated-contracts" >> $GITHUB_ENV
+          echo "CONTRACTS_SRC=packages/contracts-shadcn/src/contracts" >> $GITHUB_ENV
+
       # =====================================================================
       # Step 0: Environment
       #
@@ -61,10 +61,10 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Setup pnpm 10
+      - name: Setup pnpm 11
         uses: pnpm/action-setup@v4
         with:
-          version: '10'
+          version: '11'
 
       - name: Install dependencies (frozen lockfile)
         run: pnpm install --frozen-lockfile

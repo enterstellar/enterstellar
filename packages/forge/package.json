@@ -42,6 +42,8 @@
     }
   },
   "files": [
+    "LICENSE",
+    "NOTICE",
     "dist"
   ],
   "scripts": {
