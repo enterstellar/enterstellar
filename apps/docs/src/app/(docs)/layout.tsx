@@ -1,7 +1,7 @@
 /**
  * Enterstellar Docs — Documentation Layout
  *
- * Layout component wrapping all documentation pages with the Fumadocs UI
+ * Layout component wrapping all documentation pages with the core UI
  * `DocsLayout`. Provides:
  *
  * 1. **Sidebar navigation** — Driven by `source.getPageTree()`, the auto-
@@ -38,7 +38,7 @@ import 'katex/dist/katex.min.css';
 /**
  * Documentation pages layout.
  *
- * Wraps children in the `DocsLayout` from Fumadocs UI with Enterstellar-branded
+ * Wraps children in the `DocsLayout` from the core UI with Enterstellar-branded
  * navigation, section-colored tabs, and the AI chat float trigger.
  *
  * @param props - Next.js layout props containing `children`.

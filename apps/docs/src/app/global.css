@@ -4,14 +4,14 @@
  * This file serves as the styling backbone for the documentation app.
  * It strictly utilizes Tailwind CSS v4 patterns:
  *
- * 1. **Tooling Imports**: Hooks up Tailwind, Fumadocs UI base presets,
- *    and `@fumadocs/story` interactive component previews.
+ * 1. **Tooling Imports**: Hooks up Tailwind, core UI base presets,
+ *    and interactive component previews.
  * 2. **Enterstellar Brand Tokens**: Registers semantic Enterstellar variables into the
  *    Tailwind theme for unified color interpolation.
  * 3. **Utilities & Animations**: Registers explicit keyframes for landing
  *    page elements (marquee, circuits).
  * 4. **Layout Contexts**: Maps `content/meta.json` structural sections
- *    (`ui`, `headless`, `framework`) to primary brand colors.
+ *    (`getting-started`, `concepts`, `guides`, `architecture`, `api`) to primary brand colors.
  *
  * @module
  */
@@ -21,7 +21,6 @@
    ========================================================================= */
 
 @import 'tailwindcss';
-@import './swatches.css';
 @import 'fumadocs-ui/css/neutral.css';
 @import 'fumadocs-ui/css/preset.css';
 @import 'fumadocs-twoslash/twoslash.css';
@@ -67,8 +66,11 @@
 
   /* Section Layout Colors (Mapped from `@enterstellar-ai/web-tokens` swatches) */
   --color-headless: var(--swatch--bg-emerald);
-  --color-framework: var(--swatch--bg-emerald-dark);
-  --color-ui: var(--swatch--bg-danger);
+  --color-getting-started: var(--swatch--bg-emerald);
+  --color-concepts: var(--swatch--bg-emerald);
+  --color-guides: var(--swatch--bg-emerald);
+  --color-architecture: var(--swatch--bg);
+  --color-api: var(--swatch--bg-danger);
 }
 
 /* Dark Mode Tokens — Mapped from `@enterstellar-ai/web-tokens` swatches */
@@ -87,8 +89,11 @@
 
   /* Section Layout Colors (Mapped from `@enterstellar-ai/web-tokens` swatches) */
   --color-headless: var(--swatch--bg-emerald);
-  --color-framework: var(--swatch--bg-emerald-dark);
-  --color-ui: var(--swatch--text-danger);
+  --color-getting-started: var(--swatch--bg-emerald);
+  --color-concepts: var(--swatch--bg-emerald);
+  --color-guides: var(--swatch--bg-emerald);
+  --color-architecture: var(--swatch--bg-emerald);
+  --color-api: var(--swatch--text-danger);
 }
 
 /* =========================================================================
@@ -196,32 +201,53 @@ h6 {
   /* Elegant spacious tracking for premium headings */
 }
 
+h1 code,
+h2 code,
+h3 code,
+h4 code,
+h5 code,
+h6 code {
+  -webkit-text-fill-color: currentColor !important;
+}
+
 strong,
 b {
   font-weight: 500 !important;
   /* Locks bold body text to crisp native medium weight */
 }
 
-/* Radix/Fumadocs Scroll Lock Override - Prevents margin jumping on modals */
+/* Radix/Core Scroll Lock Override - Prevents margin jumping on modals */
 html>body[data-scroll-locked] {
   margin-right: 0px !important;
   --removed-body-scroll-bar-size: 0px !important;
 }
 
 /* =========================================================================
-   5. Fumadocs Section Layout Colors
+   5. Section Layout Colors
    Mapped to specific UI sections extracted from MDX URLs
    ========================================================================= */
 
-/* Overrides Fumadocs UI primary color based on active layout section */
-.ui {
-  --color-fd-primary: var(--color-ui);
+/* Overrides Core UI primary color based on active layout section */
+.getting-started {
+  --color-fd-primary: var(--color-getting-started);
+}
+
+.concepts {
+  --color-fd-primary: var(--color-concepts);
+}
+
+.guides {
+  --color-fd-primary: var(--color-guides);
+}
+
+.architecture {
+  --color-fd-primary: var(--color-architecture);
+}
+
+.api {
+  --color-fd-primary: var(--color-api);
 }
 
 .headless {
   --color-fd-primary: var(--color-headless);
-}
-
-.framework {
-  --color-fd-primary: var(--color-framework);
 }

@@ -39,7 +39,7 @@ export const revalidate = false;
 /**
  * GET handler — returns all documentation content as a single plain-text response.
  *
- * Iterates over every page in the Fumadocs source tree, extracts
+ * Iterates over every page in the documentation source tree, extracts
  * processed markdown via `getLLMText()`, and concatenates all pages
  * with double newlines. The response includes caching headers for
  * CDN-level optimization.

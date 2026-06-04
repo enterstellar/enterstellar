@@ -4,7 +4,7 @@ import { ServerCodeBlock } from 'fumadocs-ui/components/codeblock.rsc';
 import type { ReactElement } from 'react';
 
 export function Installation({ name }: { name: string }): ReactElement {
-  const tabs = [{ name: 'Fumadocs CLI', value: 'fumadocs-cli' }];
+  const tabs = [{ name: 'Core CLI', value: 'fumadocs-cli' }];
 
   return (
     <Tabs className="my-6">

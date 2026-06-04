@@ -20,7 +20,7 @@ npm install @enterstellar-ai/types zod
 
 ### `ComponentContract<TProps>`
 
-The formal specification for a component the LLM can select. Defined in Bible §3.1.
+The formal specification for a component the LLM can select. Detailed in the Component Contracts specification.
 
 ```typescript
 interface ComponentContract {
@@ -48,7 +48,7 @@ interface ComponentContract {
 
 ### `ComponentIntent`
 
-The agent's output. What the LLM sends, what the normalizer produces, and what the compiler validates. Defined in Bible §3.2.
+The agent's output. What the LLM sends, what the normalizer produces, and what the compiler validates. Detailed in the Component Contracts specification.
 
 ```typescript
 interface ComponentIntent {
@@ -68,7 +68,7 @@ Schema: `ComponentIntentSchema` (Zod)
 
 ### `CompilationResult`
 
-The compiler's output. Contains the validated props, errors, warnings, and provenance. Defined in Bible §3.3.
+The compiler's output. Contains the validated props, errors, warnings, and provenance. Detailed in the Compilation Lifecycle specification.
 
 ```typescript
 interface CompilationResult {
@@ -88,7 +88,7 @@ Schema: `CompilationResultSchema` (Zod)
 
 ### `AgentTrace`
 
-Full trace for every render. 5 categories of information. Defined in Bible §3.4.
+Full trace for every render. 5 categories of information. Detailed in the Telemetry architecture.
 
 ```typescript
 interface AgentTrace {
@@ -119,7 +119,7 @@ Schema: `ZoneTraceSchema` (Zod)
 
 ### `ZoneConfig`
 
-Configuration for a `<Zone>` (stored in state, not a React prop). Defined in Bible §3.5.
+Configuration for a `<Zone>` (stored in state, not a React prop). Detailed in the Zones specification.
 
 ```typescript
 interface ZoneConfig {
@@ -137,7 +137,7 @@ Schema: `ZoneConfigSchema` (Zod)
 
 ### `EnterstellarAgentConnection`
 
-Interface for the agent transport layer. Defined in Bible §3.9–3.10.
+Interface for the agent transport layer. Detailed in the Agent Connection specification.
 
 ```typescript
 interface EnterstellarAgentConnection {
@@ -153,7 +153,7 @@ interface EnterstellarAgentConnection {
 
 ### `EnterstellarStore`
 
-Interface for the state store. Defined in Bible §3.8. Full implementation: `@enterstellar-ai/state`.
+Interface for the state store. Detailed in the State Management architecture. Full implementation: `@enterstellar-ai/state`.
 
 ```typescript
 interface EnterstellarStore {
@@ -212,7 +212,7 @@ Schema: `UserSignalSchema` (Zod)
 
 ### `ForgeSignal`
 
-Mandatory zero-PII telemetry event emitted on every render (L12). Defined in Bible §3.7.
+Mandatory zero-PII telemetry event emitted on every render (L12). Detailed in the Telemetry architecture.
 
 ```typescript
 interface ForgeSignal {
@@ -233,7 +233,7 @@ Schema: `ForgeSignalSchema` (Zod)
 
 ### `DesignTokenSet`
 
-W3C DTCG-compliant design token container. Defined in Bible §3.1b.
+W3C DTCG-compliant design token container. Detailed in the Design Tokens specification.
 
 ```typescript
 type DesignTokenSet = Record<string, TokenCategory | DesignToken>;
@@ -292,5 +292,5 @@ See [Contributing → Error Taxonomy](/architecture/contributing#error-taxonomy)
 
 ## See Also
 
-- [Bible §3](https://github.com/enterstellar-ai/enterstellar/blob/main/agent/03-enterstellar-implementation-bible.md) — Core type definitions (canonical)
-- [Design Choices T1–T17](https://github.com/enterstellar-ai/enterstellar/blob/main/agent/04-enterstellar-design-choices.md)
+- [Component Contracts](../concepts/component-contracts) — practical application of Enterstellar types
+- [Design Tokens](../concepts/design-tokens) — architectural implementation of the core styling interface

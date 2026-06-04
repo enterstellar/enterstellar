@@ -257,7 +257,7 @@ export function Feedback({
  * @param props.children - The wrapped content block.
  * @returns The block wrapper with feedback popover.
  *
- * @see {@link https://fumadocs.dev/docs/integrations/feedback Fumadocs integration docs}
+ * @see Core feedback integration documentation
  */
 export function FeedbackBlock({
   id,

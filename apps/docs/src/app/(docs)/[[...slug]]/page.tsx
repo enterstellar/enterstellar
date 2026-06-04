@@ -1,34 +1,36 @@
 /**
  * Enterstellar Docs — Documentation Page Renderer
  *
- * Renders individual documentation pages from the Fumadocs source tree.
+ * Renders individual documentation pages from the documentation source tree.
  * Each page includes:
  *
  * - **MDX content** — Rendered with custom component overrides (Twoslash
  *   type annotations, Mermaid diagrams, Preview demos, Feedback blocks).
  * - **Table of Contents** — Clerk-style sticky sidebar ToC.
- * - **Toolbar** — Markdown copy button and view options popover with
- *   "Edit on GitHub" and "View Source" links.
+ * - **Toolbar** — Markdown copy button and custom view options popover with
+ *   "Edit on GitHub", "View Source", and LLM integration links.
  * - **Feedback** — Per-page and per-block feedback via GitHub Discussions.
  * - **HoverCards** — Internal links show page title/description on hover.
- * - **Preview system** — `@fumadocs/story` component previews for live
+ * - **Preview system** — interactive component previews for live
  *   demos (retained for future Enterstellar Compiler showcasing).
  *
- * **MDX component override map (12 overrides):**
+ * **MDX component override map (14 overrides):**
  *
  * | MDX Tag          | Override Component           | Purpose                                      |
  * |:-----------------|:-----------------------------|:---------------------------------------------|
  * | `a`              | `HoverCard` + `Link`         | Cross-reference hover previews               |
- * | `blockquote`     | `Callout`                    | Styled callout blocks (info/warn/error)       |
- * | `FeedbackBlock`  | `FeedbackBlock` (wired)      | Inline user feedback via GitHub Discussions   |
- * | `Banner`         | `fumadocs-ui/Banner`         | Page-level announcement banners               |
- * | `Mermaid`        | `@/components/mdx/mermaid`   | Mermaid diagram rendering                     |
- * | `TypeTable`      | `fumadocs-ui/TypeTable`      | Auto-generated prop type tables               |
- * | `Wrapper`        | `@/components/preview`       | Story preview wrapper                         |
- * | `DocsCategory`   | Local `DocsCategory`         | Sibling page navigation cards                 |
- * | `Installation`   | `@/components/preview`       | Package installation instructions             |
- * | `Customisation`  | `@/components/preview`       | Component customisation demos                 |
- * | `...Twoslash`    | `fumadocs-twoslash/ui`       | Inline TypeScript type hover annotations      |
+ * | `blockquote`     | `Callout`                    | Styled callout blocks (info/warn/error)      |
+ * | `FeedbackBlock`  | `FeedbackBlock` (wired)      | Inline user feedback via GitHub Discussions  |
+ * | `Banner`         | Core UI `Banner`             | Page-level announcement banners              |
+ * | `Mermaid`        | `@/components/mdx/mermaid`   | Mermaid diagram rendering                    |
+ * | `TypeTable`      | Core UI `TypeTable`          | Auto-generated prop type tables              |
+ * | `Step`           | Core UI `Step`               | Step-by-step instruction formatting          |
+ * | `Steps`          | Core UI `Steps`              | Container for Step components                |
+ * | `Wrapper`        | `@/components/preview`       | Story preview wrapper                        |
+ * | `DocsCategory`   | Local `DocsCategory`         | Sibling page navigation cards                |
+ * | `Installation`   | `@/components/preview`       | Package installation instructions            |
+ * | `Customisation`  | `@/components/preview`       | Component customisation demos                |
+ * | `...Twoslash`    | Core Twoslash UI             | Inline TypeScript type hover annotations     |
  *
  * **Static generation:**
  * All pages are pre-rendered at build time via `generateStaticParams()`.
@@ -48,9 +50,10 @@ import { type ComponentProps, type FC, type ReactNode } from 'react';
 import * as Twoslash from 'fumadocs-twoslash/ui';
 import { Callout } from 'fumadocs-ui/components/callout';
 import { TypeTable } from 'fumadocs-ui/components/type-table';
+import { Step, Steps } from 'fumadocs-ui/components/steps';
 import * as Preview from '@/components/preview';
 import { createMetadata } from '@/lib/metadata';
-import { getPageImage, source } from '@/lib/source';
+import { getPageImage, getPageMarkdownUrl, source } from '@/lib/source';
 import { Wrapper } from '@/components/preview/wrapper';
 import { Mermaid } from '@/components/mdx/mermaid';
 import { Feedback, FeedbackBlock } from '@/components/feedback/client';
@@ -67,8 +70,8 @@ import {
   DocsPage,
   PageLastUpdate,
   MarkdownCopyButton,
-  ViewOptionsPopover,
 } from 'fumadocs-ui/layouts/docs/page';
+import { ViewOptionsPopover } from '@/components/layouts/view-options';
 import { NotFound } from '@/components/layouts/not-found';
 import { getSuggestions } from './suggestions';
 import { PathUtils } from 'fumadocs-core/source';
@@ -85,7 +88,7 @@ import { PathUtils } from 'fumadocs-core/source';
  * the corresponding component is rendered. Otherwise, returns `null`.
  *
  * This system is retained for future Enterstellar Compiler demo showcasing —
- * preview components will be rebranded from Fumadocs UI demos to
+ * preview components will be rebranded from default UI demos to
  * Enterstellar `ComponentContract` → rendered UI demonstrations.
  *
  * @param props - Component props.
@@ -152,7 +155,7 @@ export const revalidate = false;
 /**
  * Documentation page component.
  *
- * Fetches the page from the Fumadocs source tree by slug, loads the
+ * Fetches the page from the documentation source tree by slug, loads the
  * MDX body and table of contents, and renders the full page layout
  * with toolbar, content, and feedback sections.
  *
@@ -192,9 +195,9 @@ export default async function Page(
 
       {/* --- Toolbar: Copy Markdown + View Options (Edit on GitHub) --- */}
       <div className="flex flex-row flex-wrap gap-2 items-center border-b pb-6">
-        <MarkdownCopyButton markdownUrl={`${page.url}.mdx`} />
+        <MarkdownCopyButton markdownUrl={getPageMarkdownUrl(page).url} />
         <ViewOptionsPopover
-          markdownUrl={`${page.url}.mdx`}
+          markdownUrl={getPageMarkdownUrl(page).url}
           githubUrl={`https://github.com/${owner}/${repo}/blob/dev/apps/docs/content/${page.path}`}
         />
       </div>
@@ -246,10 +249,12 @@ export default async function Page(
               </FeedbackBlock>
             ),
 
-            // --- Fumadocs UI Components ---
+            // --- Core UI Components ---
             Banner,
             Mermaid,
             TypeTable,
+            Step,
+            Steps,
 
             // --- Preview System (retained for Enterstellar Compiler demos) ---
             Wrapper,
@@ -257,7 +262,7 @@ export default async function Page(
             Customisation,
 
             // --- Callout override ---
-            // Maps `<blockquote>` to Fumadocs Callout for styled
+            // Maps <blockquote> to Core Callout for styled
             // info/warning/error blocks in MDX content.
             blockquote: Callout as unknown as FC<ComponentProps<'blockquote'>>,
 
@@ -337,7 +342,7 @@ export async function generateMetadata(
 /**
  * Pre-render all documentation pages as static routes at build time.
  *
- * Delegates to the Fumadocs source API which generates slug arrays
+ * Delegates to the core source API which generates slug arrays
  * for every page in the content tree.
  *
  * @returns Array of static params covering all doc pages.

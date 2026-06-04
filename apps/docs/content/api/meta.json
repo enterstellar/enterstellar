@@ -2,7 +2,9 @@
   "$schema": "../../.source/json-schema/docs.meta.json",
   "title": "API Reference",
   "icon": "FileCode",
+  "root": true,
   "pages": [
+    "---Core API---",
     "react",
     "registry",
     "types",

@@ -1,7 +1,7 @@
 /**
  * Enterstellar Docs — Custom Search Dialog
  *
- * Extends the Fumadocs UI `SearchDialog` with Enterstellar-specific features:
+ * Extends the Core UI `SearchDialog` with Enterstellar-specific features:
  *
  * 1. **Tag-based filtering** — A popover filter allows users to narrow
  *    search results by documentation section (e.g., "UI", "Core", "MDX").
@@ -50,7 +50,7 @@ import type { ReactElement } from 'react';
  * Each entry maps a user-facing label to a search tag value used by
  * the server-side search index. The `value` fields are functional
  * identifiers (NOT branding strings) — they must match the tags
- * emitted by the Fumadocs search indexer.
+ * emitted by the core search indexer.
  */
 const items = [
   {
@@ -58,14 +58,29 @@ const items = [
     value: undefined,
   },
   {
-    name: 'Framework',
-    description: 'Framework guides and core concepts',
-    value: 'framework',
+    name: 'Getting Started',
+    description: 'Onboarding and installation',
+    value: '(getting-started)',
   },
   {
-    name: 'UI',
-    description: 'UI component documentation and APIs',
-    value: 'ui',
+    name: 'Concepts',
+    description: 'Core system paradigms',
+    value: 'concepts',
+  },
+  {
+    name: 'Guides',
+    description: 'Advanced settings and workflows',
+    value: 'guides',
+  },
+  {
+    name: 'Architecture',
+    description: 'System blueprints and design choices',
+    value: 'architecture',
+  },
+  {
+    name: 'API Reference',
+    description: 'Technical references and SDKs',
+    value: 'api',
   },
 ];
 
@@ -74,9 +89,9 @@ const items = [
  *
  * Renders a full-screen search overlay with an input field, result list,
  * and footer containing a tag filter popover. Supports keyboard
- * navigation via the Fumadocs `SearchDialogList` component.
+ * navigation via the `SearchDialogList` component.
  *
- * @param props - Fumadocs shared search dialog props (open state, callbacks).
+ * @param props - Shared search dialog props (open state, callbacks).
  * @returns The rendered search dialog.
  */
 export default function CustomSearchDialog(props: SharedProps): ReactElement {

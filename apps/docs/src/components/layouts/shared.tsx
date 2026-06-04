@@ -4,11 +4,11 @@
  * Central layout configuration consumed by the `DocsLayout` in the docs
  * route layout. Exports navigation items, the logo element, and the
  * `baseOptions()` factory that produces the `BaseLayoutProps` for
- * Fumadocs UI.
+ * Core UI.
  *
  * **Exports:**
  * - `linkItems` — Top-level navigation link entries (GitHub icon link).
- * - `logo` — The Enterstellar logo `<Image>` element used in the nav bar.
+ * - `logo` — The Enterstellar logo `BrandMark` SVG component used in the nav bar.
  * - `baseOptions()` — Factory returning `BaseLayoutProps` with the nav
  *   title composed of the logo and the app name.
  *
@@ -17,9 +17,8 @@
  *
  * @module
  */
-import Image from 'next/image';
 import type { BaseLayoutProps, LinkItemType } from 'fumadocs-ui/layouts/shared';
-import Logo from '@/public/logo.png';
+import BrandMark from './brand-mark';
 import { appName, gitConfig } from '@/lib/shared';
 
 /**
@@ -30,7 +29,7 @@ import { appName, gitConfig } from '@/lib/shared';
  * within the Enterstellar docs app or are served via subpath routing.
  *
  * @remarks
- * Dead Fumadocs entries (`/blog`, `/showcase`, `/sponsors`) were removed
+ * Dead upstream entries (`/blog`, `/showcase`, `/sponsors`) were removed
  * because those pages do not exist in this documentation app.
  */
 export const linkItems: LinkItemType[] = [
@@ -51,23 +50,14 @@ export const linkItems: LinkItemType[] = [
 /**
  * Enterstellar logo element rendered in the navigation bar.
  *
- * Uses the static `logo.png` asset from the `public/` directory, sized
- * for the nav bar. The `uwu` conditional classes are inherited from the
- * Fumadocs framework's Easter egg mode — they have no visual effect in
- * standard Enterstellar usage.
+ * Uses the inline SVG BrandMark component in "icon" mode.
  */
 export const logo = (
-  <Image
-    alt="Enterstellar Docs"
-    src={Logo}
-    sizes="100px"
-    className="size-5"
-    aria-label="Enterstellar Docs"
-  />
+  <BrandMark mode="icon" variant="white" className="size-5" />
 );
 
 /**
- * Base layout options factory for Fumadocs UI.
+ * Base layout options factory for Core UI.
  *
  * Returns `BaseLayoutProps` with the navigation title composed of the
  * Enterstellar logo image and the app name text. Consumed by both the docs

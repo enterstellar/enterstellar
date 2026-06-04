@@ -1,16 +1,16 @@
 /**
  * Enterstellar Docs — Link Preview Hover Card
  *
- * Wraps `@radix-ui/react-hover-card` with Fumadocs design tokens and
+ * Wraps `@radix-ui/react-hover-card` with Core design tokens and
  * Tailwind styling. Renders a floating card when users hover over
  * internal documentation links, showing a preview of the linked page.
  *
  * **Architecture:**
  * - `HoverCard` — Root container (Radix state management).
- * - `HoverCardTrigger` — Wraps a `fumadocs-core/link` element. The
+ * - `HoverCardTrigger` — Wraps a `Link` element. The
  *   `asChild` prop ensures the trigger inherits the link's `<a>` element
  *   semantics (keyboard focus, accessibility).
- * - `HoverCardContent` — Portal-rendered popup with Fumadocs popover
+ * - `HoverCardContent` — Portal-rendered popup with Core popover
  *   animations (`animate-fd-popover-in`/`out`).
  *
  * **Consumer:** Used exclusively by the docs page component
@@ -41,7 +41,7 @@ const HoverCard = HoverCardPrimitive.Root;
 /**
  * Hover card trigger wrapper.
  *
- * Renders the trigger as a `fumadocs-core/link` element using Radix's
+ * Renders the trigger as a `Link` element using Radix's
  * `asChild` composition pattern. This ensures the trigger is a semantic
  * `<a>` tag with proper keyboard and screen reader accessibility.
  *
@@ -61,7 +61,7 @@ function HoverCardTrigger(
 /**
  * Hover card content panel.
  *
- * Portal-mounted floating card that appears on hover. Includes Fumadocs
+ * Portal-mounted floating card that appears on hover. Includes Core
  * design tokens for border, background, shadow, and popover
  * animations. The `origin-[--radix-hover-card-content-transform-origin]`
  * class ensures the scale animation originates from the trigger element.

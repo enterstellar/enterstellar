@@ -4,13 +4,13 @@
  * Top-level layout component for the Enterstellar documentation app. Wraps every
  * page with:
  *
- * 1. **Global CSS** — Tailwind v4 + Fumadocs UI theme + `@fumadocs/story` preset.
+ * 1. **Global CSS** — Tailwind v4 + core UI theme + interactive component previews preset.
  * 2. **Typography** — Geist (sans) and Geist Mono (mono) from Google Fonts,
  *    exposed as CSS custom properties `--font-sans` and `--font-mono`.
  * 3. **Theme** — `next-themes` provider (via `Provider`) for dark/light mode.
  * 4. **Navigation** — `TreeContextProvider` hydrates the sidebar page tree
- *    from the Fumadocs source at build time.
- * 5. **Framework** — `NextProvider` from `fumadocs-core` enables framework-
+ *    from the documentation source at build time.
+ * 5. **Framework** — `NextProvider` enables framework-
  *    level features (link prefetching, scroll restoration, etc.).
  *
  * **Metadata exports:**
@@ -26,6 +26,7 @@
  */
 
 import './global.css';
+import './swatches.css';
 import type { Viewport } from 'next';
 import { baseUrl, createMetadata } from '@/lib/metadata';
 import { Body } from '@/app/layout.client';
@@ -78,7 +79,7 @@ export const viewport: Viewport = {
  * ```
  * <html>
  *   <Body>              ← client component (className, scroll lock)
- *     <NextProvider>     ← fumadocs-core framework features
+ *     <NextProvider>     ← core framework features
  *       <TreeContext>    ← sidebar navigation tree
  *         <Provider>     ← next-themes + app-level providers
  *           {children}

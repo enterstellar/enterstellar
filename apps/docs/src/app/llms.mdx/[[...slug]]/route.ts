@@ -40,7 +40,7 @@ export const revalidate = false;
  * GET handler — returns a single page's processed markdown content.
  *
  * Extracts the page slug from the route params (stripping the trailing
- * `content.md` segment), looks up the page in the Fumadocs source tree,
+ * `content.md` segment), looks up the page in the documentation source tree,
  * and returns its processed markdown text via `getLLMText()`.
  *
  * Returns a 404 if the slug doesn't match any page.

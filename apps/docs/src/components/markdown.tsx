@@ -3,7 +3,7 @@
  *
  * Converts raw markdown text into React elements for the AI chat panel.
  * Uses a `remark` → `remark-rehype` → `hast-util-to-jsx-runtime` pipeline
- * with Fumadocs MDX component overrides.
+ * with Core MDX component overrides.
  *
  * **Pipeline:**
  * 1. Parse markdown to MDAST (`remark`).
@@ -106,7 +106,7 @@ export function rehypeWrapWords() {
  *
  * Chains `remark-gfm` (GitHub Flavored Markdown), `remark-rehype`
  * (MDAST→HAST conversion), and `rehypeWrapWords` (word animation).
- * The final HAST tree is converted to React JSX with Fumadocs
+ * The final HAST tree is converted to React JSX with the core
  * component overrides.
  *
  * @returns A `Processor` instance with a `process()` method.

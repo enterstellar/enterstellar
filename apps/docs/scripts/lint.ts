@@ -11,7 +11,7 @@
  * pnpm lint:links
  * ```
  *
- * This runs `fumadocs-mdx` first (to generate the `.source/` artifacts),
+ * This runs the core MDX compiler first (to generate the `.source/` artifacts),
  * then executes this script with `node --experimental-strip-types`.
  *
  * **How it works:**

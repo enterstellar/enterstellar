@@ -6,8 +6,8 @@
  *
  * **Why a separate file?**
  * This module is consumed by `layout.client.tsx` (`'use client'`). It
- * MUST NOT import anything from the Fumadocs content pipeline
- * (`collections/server`, `fumadocs-core/source`) because those modules
+ * MUST NOT import anything from the server-side content pipeline
+ * (`collections/server`, `core/source`) because those modules
  * transitively depend on `node:fs/promises`, which cannot be bundled
  * for the browser. Keeping this logic isolated ensures the client
  * component's import chain stays browser-safe.
@@ -40,11 +40,14 @@
  * this registry, it falls back to `DEFAULT_SECTION`.
  */
 const SECTION_MAP: Record<string, string> = {
-  ui: 'ui',
+  concepts: 'concepts',
+  guides: 'guides',
+  architecture: 'architecture',
+  api: 'api',
 };
 
 /** Default section identifier assigned to unmatched routes. */
-const DEFAULT_SECTION = 'framework';
+const DEFAULT_SECTION = 'getting-started';
 
 /**
  * Determine the structural section of a given path.
@@ -55,8 +58,8 @@ const DEFAULT_SECTION = 'framework';
  *
  * @param path - The relative file path or route string of the page.
  *               Can be `undefined` (e.g., on index pages without subpaths).
- * @returns The mapped section identifier (e.g., `'ui'`) or the
- *          default identifier (`'framework'`) if the path is empty/unmapped.
+ * @returns The mapped section identifier (e.g., `'api'`) or the
+ *          default identifier (`'getting-started'`) if the path is empty/unmapped.
  */
 export function getSection(path?: string): string {
   if (!path) return DEFAULT_SECTION;

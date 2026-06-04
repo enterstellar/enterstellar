@@ -2,7 +2,9 @@
   "$schema": "../../.source/json-schema/docs.meta.json",
   "title": "Core Concepts",
   "icon": "BookOpen",
+  "root": true,
   "pages": [
+    "---Core Concepts---",
     "component-contracts",
     "registry",
     "provider",

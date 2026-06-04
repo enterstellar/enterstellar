@@ -2,7 +2,7 @@
  * @module suggestions
  * @description Provides page suggestions for the 404 not-found page.
  *
- * Uses Fumadocs' built-in source API to search for pages matching
+ * Uses the core built-in source API to search for pages matching
  * the requested pathname. Replaces the previous Orama Cloud integration
  * with a zero-dependency, server-side search using the local page tree.
  */

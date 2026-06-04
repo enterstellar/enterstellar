@@ -3,7 +3,7 @@
  *
  * Generates a `sitemap.xml` conforming to the Sitemaps 0.9 protocol for
  * search engine crawlers. The sitemap includes every documentation page
- * from the Fumadocs source tree, with:
+ * from the documentation source tree, with:
  *
  * - **Priority tiers:**
  *   - `1.0` — Root `/` index (docs landing page)
@@ -23,8 +23,8 @@
  * NOT Vercel).
  *
  * **Exclusions:**
- * - `/showcase` — Fumadocs upstream entry, not applicable to Enterstellar.
- * - `openapi` type pages — Removed. We do not use `fumadocs-openapi`.
+ * - `/showcase` — Upstream entry, not applicable to Enterstellar.
+ * - `openapi` type pages — Removed. We do not use the OpenAPI generator.
  *
  * @see lib/metadata.ts — `baseUrl` (resolves to `https://enterstellar.dev`)
  * @see lib/source.ts — `source.getPages()` for content enumeration
@@ -45,7 +45,7 @@ export const revalidate = false;
 /**
  * Generate the sitemap for the Enterstellar documentation site.
  *
- * Enumerates all pages from the Fumadocs source tree, loads their
+ * Enumerates all pages from the documentation source tree, loads their
  * `lastModified` git timestamps, and produces a flat array of sitemap
  * entries with differentiated priority. The root `/docs` entry is
  * always included at priority `1.0`.

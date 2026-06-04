@@ -6,7 +6,7 @@ icon: GitPullRequest
 
 ## The Prime Directive
 
-**Zero improvisation.** Design decisions are locked in `04-enterstellar-design-choices.md`. Do not change them mid-implementation. If you hit a genuine blocker or a decision that wasn't anticipated, raise it before writing code — not after. Ad-hoc changes break strategic moats.
+**Zero improvisation.** Design decisions are locked in the [Design Principles](./design-principles). Do not change them mid-implementation. If you hit a genuine blocker or a decision that wasn't anticipated, raise it before writing code — not after. Ad-hoc changes break strategic moats.
 
 ---
 
@@ -20,7 +20,7 @@ Before writing implementation code for any package, create its `README.md` first
 
 **2. Execute**
 
-Write strict TypeScript against the Bible's API signatures (`03-enterstellar-implementation-bible.md`). No `any`. No improvisation on types. Reference the Design Choices doc for every non-trivial decision.
+Write strict TypeScript against the established architectural signatures (`Package Map`). No `any`. No improvisation on types. Reference the Design Principles for every non-trivial decision.
 
 **3. Verify**
 
@@ -87,7 +87,7 @@ class EnterstellarError extends Error {
 - **LLM errors** → recoverable (self-correct or coerce)
 - **Infrastructure errors** → fallback component, log to trace
 - **Developer errors** (bad config, invalid zone) → fatal throw
-- All error messages must match the exact spec in `03-enterstellar-implementation-bible.md §4.2`
+- All error messages must match the exact spec defined in the Compilation Lifecycle.
 
 ---
 
@@ -113,7 +113,7 @@ Every module ships with tests before it ships features.
 | **Unit tests** | ≥90% line coverage. Every exported function has dedicated tests. |
 | **Integration tests** | Each module tested with its direct dependencies (no mocks for internal deps). |
 | **Contract tests** | Every `ComponentContract` in `examples/` passes `registry.validate()`. |
-| **Compilation tests** | Every `CompilationError` message text matches the exact spec in Bible §4.2. |
+| **Compilation tests** | Every `CompilationError` message text matches the exact Compilation Lifecycle spec. |
 | **Snapshot tests** | DevTools panel renders match approved Storybook snapshots. |
 
 ### Running Tests
@@ -156,7 +156,7 @@ feat: add createGlobalIndex() to @enterstellar-ai/global-index
 fix: correct 8-char hash truncation in forge naming
 chore: bump @enterstellar-ai/types to 1.2.0
 breaking: rename AgentTrace.compilation.result → compilation.compilationResult
-docs: update Bible §4.5 with new EnterstellarTestHarness.expect API
+docs: update testing guides with new EnterstellarTestHarness.expect API
 ```
 
 Types: `feat`, `fix`, `chore`, `breaking`, `docs`, `test`, `refactor`, `perf`
@@ -171,9 +171,9 @@ Every package's `README.md` must contain, in order:
 2. **Quick Start** — minimal working code example.
 3. **API Reference** — all exported functions and interfaces with parameter descriptions.
 4. **Configuration** — all config options with defaults and valid values.
-5. **Link to Bible** — `See [Implementation Bible §4.x](../../../agent/03-enterstellar-implementation-bible.md)` for canonical spec.
+5. **Cross-Reference** — `See [Architecture Overview](./overview)` for canonical specifications and context.
 
-This is the first thing a developer or AI agent reads. If someone needs to open the Bible to understand the README, the README is incomplete.
+This is the first thing a developer or AI agent reads. If someone needs to open the core architectural source code to understand the README, the README is incomplete.
 
 ---
 
@@ -198,10 +198,10 @@ Before opening a PR:
 
 | Need | Document |
 |:---|:---|
-| API signatures | [`03-enterstellar-implementation-bible.md`](https://github.com/enterstellar-ai/enterstellar/blob/main/agent/03-enterstellar-implementation-bible.md) |
-| Design decisions | [`04-enterstellar-design-choices.md`](https://github.com/enterstellar-ai/enterstellar/blob/main/agent/04-enterstellar-design-choices.md) |
-| System architecture | [`02-enterstellar-system-architecture.md`](https://github.com/enterstellar-ai/enterstellar/blob/main/agent/02-enterstellar-system-architecture.md) |
-| Coding rules | [`05-enterstellar-coding-rules.md`](https://github.com/enterstellar-ai/enterstellar/blob/main/agent/05-enterstellar-coding-rules.md) |
+| API signatures | [`Package Map`](./package-map) |
+| Design decisions | [`Design Principles`](./design-principles) |
+| System architecture | [`Architecture Overview`](./overview) |
+| Conceptual specs | [`Concepts Guide`](../concepts/registry) |
 
 <Cards>
   <Card title="Design Principles →" description="The 15 non-negotiable principles that underpin every coding rule." href="/architecture/design-principles" />

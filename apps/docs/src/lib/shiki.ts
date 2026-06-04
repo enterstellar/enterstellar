@@ -12,7 +12,7 @@
 /**
  * Default Shiki theme options for dual-theme code highlighting.
  *
- * Applied to both the Fumadocs MDX pipeline (via `source.config.ts`)
+ * Applied to both the primary MDX pipeline (via `source.config.ts`)
  * and any runtime `DynamicCodeBlock` instances.
  */
 export const defaultShikiOptions = {

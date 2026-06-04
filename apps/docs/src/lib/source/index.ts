@@ -1,7 +1,7 @@
 /**
  * Enterstellar Docs — Content Loader API
  *
- * This module initializes the Fumadocs core loader with our MDX
+ * This module initializes the core content loader with our MDX
  * collections. It creates the canonical `source` object used across
  * the app to query pages, extract content, and build navigation.
  *
@@ -26,7 +26,7 @@ import { lucideIconsPlugin } from 'fumadocs-core/source/lucide-icons';
 import { docsContentRoute, docsImageRoute, docsRoute } from '../shared';
 
 /**
- * The canonical Fumadocs source instance.
+ * The canonical content source instance.
  *
  * Re-exports the generated `docs` collection (from `.source/server`)
  * plugged into the core loader. Contains memory structures for the
@@ -84,7 +84,7 @@ export function getPageMarkdownUrl(
 /**
  * Extract clean, plain-text markdown content from a page.
  *
- * Pulls the 'processed' content via the Fumadocs loader. This text
+ * Pulls the 'processed' content via the core loader. This text
  * has been stripped of React specific components and layout debris,
  * leaving pure Markdown suitable for LLM grounding and search indexing.
  * Prepends the page title and URL as standard Markdown headings.

@@ -35,8 +35,8 @@ export const revalidate = false;
  * GET handler — renders an Enterstellar-branded OG image for a single doc page.
  *
  * Extracts the page slug from the route params, looks up the page in
- * the Fumadocs source tree, and renders a 1200×630 image using the
- * `fumadocs-ui/og` generator with Enterstellar branding.
+ * the documentation source tree, and renders a 1200×630 image using the
+ * core UI generator with Enterstellar branding.
  *
  * @param _req - Incoming request (unused — image content is static).
  * @param context - Route context containing the `slug` segments.

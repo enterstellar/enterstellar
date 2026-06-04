@@ -1,8 +1,8 @@
 /**
- * Enterstellar Docs — Fumadocs MDX Source Configuration
+ * Enterstellar Docs — Core MDX Source Configuration
  *
  * Defines the content pipeline for the Enterstellar documentation app. This file
- * is consumed by `fumadocs-mdx` at build time to:
+ * is consumed at build time to:
  *
  * 1. **Discover** MDX files in `content/` and transform them into
  *    typed, searchable documentation pages.
@@ -40,7 +40,7 @@
  * - `jsonSchema` — Auto-generates JSON Schema from Zod frontmatter schemas.
  * - `lastModified` — Extracts git last-modified timestamps per page.
  *
- * @see lib/source.ts — Consumes the `docs` collection via Fumadocs loader.
+ * @see lib/source.ts — Consumes the `docs` collection via the core loader.
  * @see lib/shiki.ts — Shared Shiki configuration (theme, languages).
  * @see app/(docs)/[[...slug]]/page.tsx — Renders pages from this pipeline.
  * @see archive/CORE/enterstellar-web-presence-appendix.md — WP10 (blogs in enterstellar-web).
@@ -85,7 +85,7 @@ const isLint = process.env['LINT'] === '1';
  * Reads MDX files from `content/` with extended frontmatter schema:
  *
  * - `preview` — Optional key referencing a live preview component from
- *   `@/components/preview`. Used for `@fumadocs/story` demos.
+ *   `@/components/preview`. Used for interactive component demos.
  * - `index` — Whether this page is a category index (renders sibling
  *   pages as cards below content). Defaults to `false`.
  * - `method` — HTTP method label for API route documentation pages
@@ -169,7 +169,7 @@ export const docs = defineDocs({
               dark: 'catppuccin-mocha',
             },
             transformers: [
-              // Default Fumadocs transformers (line numbers, etc.)
+              // Default Core transformers (line numbers, etc.)
               ...(rehypeCodeDefaultOptions.transformers ?? []),
               // Twoslash — inline type annotations with FS-cached types.
               transformerTwoslash({
@@ -341,7 +341,7 @@ function remarkElementIds(): Transformer<Root, Root> {
 // ---------------------------------------------------------------------------
 
 /**
- * Root Fumadocs MDX configuration.
+ * Root Core MDX configuration.
  *
  * Applies global plugins to all collections:
  *

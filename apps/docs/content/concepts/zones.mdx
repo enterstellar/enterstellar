@@ -55,7 +55,7 @@ This is the key insight: **safety and expressiveness are not in conflict**. You 
 
 ## Rendering Rules
 
-A zone's rendering behavior follows 6 rules (from Bible §4.3):
+A zone's rendering behavior follows 6 architectural rules:
 
 1. If `determinism === 0.0`, render `children`. Never call the agent.
 2. If `Provider` is still initializing (context is `null`), render `fallback`.

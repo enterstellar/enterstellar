@@ -1,7 +1,7 @@
 import { register } from "node:module";
 import { pathToFileURL } from "node:url";
 
-// Register fumadocs mdx node loader first
+// Register core mdx node loader first
 register("fumadocs-mdx/node/loader", pathToFileURL("./").href);
 
 // Register custom interceptor module for static assets and metadata fragments

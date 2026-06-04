@@ -2,7 +2,7 @@
  * @module api/search
  * @description Documentation search API route.
  *
- * Provides a GET endpoint for the Fumadocs search UI component.
+ * Provides a GET endpoint for the documentation search UI component.
  * Uses `createFromSource` to build a FlexSearch-backed search server
  * from the documentation source tree, enabling full-text search across
  * all page titles, descriptions, and structured content.
@@ -20,7 +20,7 @@
  *
  * @see components/layouts/search.tsx — Client-side search UI consumer
  * @see lib/source/index.ts — `source` API for page enumeration
- * @see {@link https://fumadocs.dev/docs/headless/search Fumadocs Search docs}
+ * @see Core Search documentation
  */
 import { source } from '@/lib/source';
 import { createFromSource } from 'fumadocs-core/search/server';
@@ -29,7 +29,7 @@ import { createFromSource } from 'fumadocs-core/search/server';
  * GET /api/search — Full-text documentation search endpoint.
  *
  * Accepts a `query` search parameter and returns matching pages as JSON.
- * The response shape is defined by Fumadocs' `createFromSource` and is
+ * The response shape is defined by the core `createFromSource` and is
  * consumed by the `SearchDialog` / `AISearch` client components.
  */
 export const { GET } = createFromSource(source, {

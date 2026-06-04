@@ -2,5 +2,12 @@
   "$schema": "../../.source/json-schema/docs.meta.json",
   "title": "Architecture",
   "icon": "Building",
-  "pages": ["overview", "design-principles", "package-map", "contributing"]
+  "root": true,
+  "pages": [
+    "---Architecture Overview---",
+    "overview",
+    "design-principles",
+    "package-map",
+    "contributing"
+  ]
 }

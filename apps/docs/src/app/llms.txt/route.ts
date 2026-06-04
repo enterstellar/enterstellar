@@ -11,7 +11,7 @@
  * pages via the companion `llms.mdx` per-page route.
  *
  * **Implementation:**
- * Uses the Fumadocs-native `llms()` utility from `fumadocs-core/source`,
+ * Uses the core `llms()` utility,
  * which reads from the canonical `source` API (same data as search,
  * sidebar, and sitemap). This is the most maintainable approach — zero
  * custom code to keep in sync with content changes.

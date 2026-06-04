@@ -3,7 +3,7 @@
  *
  * Central configuration for the Enterstellar documentation app. Handles:
  *
- * 1. **MDX pipeline** — `createMDX()` from `fumadocs-mdx` wraps the
+ * 1. **MDX pipeline** — `createMDX()` wraps the
  *    config with MDX processing support.
  * 2. **Bundle analysis** — `@next/bundle-analyzer` wraps the config
  *    when `ANALYZE=true` is set, generating a visual bundle map for
@@ -22,7 +22,7 @@
  * access to Cloudflare bindings (KV, D1, etc.) during `next dev`.
  *
  * @see open-next.config.ts — OpenNext Cloudflare adapter configuration
- * @see source.config.ts — Fumadocs MDX content pipeline
+ * @see source.config.ts — Core MDX content pipeline
  *
  * @module
  */
@@ -54,7 +54,7 @@ const withBundleAnalyzer = bundleAnalyzer({
 // MDX
 // ---------------------------------------------------------------------------
 
-/** Fumadocs MDX plugin wrapper. Applied before bundle analyzer. */
+/** Core MDX plugin wrapper. Applied before bundle analyzer. */
 const withMDX = createMDX();
 
 // ---------------------------------------------------------------------------
@@ -71,7 +71,7 @@ const withMDX = createMDX();
  *   Worker bundle, potentially exceeding the 10MB size limit or causing
  *   WASM-related runtime errors.
  * - `reactCompiler: true` — React Compiler (RC) for automatic
- *   memoization. We're ahead of Fumadocs upstream here.
+ *   memoization. We're ahead of upstream here.
  */
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -127,7 +127,7 @@ const nextConfig: NextConfig = {
  * Final config: MDX → Bundle Analyzer → Next.js.
  *
  * The wrapping order matters:
- * 1. `withMDX` applies the Fumadocs MDX processing pipeline.
+ * 1. `withMDX` applies the Core MDX processing pipeline.
  * 2. `withBundleAnalyzer` (when enabled) injects the bundle analysis
  *    plugin on top of the MDX-wrapped config.
  */

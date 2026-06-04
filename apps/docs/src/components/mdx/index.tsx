@@ -2,7 +2,7 @@
  * Enterstellar Docs — MDX Component Overrides
  *
  * Barrel module that provides the canonical set of MDX component overrides
- * for all documentation pages. Merges Fumadocs UI defaults with additional
+ * for all documentation pages. Merges Core UI defaults with additional
  * component registrations (Files, Tabs, Accordion) and allows per-page
  * overrides via the `components` parameter.
  *
@@ -27,15 +27,15 @@ import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
 /**
  * Returns the merged MDX component map.
  *
- * Layers Fumadocs UI defaults with Files, Tabs, and Accordion components.
+ * Layers Core UI defaults with Files, Tabs, and Accordion components.
  * Additional per-page overrides can be passed via the `components` parameter
  * and will take highest precedence.
  *
  * @remarks
  * The type assertion on `defaultMdxComponents` is required because
- * Fumadocs' internal `img` component type is incompatible with the
- * `MDXComponents` type under `exactOptionalPropertyTypes: true`.
- * This is a library-level type mismatch (fumadocs-ui/mdx), not our code.
+ * The internal `img` component type is incompatible with the
+ * `NextImage` type without a heavy wrapper.
+ * This is a library-level type mismatch, not our code.
  *
  * @param components - Optional per-page component overrides.
  * @returns The complete MDX component map.

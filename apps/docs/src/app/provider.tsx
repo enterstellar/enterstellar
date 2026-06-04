@@ -5,7 +5,7 @@
  * providers that must execute on the client side (`'use client'`).
  *
  * It provides:
- * 1. `RootProvider` from `fumadocs-ui` — Initializes the global search
+ * 1. `RootProvider` from the core UI library — Initializes the global search
  *    dialog. The actual `SearchDialog` interface is dynamically imported
  *    to prevent it from blooming the initial SSR payload.
  * 2. `TooltipProvider` from Radix UI — Required global context for any

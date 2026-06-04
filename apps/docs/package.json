@@ -1,6 +1,6 @@
 {
   "name": "@enterstellar-ai/docs",
-  "description": "Enterstellar Docs — Next.js 16+ App Router with Fumadocs. Deployed via Cloudflare Workers (DB5).",
+  "description": "Official documentation, technical specifications, architecture blueprints, and interactive API references for the Enterstellar OS ecosystem.",
   "author": "Enterstellar",
   "version": "0.0.0",
   "type": "module",

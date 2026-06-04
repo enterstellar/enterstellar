@@ -9,9 +9,9 @@
  * (`components/ai/search.tsx`) to style triggers, submit buttons,
  * and action controls with consistent variant/size combinations.
  *
- * The Fumadocs UI exports its own `buttonVariants`, but this local
+ * The Core UI exports its own `buttonVariants`, but this local
  * version includes a `color` variant alias (mapping to the same
- * values as `variant`). Fumadocs UI uses `color` internally as
+ * values as `variant`). Core UI uses `color` internally as
  * its primary key; this file exposes both for compatibility with
  * components that use either convention.
  *
@@ -25,7 +25,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
  * Visual variant definitions for the AI launcher button.
  *
  * Each key maps to a Tailwind class string combining background,
- * text color, hover state, and disabled state styles. Uses Fumadocs
+ * text color, hover state, and disabled state styles. Uses Core
  * design tokens (`fd-primary`, `fd-accent`, `fd-secondary`).
  */
 const variants = {
@@ -47,7 +47,7 @@ const variants = {
  * **Variant keys:**
  * - `variant` / `color` — Visual style (`primary`, `outline`, `ghost`, `secondary`).
  *   Both keys resolve to the same values; `color` is an alias for
- *   Fumadocs internal compatibility.
+ *   Core internal compatibility.
  * - `size` — Dimensional preset (`sm`, `icon`, `icon-sm`, `icon-xs`).
  */
 export const buttonVariants = cva(

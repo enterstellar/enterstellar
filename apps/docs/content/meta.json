@@ -1,4 +1,10 @@
 {
   "$schema": "../.source/json-schema/docs.meta.json",
-  "pages": ["getting-started", "concepts", "guides", "architecture", "api"]
+  "pages": [
+    "(getting-started)",
+    "concepts",
+    "guides",
+    "architecture",
+    "api"
+  ]
 }
