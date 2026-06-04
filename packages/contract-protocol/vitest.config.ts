@@ -1,19 +1,20 @@
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-    test: {
-        globals: true,
-        environment: 'node',
-        include: ['src/**/*.test.ts', '__tests__/**/*.test.ts'],
-        coverage: {
-            provider: 'v8',
-            reporter: ['text', 'json', 'html'],
-            thresholds: {
-                lines: 90,
-                functions: 90,
-                branches: 90,
-                statements: 90,
-            },
-        },
+  test: {
+    globals: true,
+    environment: 'node',
+    testTimeout: 30_000,
+    include: ['src/**/*.test.ts', '__tests__/**/*.test.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      thresholds: {
+        lines: 90,
+        functions: 90,
+        branches: 90,
+        statements: 90,
+      },
     },
+  },
 });

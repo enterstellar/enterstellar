@@ -63,18 +63,16 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node.js 20
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           # Configure npm registry for publishing.
           # NODE_AUTH_TOKEN (set to NPM_TOKEN below) is used by npm publish.
           registry-url: 'https://registry.npmjs.org'
 
       - name: Setup pnpm 11
         uses: pnpm/action-setup@v4
-        with:
-          version: '11'
 
       # -----------------------------------------------------------------------
       # Install all workspace dependencies.
@@ -113,6 +111,7 @@ jobs:
           commit: 'chore: version packages'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_PROVENANCE: 'true'
           # NPM_TOKEN must be set as a repository secret:
           # GitHub → Settings → Secrets and variables → Actions → New secret
           # Name: NPM_TOKEN

@@ -70,6 +70,6 @@
   },
   "devDependencies": {
     "@enterstellar-ai/types": "workspace:*",
-    "@types/node": "^25.3.0"
+    "@types/node": "^25.5.0"
   }
 }

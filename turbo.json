@@ -21,6 +21,7 @@
       "outputLogs": "new-only"
     },
     "lint": {
+      "dependsOn": ["^build"],
       "inputs": ["src/**", "../../eslint.config.mjs"],
       "outputs": [],
       "outputLogs": "new-only"

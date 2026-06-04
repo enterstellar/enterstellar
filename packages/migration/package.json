@@ -64,7 +64,7 @@
   "devDependencies": {
     "@enterstellar-ai/types": "workspace:*",
     "@enterstellar-ai/compiler": "workspace:*",
-    "@types/node": "^22.15.0",
+    "@types/node": "^25.5.0",
     "zod": "^4.3.6"
   }
 }

@@ -16,3 +16,8 @@ onlyBuiltDependencies:
   - protobufjs
   - sharp
   - workerd
+
+peerDependencyRules:
+  allowedVersions:
+    tailwindcss: 4.x
+    next: 16.x

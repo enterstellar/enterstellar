@@ -63,8 +63,7 @@
     "@enterstellar-ai/types": "workspace:*",
     "@enterstellar-ai/registry": "workspace:*",
     "@enterstellar-ai/compiler": "workspace:*",
-    "@types/node": "^25.3.0",
-    "vitest": "^4.0.18",
-    "zod": "^4.3.6"
+    "@types/node": "^25.5.0",
+    "vitest": "^4.1.8"
   }
 }

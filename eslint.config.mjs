@@ -72,6 +72,8 @@ export default [
             'packages/*/src/**/*.ts',
             'packages/*/src/**/*.tsx',
             'packages/*/__tests__/**/*.ts',
+            'packages/*/vitest.config.ts',
+            'packages/*/tsup.config.ts',
             'apps/*/src/**/*.ts',
             'apps/*/src/**/*.tsx',
             'examples/*/src/**/*.ts',
@@ -80,7 +82,10 @@ export default [
         languageOptions: {
             parser: tsParser,
             parserOptions: {
-                projectService: true,
+                projectService: {
+                    allowDefaultProject: ['*.ts', 'packages/*/*.ts', 'apps/*/*.ts', 'examples/*/*.ts'],
+                    defaultProject: 'tsconfig.base.json'
+                },
                 tsconfigRootDir: import.meta.dirname,
             },
             globals: {
