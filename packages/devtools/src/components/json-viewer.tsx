@@ -85,7 +85,10 @@ function renderPrimitive(value: unknown): React.JSX.Element {
     }
 
     // Fallback for symbols, bigints, functions, etc.
-    return <span style={jsonViewerStyles['null']}>{typeof value === 'function' ? '[function]' : String(value)}</span>;
+    // Cast to the union of types String() handles deterministically.
+    // Only symbol, bigint, and function values can reach this fallback branch.
+    const safeValue = value as string | number | boolean | symbol | bigint;
+    return <span style={jsonViewerStyles['null']}>{typeof safeValue === 'function' ? '[function]' : String(safeValue)}</span>;
 }
 
 // ---------------------------------------------------------------------------

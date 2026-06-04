@@ -100,7 +100,7 @@ export function registerPlaygroundRenderers(): void {
 
   registerRenderer('MetricCard', (props: Record<string, unknown>): JSX.Element => {
     const label = str(props['label'], 'Metric');
-    const value = props['value'] !== undefined ? String(props['value']) : '—';
+    const value = typeof props['value'] === 'number' ? String(props['value']) : str(props['value'], '—');
     const unit = str(props['unit']);
     const trend = str(props['trend']);
     const sparkline = arr(props['sparkline']).filter(

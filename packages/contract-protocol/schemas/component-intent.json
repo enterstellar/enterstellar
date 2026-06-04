@@ -23,21 +23,38 @@
     },
     "layout": {
       "type": "string",
-      "enum": ["single", "split", "grid", "stack", "tabs"]
+      "enum": [
+        "single",
+        "split",
+        "grid",
+        "stack",
+        "tabs"
+      ]
     },
     "mode": {
       "type": "string"
     },
     "interaction": {
       "type": "string",
-      "enum": ["read-only", "editable", "actionable"]
+      "enum": [
+        "read-only",
+        "editable",
+        "actionable"
+      ]
     },
     "_source": {
       "type": "object",
       "properties": {
         "protocol": {
           "type": "string",
-          "enum": ["ag-ui", "a2ui", "mcp", "websocket", "sse", "custom"]
+          "enum": [
+            "ag-ui",
+            "a2ui",
+            "mcp",
+            "websocket",
+            "sse",
+            "custom"
+          ]
         },
         "rawEventId": {
           "type": "string"
@@ -47,10 +64,16 @@
         },
         "raw": {}
       },
-      "required": ["protocol"],
+      "required": [
+        "protocol"
+      ],
       "additionalProperties": false
     }
   },
-  "required": ["component", "props", "confidence"],
+  "required": [
+    "component",
+    "props",
+    "confidence"
+  ],
   "additionalProperties": false
 }

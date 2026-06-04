@@ -58,20 +58,20 @@ const SRC_DIR = path.resolve(CURRENT_DIR, '../../src');
  */
 const CLIENT_DIRECTIVE_REQUIRED_FILES: readonly string[] = [
     'index.ts',
-    'enterstellar-provider.tsx',
-    'enterstellar-zone.tsx',
+    'provider.tsx',
+    'zone.tsx',
     'provenance-badge.tsx',
     'zone-error-boundary.tsx',
     'lifecycle-wrapper.tsx',
-    'defaults/enterstellar-skeleton.tsx',
-    'defaults/enterstellar-error-card.tsx',
-    'defaults/enterstellar-empty-state.tsx',
-    'hooks/use-enterstellar-context.ts',
-    'hooks/use-enterstellar-agent.ts',
-    'hooks/use-enterstellar-store.ts',
-    'hooks/use-enterstellar-trace.ts',
+    'defaults/skeleton.tsx',
+    'defaults/error-card.tsx',
+    'defaults/empty-state.tsx',
+    'hooks/use-enterstellar.ts',
+    'hooks/use-agent.ts',
+    'hooks/use-store.ts',
+    'hooks/use-trace.ts',
     'hooks/use-spatial-context.ts',
-    'hooks/use-enterstellar-adapters.ts',
+    'hooks/use-adapters.ts',
 ];
 
 /**
@@ -80,7 +80,7 @@ const CLIENT_DIRECTIVE_REQUIRED_FILES: readonly string[] = [
  */
 const SERVER_COMPATIBLE_FILES: readonly string[] = [
     'types.ts',
-    'define-enterstellar-component.ts',
+    'define-component.ts',
     'renderer-registry.ts',
 ];
 

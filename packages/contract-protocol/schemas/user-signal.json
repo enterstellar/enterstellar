@@ -2,12 +2,17 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "./user-signal.json",
   "title": "Enterstellar UserSignal",
-  "description": "A user interaction signal dispatched from an EnterstellarZone to the agent. Fire-and-forget with enqueue guarantee.",
+  "description": "A user interaction signal dispatched from an Zone to the agent. Fire-and-forget with enqueue guarantee.",
   "type": "object",
   "properties": {
     "type": {
       "type": "string",
-      "enum": ["click", "submit", "input", "custom"]
+      "enum": [
+        "click",
+        "submit",
+        "input",
+        "custom"
+      ]
     },
     "zone": {
       "type": "string",
@@ -32,6 +37,12 @@
       "type": "string"
     }
   },
-  "required": ["type", "zone", "component", "payload", "timestamp"],
+  "required": [
+    "type",
+    "zone",
+    "component",
+    "payload",
+    "timestamp"
+  ],
   "additionalProperties": false
 }

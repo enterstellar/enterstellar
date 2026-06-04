@@ -71,6 +71,7 @@ export default [
         files: [
             'packages/*/src/**/*.ts',
             'packages/*/src/**/*.tsx',
+            'packages/*/__tests__/**/*.ts',
             'apps/*/src/**/*.ts',
             'apps/*/src/**/*.tsx',
             'examples/*/src/**/*.ts',

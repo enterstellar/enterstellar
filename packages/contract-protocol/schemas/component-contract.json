@@ -54,7 +54,11 @@
           "type": "boolean"
         }
       },
-      "required": ["role", "ariaLabel", "announceOnUpdate"],
+      "required": [
+        "role",
+        "ariaLabel",
+        "announceOnUpdate"
+      ],
       "additionalProperties": false
     },
     "states": {
@@ -77,7 +81,12 @@
           "minLength": 1
         }
       },
-      "required": ["loading", "error", "empty", "ready"],
+      "required": [
+        "loading",
+        "error",
+        "empty",
+        "ready"
+      ],
       "additionalProperties": false
     },
     "examples": {
@@ -97,7 +106,10 @@
             "additionalProperties": {}
           }
         },
-        "required": ["intent", "props"],
+        "required": [
+          "intent",
+          "props"
+        ],
         "additionalProperties": false
       }
     },
@@ -120,7 +132,10 @@
           "additionalProperties": {}
         }
       },
-      "required": ["adapter", "resource"],
+      "required": [
+        "adapter",
+        "resource"
+      ],
       "additionalProperties": false
     },
     "auth": {
@@ -136,7 +151,10 @@
           }
         }
       },
-      "required": ["required", "roles"],
+      "required": [
+        "required",
+        "roles"
+      ],
       "additionalProperties": false
     },
     "origin": {
@@ -154,7 +172,10 @@
           "type": "string"
         }
       },
-      "required": ["registryUrl", "publisher"],
+      "required": [
+        "registryUrl",
+        "publisher"
+      ],
       "additionalProperties": false
     },
     "_meta": {
@@ -172,7 +193,11 @@
           "minLength": 1
         }
       },
-      "required": ["forged", "version", "createdAt"],
+      "required": [
+        "forged",
+        "version",
+        "createdAt"
+      ],
       "additionalProperties": false
     }
   },

@@ -104,7 +104,7 @@ export function ViewOptionsPopover({
       },
     ];
 
-    return list.filter((v): v is { title: string; href: string; icon: ReactElement } => typeof v === 'object' && v !== null && 'href' in v);
+    return list.filter((v): v is { title: string; href: string; icon: ReactElement } => typeof v === 'object' && 'href' in v);
   }, [githubUrl, markdownUrl, pathname]);
 
   return (

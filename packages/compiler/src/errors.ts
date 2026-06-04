@@ -29,7 +29,13 @@ function safeStringify(value: unknown): string {
     if (value === null) return 'null';
     if (value === undefined) return 'undefined';
     if (typeof value === 'object') return JSON.stringify(value);
-    return String(value);
+    if (typeof value === 'symbol') return value.toString();
+    if (typeof value === 'function') return '[function]';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number') return String(value);
+    if (typeof value === 'bigint') return String(value);
+    if (typeof value === 'boolean') return String(value);
+    return '[unknown]';
 }
 
 /**
@@ -452,4 +458,3 @@ export function templateCorrectionInfo(
         },
     );
 }
-

@@ -59,7 +59,7 @@ const EMPTY_TRACES: readonly ZoneTrace[] = Object.freeze([]);
  */
 const NULL_STORE: Pick<EnterstellarStore, 'subscribe' | 'get'> = {
     subscribe: () => () => { /* no-op */ },
-    get: <T = unknown>(_key: string): T | undefined => undefined,
+    get: (_key: string) => undefined,
 };
 
 // ---------------------------------------------------------------------------

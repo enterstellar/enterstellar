@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "./zone-config.json",
   "title": "Enterstellar ZoneConfig",
-  "description": "Configuration for an EnterstellarZone instance. The determinism dial (0.0–1.0) controls AI influence over the zone.",
+  "description": "Configuration for an Zone instance. The determinism dial (0.0–1.0) controls AI influence over the zone.",
   "type": "object",
   "properties": {
     "id": {
@@ -45,12 +45,19 @@
           "maximum": 9007199254740991
         }
       },
-      "required": ["enabled", "ttl"],
+      "required": [
+        "enabled",
+        "ttl"
+      ],
       "additionalProperties": false
     },
     "activateOn": {
       "type": "string",
-      "enum": ["mount", "visible", "manual"]
+      "enum": [
+        "mount",
+        "visible",
+        "manual"
+      ]
     }
   },
   "required": [

@@ -15,15 +15,31 @@
     },
     "intentCategory": {
       "type": "string",
-      "enum": ["clinical", "admin", "navigation", "data-display", "form", "feedback", "utility"]
+      "enum": [
+        "clinical",
+        "admin",
+        "navigation",
+        "data-display",
+        "form",
+        "feedback",
+        "utility"
+      ]
     },
     "compilationStatus": {
       "type": "string",
-      "enum": ["pass", "fail", "corrected"]
+      "enum": [
+        "pass",
+        "fail",
+        "corrected"
+      ]
     },
     "forgeMode": {
       "type": "string",
-      "enum": ["none", "local", "cloud"]
+      "enum": [
+        "none",
+        "local",
+        "cloud"
+      ]
     },
     "forgeUsed": {
       "type": "boolean"
@@ -57,7 +73,13 @@
     },
     "platform": {
       "type": "string",
-      "enum": ["web", "native", "desktop", "cli", "unknown"]
+      "enum": [
+        "web",
+        "native",
+        "desktop",
+        "cli",
+        "unknown"
+      ]
     }
   },
   "required": [

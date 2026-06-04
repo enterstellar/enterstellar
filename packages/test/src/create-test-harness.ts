@@ -91,6 +91,13 @@ export function createTestHarness(config: TestHarnessConfig): EnterstellarTestHa
         strictDesignTokens: true,
         autoAccessibility: true,
         includeDiff: true,
+        // Disable deterministic self-correction (Tier 1 + Tier 2) so that
+        // validation failures surface immediately as `status: 'fail'` with
+        // raw Zod errors — the harness's core invariant (SC-08).
+        // Without this, Tier 2 template correction can fill missing fields
+        // from contract examples, silently masking failures the test is
+        // designed to surface.
+        selfCorrection: { deterministic: false },
     });
 
     // -----------------------------------------------------------------------

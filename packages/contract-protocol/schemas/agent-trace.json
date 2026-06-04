@@ -38,7 +38,11 @@
           "type": "string"
         }
       },
-      "required": ["raw", "component", "confidence"],
+      "required": [
+        "raw",
+        "component",
+        "confidence"
+      ],
       "additionalProperties": false
     },
     "resolution": {
@@ -46,7 +50,12 @@
       "properties": {
         "strategy": {
           "type": "string",
-          "enum": ["exact", "semantic", "forge", "fallback"]
+          "enum": [
+            "exact",
+            "semantic",
+            "forge",
+            "fallback"
+          ]
         },
         "resolvedComponent": {
           "type": "string",
@@ -63,7 +72,11 @@
           "maximum": 9007199254740991
         }
       },
-      "required": ["strategy", "resolvedComponent", "candidatesConsidered"],
+      "required": [
+        "strategy",
+        "resolvedComponent",
+        "candidatesConsidered"
+      ],
       "additionalProperties": false
     },
     "compilation": {
@@ -71,7 +84,11 @@
       "properties": {
         "status": {
           "type": "string",
-          "enum": ["pass", "fail", "corrected"]
+          "enum": [
+            "pass",
+            "fail",
+            "corrected"
+          ]
         },
         "errorCount": {
           "type": "integer",
@@ -115,7 +132,11 @@
           "minLength": 1
         }
       },
-      "required": ["level", "cacheHit", "zone"],
+      "required": [
+        "level",
+        "cacheHit",
+        "zone"
+      ],
       "additionalProperties": false
     },
     "metrics": {
@@ -138,7 +159,12 @@
           "minimum": 0
         }
       },
-      "required": ["totalMs", "resolutionMs", "compilationMs", "renderMs"],
+      "required": [
+        "totalMs",
+        "resolutionMs",
+        "compilationMs",
+        "renderMs"
+      ],
       "additionalProperties": false
     },
     "consent": {
@@ -148,7 +174,9 @@
           "type": "boolean"
         }
       },
-      "required": ["anonymizedAggregation"],
+      "required": [
+        "anonymizedAggregation"
+      ],
       "additionalProperties": false
     }
   },
