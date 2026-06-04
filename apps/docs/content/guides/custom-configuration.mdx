@@ -1,0 +1,194 @@
+---
+title: Custom Configuration
+description: Override every auto-created Provider service — compiler strategy, render cache size and warmup, telemetry opt-out, and encrypted store — for enterprise-grade control.
+icon: Settings
+---
+
+## When to Override Defaults
+
+`Provider` auto-creates sensible defaults for everything. Override them when:
+
+- **Compiler:** You need a custom `onValidationFailure` strategy, or HIPAA-compliant middleware via `compiler.use()`.
+- **Cache:** You want fewer entries, a shorter TTL, or a warmup list of frequent intents.
+- **Store:** You need AES-GCM encryption, a non-default `maxTraces`, or custom migrations.
+- **Telemetry:** Your org has data residency requirements and needs opt-out or a custom endpoint.
+
+## Custom Compiler
+
+```ts
+import { createCompiler } from '@enterstellar-ai/compiler';
+import { registry } from './enterstellar/registry';
+
+const compiler = createCompiler({
+  registry,
+  onValidationFailure: {
+    strategy: 'self-correct',  // 'fallback' | 'self-correct' | 'throw'
+    maxRetries: 2,
+    fallbackComponent: 'GenericCard',
+  },
+});
+
+// Add HIPAA compliance middleware (runs after accessibility, before trace)
+compiler.use(async (context, next) => {
+  const { props } = context;
+  if (containsSSN(props)) {
+    context.errors.push({
+      step: 'hipaa',
+      code: 'ENS-custom-001',
+      message: 'Props contain SSN — rejected by HIPAA policy.',
+      path: 'props',
+    });
+    return context; // short-circuit (trace still runs)
+  }
+  return next();
+});
+```
+
+Pass to `Provider`:
+
+```tsx
+<Provider registry={registry} compiler={compiler} connection={connection}>
+  {/* ... */}
+</Provider>
+```
+
+## Custom Render Cache
+
+`createRenderCache()` defaults: `strategy: 'lru'`, `maxEntries: 1000`, `ttl: 3600` (seconds).
+
+Override for your traffic pattern:
+
+```ts
+import { createRenderCache } from '@enterstellar-ai/cache';
+
+const cache = createRenderCache({
+  strategy: 'lru',
+  maxEntries: 500,    // Tighter memory budget
+  ttl: 1800,         // 30-minute TTL (intents are session-specific)
+  onEvict: (key, reason) => {
+    console.log(`Cache evicted: ${key} (${reason})`);
+  },
+});
+```
+
+### Cache Warmup
+
+Pre-populate the cache with your 5 most common intents on startup so the first users see instant renders:
+
+```ts
+import { createRenderCache } from '@enterstellar-ai/cache';
+import { createCompiler } from '@enterstellar-ai/compiler';
+
+const cache = createRenderCache({ maxEntries: 500, ttl: 1800 });
+const compiler = createCompiler({ registry });
+
+// Warm up at app initialization — never blocks rendering (CA7 locked)
+await cache.warmup(
+  [
+    { intent: { component: 'StatusCard', props: { title: 'API', value: 99.9, status: 'healthy' } } },
+    { intent: { component: 'DataTable', props: { columns: [], rows: [] } } },
+    { intent: { component: 'MetricChart', props: { metric: 'requests', period: '24h', data: [] } } },
+    { intent: { component: 'AlertCard', props: { message: 'All systems operational', severity: 'info' } } },
+    { intent: { component: 'SearchResults', props: { query: '', results: [], totalCount: 0 } } },
+  ],
+  (intent) => compiler.compile(intent, { agent: 'warmup' }),
+);
+
+// Pass to Provider
+<Provider registry={registry} compiler={compiler} cache={cache} connection={connection}>
+  {/* First render of these intents hits cache — zero compilation latency */}
+</Provider>
+```
+
+Warmup failures are silently skipped (CA7). If a compile call fails during warmup, the cache moves to the next entry without error.
+
+## Custom Store
+
+```ts
+import { createEnterstellarStore } from '@enterstellar-ai/state';
+
+// Enterprise: encrypted, 50 traces max, custom thread ID
+const encKey = await crypto.subtle.generateKey(
+  { name: 'AES-GCM', length: 256 },
+  true,
+  ['encrypt', 'decrypt'],
+);
+
+const store = await createEnterstellarStore({
+  persistence: 'indexed-db',
+  maxTraces: 50,
+  encryption: { key: encKey, algorithm: 'AES-GCM' },
+  threadId: session.threadId,
+  devMode: process.env.NODE_ENV !== 'production', // enables Zod validation on get()
+});
+```
+
+## Telemetry Opt-Out
+
+If your org's data residency policy prohibits Enterstellar's default telemetry (IndexedDB queue, 30s flush):
+
+```ts
+import { createTelemetryCollector } from '@enterstellar-ai/telemetry';
+
+// Opt-out: no-op collector that discards all events
+const telemetry = createTelemetryCollector({
+  platform: 'web',
+  registrySize: registry.size,
+  queueStrategy: 'memory',   // Never writes to IndexedDB
+  flushIntervalMs: 0,        // Never flushes externally
+});
+
+<Provider registry={registry} telemetry={telemetry} connection={connection}>
+  {/* ... */}
+</Provider>
+```
+
+## Full Enterprise Configuration
+
+```tsx
+import { Provider } from '@enterstellar-ai/react';
+import { createCompiler } from '@enterstellar-ai/compiler';
+import { createRenderCache } from '@enterstellar-ai/cache';
+import { createEnterstellarStore } from '@enterstellar-ai/state';
+import { createTelemetryCollector } from '@enterstellar-ai/telemetry';
+import { createAgentConnection } from '@enterstellar-ai/connection';
+import { registry } from './enterstellar/registry';
+
+// 1. Custom compiler with HIPAA middleware
+const compiler = createCompiler({ registry, onValidationFailure: { strategy: 'fallback', fallbackComponent: 'GenericCard', maxRetries: 2 } });
+compiler.use(hipaaComplianceStep);
+
+// 2. Custom cache — 500 entries, 30-min TTL
+const cache = createRenderCache({ maxEntries: 500, ttl: 1800 });
+await cache.warmup(warmupIntents, (i) => compiler.compile(i, { agent: 'warmup' }));
+
+// 3. Encrypted store
+const store = await createEnterstellarStore({ persistence: 'indexed-db', maxTraces: 50, encryption: { key: encKey, algorithm: 'AES-GCM' } });
+
+// 4. No-op telemetry
+const telemetry = createTelemetryCollector({ platform: 'web', registrySize: registry.size, queueStrategy: 'memory', flushIntervalMs: 0 });
+
+// 5. Agent connection
+const connection = createAgentConnection({ url: process.env.AGENT_WS_URL! });
+
+export default function App() {
+  return (
+    <Provider
+      registry={registry}
+      compiler={compiler}
+      cache={cache}
+      store={store}
+      telemetry={telemetry}
+      connection={connection}
+      threadId={session.threadId}
+    >
+      {/* All zones use enterprise config */}
+    </Provider>
+  );
+}
+```
+
+<Cards>
+  <Card title="State Management →" description="Full guide to EnterstellarStore — encryption, snapshot/restore, migrations." href="/guides/state-management" />
+  <Card title="Custom Adapters →" description="Wire auth, data, error, and analytics adapters alongside your custom config." href="/guides/custom-adapters" />
+</Cards>

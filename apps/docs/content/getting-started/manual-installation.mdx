@@ -1,0 +1,122 @@
+---
+title: Manual Installation
+description: Add Enterstellar to an existing Next.js or React app. One Zone. Under 30 minutes.
+icon: Package
+---
+
+<Callout type="info" title="Time to integrate: &lt;30 minutes">
+This guide is for existing React or Next.js apps. Starting fresh? Use the [Quick Start](/getting-started/quick-start) instead — it's one command.
+</Callout>
+
+<Steps>
+
+<Step>
+
+## Install the package
+
+```npm
+npm install @enterstellar-ai/react @enterstellar-ai/registry
+```
+
+</Step>
+
+<Step>
+
+## Create your registry
+
+Create `enterstellar/registry.ts` in your project root. The registry is your component deck — the closed set of components the AI can select from.
+
+```ts
+import { createRegistry, defineComponent } from '@enterstellar-ai/registry';
+import { z } from 'zod';
+
+const StatusCard = defineComponent({
+  name: 'StatusCard',
+  description: 'Displays a metric with a status indicator',
+  category: 'data-display',
+  tags: ['status', 'metric', 'card'],
+  props: z.object({
+    title: z.string(),
+    value: z.number(),
+    status: z.enum(['healthy', 'warning', 'critical']),
+  }),
+  tokens: {
+    background: 'token:surface-primary',
+    statusBadge: 'token:semantic-success',
+  },
+  accessibility: {
+    role: 'status',
+    ariaLabel: 'Service health metric',
+    announceOnUpdate: true,
+  },
+  states: {
+    loading: 'StatusCardSkeleton',
+    error: 'EnterstellarErrorCard',
+    empty: 'EnterstellarEmptyState',
+    ready: 'StatusCard',
+  },
+  examples: [
+    { intent: 'Show API status', props: { title: 'API', value: 99.9, status: 'healthy' } },
+  ],
+});
+
+export const registry = createRegistry({
+  components: [StatusCard],
+});
+```
+
+</Step>
+
+<Step>
+
+## Connect your agent
+
+Create `enterstellar/connection.ts`. This connects Enterstellar to your AI backend via the `createAgentConnection()` factory from `@enterstellar-ai/connection`.
+
+```ts
+import { createAgentConnection } from '@enterstellar-ai/connection';
+
+export const connection = createAgentConnection({
+  url: process.env.NEXT_PUBLIC_AGENT_URL!,
+});
+```
+
+</Step>
+
+<Step>
+
+## Wrap with Provider and add a Zone
+
+Add `Provider` at your app root and place a `Zone` wherever you want the AI to render components.
+
+```tsx
+import { Provider, Zone } from '@enterstellar-ai/react';
+import { registry } from './enterstellar/registry';
+import { connection } from './enterstellar/connection';
+
+export default function App() {
+  return (
+    <Provider registry={registry} connection={connection}>
+      {/* Your existing app */}
+      <main>
+        <Zone
+          name="dashboard"
+          determinism={0.8}
+          fallback={<div>Loading AI components...</div>}
+        />
+      </main>
+    </Provider>
+  );
+}
+```
+
+`determinism={0.8}` means the zone is mostly generative — the AI picks from your registry — but it favors higher-confidence matches. Set it to `1.0` for fully generative, `0.0` to lock the zone to a specific component.
+
+</Step>
+
+</Steps>
+
+<Cards>
+  <Card title="Component Contracts →" description="Learn how defineComponent works. Build your full contract with tokens, semantics, and accessibility." href="/concepts/component-contracts" />
+  <Card title="Project Structure →" description="Understand what create-enterstellar-app scaffolds and how to organize a larger project." href="/getting-started/project-structure" />
+</Cards>

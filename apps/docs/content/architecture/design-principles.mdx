@@ -1,0 +1,150 @@
+---
+title: Design Principles
+description: 15 non-negotiable principles govern every decision in Enterstellar. These are not preferences — they are locked constraints. Violating any one breaks a strategic moat.
+icon: BookOpen
+---
+
+## The Prime Directive: Zero Improvisation
+
+> **"If it's not specified here, ask — don't invent."**
+
+Every design decision in Enterstellar is locked before coding begins. Ad-hoc changes don't just break convention — they break strategic moats. M1 (the Compiler) is only a moat if nothing bypasses it. M4 (the Intent Router) is only a moat if it receives complete telemetry. The principles below are the architectural contracts that make the moats real.
+
+---
+
+## The 15 Principles
+
+### M1 — Compiler Moat
+
+**L1: LLM Never Generates UI Code**
+
+> *Rule: The LLM emits `{ component, props }` JSON. Never HTML, JSX, CSS, or markup of any kind.*
+
+The LLM is a decision engine, not a renderer. Every visual output is the responsibility of the renderer, not the model. This is why Enterstellar can work with any LLM — GPT-4o, Claude, Gemini, a local Llama model — because none of them are coupled to the render target. The moment an LLM generates JSX, the Compiler cannot validate it, the design system cannot enforce it, and the DevTools cannot inspect it.
+
+**L2: Design System as Firmware**
+
+> *Rule: Every rendered value (color, spacing, font, size) MUST resolve to a design token. Hardcoded visual values are compilation errors.*
+
+Design tokens are firmware for the visual layer. The LLM cannot hallucinate `#ff0000` — it must reference `token:colors.semantic.danger`. If it can't produce a valid token, the Compiler coerces it to the nearest valid token (ENS-2002) or rejects the output (ENS-2001). This is how Enterstellar guarantees brand compliance without a human reviewing every render.
+
+**L3: Compiler Never Bypassed**
+
+> *Rule: Every `ComponentIntent` — whether from the registry or the Forge — passes through the UI Compiler. No fast path that skips validation.*
+
+L3 is the structural guarantee of M1. If any path bypasses the Compiler, M1 is not a moat — it's a suggestion. The Forge's output is not exempt. The render cache only stores compiled results (CA2 locked). Tests run the real compiler pipeline (no mocks for the Compiler step).
+
+**L9: Every Component Has 4 States**
+
+> *Rule: `loading`, `error`, `empty`, `ready`. Components missing any state are rejected by the registry.*
+
+This is L1 applied to lifecycle. GenUI that only handles the happy path (`ready`) is not production-ready. The registry validator enforces all 4 states at registration time. If `states.loading` references a non-existent component, `createRegistry()` throws immediately.
+
+**L13: The Forge is Pure**
+
+> *Rule: The Forge generates based on user intent only. No advertiser injection, no sponsored components inside the generation pipeline.*
+
+Commercial content uses dedicated, explicitly labeled zones. The generation pipeline is not a monetization surface.
+
+---
+
+### M2 — ForgeSignal Corpus Moat
+
+**L4: Observable by Default**
+
+> *Rule: Every pipeline step emits a trace event. Tracing is not opt-in — it is structural. You cannot render without producing a trace.*
+
+Every `Zone` render produces an `AgentTrace`. Every compiler step emits to the trace. The DevTools read from the trace — they have no other source. This is not logging; it is the architectural backbone of the debugging, testing, and monitoring layers. L4 is what makes the DevTools possible at all.
+
+**L12: ForgeSignal is Mandatory**
+
+> *Rule: Every Enterstellar render emits a `ForgeSignal`. Collection is mandatory for open-source and cloud tiers. Enterprise tier may opt out.*
+
+ForgeSignals are zero-PII telemetry events that queue offline and sync on connectivity. They train the Intent Router (M4) and Forge Model (M5). This is the "price" of the free engine — usage that makes Enterstellar smarter for everyone. Enterprise customers who require data residency may opt out via the telemetry config.
+
+---
+
+### M3 — ComponentContract Standard Moat
+
+**L5: Incrementally Adoptable**
+
+> *Rule: One `<Zone>` in an existing React app must work. No global rewrites, no mandatory providers beyond `<Provider>`.*
+
+The TypeScript of GenUI is only the TypeScript of GenUI if it's as easy to add to an existing project as TypeScript. The test: can a developer add Enterstellar to a Next.js app in 30 minutes without touching anything outside the target component? Yes. That's the bar.
+
+**L6: Protocol-Agnostic**
+
+> *Rule: Enterstellar consumes `ComponentIntent` objects. It does not care whether they came from AG-UI, A2UI, MCP, WebSocket, or a unit test.*
+
+The Normalizer (`@enterstellar-ai/normalizer`) handles protocol conversion. The rest of the engine is `ComponentIntent`-native. This means Enterstellar works with any agent backend without a rewrite.
+
+**L7: Infrastructure-Agnostic**
+
+> *Rule: Auth, data, errors, and analytics are adapter interfaces. Enterstellar ships adapters for common stacks but never hardcodes a vendor.*
+
+Enterstellar is opinionated about UI compilation (that's the moat). It is deliberately un-opinionated about auth, data, and errors (that's the user's domain). Swapping Supabase for Firebase requires changing one adapter instantiation — zero changes to contracts or renderers.
+
+**L15: Platform-Agnostic Engine**
+
+> *Rule: No package in the engine layer may import `react`, `react-dom`, `react-native`, or any framework-specific dependency. CI-enforced.*
+
+The packages `@enterstellar-ai/registry`, `@enterstellar-ai/compiler`, `@enterstellar-ai/cache`, `@enterstellar-ai/semantic-index`, `@enterstellar-ai/lifecycle`, `@enterstellar-ai/normalizer`, `@enterstellar-ai/forge`, `@enterstellar-ai/state`, `@enterstellar-ai/telemetry`, `@enterstellar-ai/adapters`, `@enterstellar-ai/agent-sdk`, and `@enterstellar-ai/cloud` all have zero framework imports. This is enforced by a custom ESLint rule in CI. If it fails, the build fails.
+
+---
+
+### M4 — Intent Router Moat
+
+**L10: Determinism is Per-Zone**
+
+> *Rule: The determinism dial (0.0–1.0) is set per `<Zone>`, never globally.*
+
+Global determinism is a blunt instrument. Clinical apps need medication ordering at 0.0 (fully locked) and patient notes at 1.0 (fully generative) in the same session. The determinism dial is per-zone by design, not by convenience.
+
+**L14: Intent as Firmware**
+
+> *Rule: Enterstellar controls the routing of intent — the decision of which component renders for which intent.*
+
+Whoever owns the Intent Router owns the user relationship. The Semantic Index + Global Index route intents to components. ForgeSignal trains this routing to improve with every render. This is not a feature — it is the strategic core of M4.
+
+---
+
+### M5 — Forge Model Moat
+
+**L8: TypeScript-First**
+
+> *Rule: Every package is TypeScript. Strict mode. No `any`. All public APIs have JSDoc. All schemas are Zod.*
+
+This is the quality floor. `strict: true` in every `tsconfig.json`. `catch` clauses use `unknown`, narrowed before use. No `any` — not explicit, not implicit. The type system is the first line of defence against runtime errors.
+
+**L11: Cloud-Default, Local-Capable**
+
+> *Rule: Semantic Index and Forge resolve via Enterstellar Cloud (`api.enterstellar.dev`) by default. Enterprises MAY deploy fully local. No feature is cloud-only.*
+
+The cloud path enables IPU metering and ForgeSignal aggregation. The local path enables air-gapped compliance (regulated industries, HIPAA, GDPR data residency). No feature is gated to cloud-only — the local path is a first-class deployment target.
+
+---
+
+## Principle → Moat Map
+
+| Principle | L# | Moat | What It Protects |
+|:---|:---:|:---:|:---|
+| LLM Never Generates UI Code | L1 | M1 | Compiler can validate; design system can enforce |
+| Design System as Firmware | L2 | M1, M4 | Brand compliance without human review |
+| Compiler Never Bypassed | L3 | M1 | The moat is structural, not advisory |
+| Observable by Default | L4 | M2 | DevTools, testing, and monitoring are possible |
+| Incrementally Adoptable | L5 | M3 | Adoption at scale |
+| Protocol-Agnostic | L6 | M3 | Works with any agent backend |
+| Infrastructure-Agnostic | L7 | M3 | Adoptable across every stack |
+| TypeScript-First | L8 | M5 | Quality floor for the Forge Model's training data |
+| Every Component Has 4 States | L9 | M1 | Production-ready contracts only |
+| Determinism is Per-Zone | L10 | — | Clinical-grade trust model |
+| Cloud-Default, Local-Capable | L11 | M2, M4, M5 | Enterprise adoption + ForgeSignal corpus |
+| ForgeSignal is Mandatory | L12 | M2 | Corpus grows with every deployment |
+| The Forge is Pure | L13 | M1, M5 | Generation pipeline is not monetized |
+| Intent as Firmware | L14 | M4 | Intent Router is a moat, not a convenience |
+| Platform-Agnostic Engine | L15 | M3 | Engine runs everywhere; renderers are swappable |
+
+<Cards>
+  <Card title="Architecture Overview →" description="The pipeline diagram and Two-Speed Architecture that these principles govern." href="/architecture/overview" />
+  <Card title="Contributing →" description="How these principles translate into coding rules, naming conventions, and PR checklists." href="/architecture/contributing" />
+</Cards>

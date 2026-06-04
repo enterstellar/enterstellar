@@ -1,0 +1,18 @@
+{
+  "$schema": "../../.source/json-schema/docs.meta.json",
+  "title": "Guides",
+  "icon": "Wrench",
+  "pages": [
+    "state-management",
+    "testing",
+    "devtools",
+    "configuring-tokens",
+    "data-integration",
+    "integrating-existing-apps",
+    "---Advanced---",
+    "custom-configuration",
+    "custom-adapters",
+    "agent-integration",
+    "cross-language-renderers"
+  ]
+}

@@ -1,0 +1,178 @@
+---
+title: Component Contracts
+description: A ComponentContract is the typed specification that defines what an AI-selectable component accepts, how it behaves, and what it looks like in every state.
+icon: FileCode
+---
+
+## The Card Deck Metaphor
+
+The LLM doesn't write components. It plays cards from a deck.
+
+Each card is a `ComponentContract` — a frozen, validated declaration that tells Enterstellar exactly what this component is, what props it accepts, which design tokens it uses, and how it behaves in every lifecycle state. The deck is your `Registry`. The LLM can only play cards that exist in the deck.
+
+This is the core safety guarantee: **the LLM can never hallucinate a component that isn't in your registry.**
+
+## `defineComponent()`
+
+`defineComponent()` is the factory for creating `ComponentContract` objects. It validates your input against 9 registration-time rules (R1–R9) at the call site — before anything is registered, before any zone renders. If you pass an invalid name, a missing state, or a token that doesn't start with `token:`, you get an error immediately.
+
+```ts
+import { defineComponent } from '@enterstellar-ai/registry';
+import { z } from 'zod';
+
+export const StatusCard = defineComponent({
+  name: 'StatusCard',
+  description: 'Displays a metric with a status indicator',
+  category: 'data-display',
+  tags: ['status', 'metric', 'card', 'dashboard'],
+
+  props: z.object({
+    title: z.string(),
+    value: z.number(),
+    status: z.enum(['healthy', 'warning', 'critical']),
+  }),
+
+  tokens: {
+    background: 'token:colors.surface.primary',
+    statusColor: 'token:colors.semantic.success',
+  },
+
+  accessibility: {
+    role: 'region',
+    ariaLabel: 'Status card',
+    announceOnUpdate: false,
+  },
+
+  states: {
+    loading: 'StatusCardSkeleton',
+    error: 'EnterstellarErrorCard',
+    empty: 'EnterstellarEmptyState',
+    ready: 'StatusCard',
+  },
+
+  examples: [
+    {
+      intent: 'Show system health',
+      props: { title: 'API Status', value: 99.9, status: 'healthy' },
+    },
+  ],
+});
+```
+
+### Why Zod, not TypeScript interfaces?
+
+TypeScript types exist only at compile time. Zod schemas exist at runtime.
+
+When the LLM emits `{ component: 'StatusCard', props: { status: 'catastrophic' } }`, the Compiler runs the Zod `parse()` against the props. `'catastrophic'` is not in the enum — the parse fails, the Compiler catches it, and the zone never renders invalid data.
+
+TypeScript can't do that. Zod can.
+
+## The 4 Lifecycle States
+
+Every contract must declare all 4 lifecycle states. This is non-negotiable:
+
+| State | When it renders | What it shows |
+|:---|:---|:---|
+| `loading` | While the agent is deciding + compiling | A skeleton (e.g., `StatusCardSkeleton`) |
+| `error` | Compilation failed, network error, timeout | An error card with a retry button |
+| `empty` | Agent signaled no content for this zone | An empty state placeholder |
+| `ready` | Compilation succeeded, all props valid | The actual component |
+
+The `states.ready` value must match the contract's `name` exactly (R5). This is how the Compiler knows which renderer to invoke after a successful compilation.
+
+## The Accessibility Contract
+
+```ts
+accessibility: {
+  role: 'region',       // W3C ARIA role (required, validated against allowed list)
+  ariaLabel: 'Status card', // Required if role is 'region', 'button', etc.
+  announceOnUpdate: false,  // true = emit aria-live="polite" on re-render
+},
+```
+
+The Compiler auto-injects missing ARIA attributes where it can. If `announceOnUpdate` is `true` and the rendered component doesn't include `aria-live`, the Compiler adds it before the component reaches the screen.
+
+## Your First Component — End-to-End
+
+Here's the complete journey from CLI to rendered Zone:
+
+<Steps>
+
+<Step>
+
+### Scaffold the component
+
+```bash
+enterstellar add component StatusCard
+```
+
+This creates 4 files in `src/enterstellar/components/`:
+- `StatusCard.contract.ts` — Zod schema + `defineComponent()` contract
+- `StatusCard.tsx` — React render function stub
+- `StatusCard.test.ts` — Intent test with `harness.mock()` + `harness.resolve()`
+- `StatusCard.fixture.json` — Example props fixture
+
+</Step>
+
+<Step>
+
+### Define the contract
+
+Fill in `StatusCard.contract.ts` using `defineComponent()` as shown above. The validator runs immediately — fix any errors before moving on.
+
+</Step>
+
+<Step>
+
+### Register in the registry
+
+```ts
+import { createRegistry } from '@enterstellar-ai/registry';
+import { StatusCard } from './components/status-card/StatusCard.contract';
+
+export const registry = createRegistry({
+  components: [StatusCard],
+});
+```
+
+</Step>
+
+<Step>
+
+### Implement the renderer
+
+```tsx
+export function StatusCard({ title, value, status }: StatusCardProps) {
+  return (
+    <div data-status={status}>
+      <h3>{title}</h3>
+      <p>{value}</p>
+    </div>
+  );
+}
+```
+
+</Step>
+
+<Step>
+
+### Test the intent
+
+```ts
+import { createTestHarness } from '@enterstellar-ai/test';
+
+const harness = createTestHarness({ registry });
+const trace = await harness.resolve('Show system health for the API');
+
+expect(trace).toResolveToComponent('StatusCard');
+expect(trace).toPassValidation();
+```
+
+</Step>
+
+</Steps>
+
+<Cards>
+  <Card title="Registry →" description="How createRegistry() assembles your deck and auto-generates the LLM manifest." href="/concepts/registry" />
+  <Card title="Compilation →" description="How the Compiler validates props, enforces tokens, and auto-injects accessibility." href="/concepts/compilation" />
+</Cards>

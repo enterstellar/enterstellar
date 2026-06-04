@@ -1,0 +1,202 @@
+---
+title: Agent Integration
+description: createAgentSDK() exposes Enterstellar as an MCP server — 6 atomic tools plus one composite tool. Any AI agent (Claude, GPT, Gemini) can search your registry, compose UI, validate specs, and stream intents via the standardized MCP protocol.
+icon: Bot
+---
+
+## The Agent SDK
+
+`@enterstellar-ai/agent-sdk` turns your Enterstellar registry and compiler into a set of tools your AI agent can call. The agent doesn't need to know how Enterstellar works internally — it calls tools and gets structured responses.
+
+## Creating the SDK
+
+```ts
+import { createAgentSDK } from '@enterstellar-ai/agent-sdk';
+import { registry } from './enterstellar/registry';
+import { compiler } from './enterstellar/compiler';
+import { semanticIndex } from './enterstellar/semantic-index';
+import { forge } from './enterstellar/forge';
+
+const sdk = createAgentSDK({
+  registry,
+  compiler,
+  semanticIndex,
+  forge,   // optional — enterstellar_forge_component degrades gracefully if omitted
+});
+```
+
+## The 6 Atomic MCP Tools
+
+The SDK exposes 6 tools over the MCP protocol (AS2 locked):
+
+| Tool | What it does |
+|:---|:---|
+| `enterstellar_search_components` | Semantic search over the registry by query string |
+| `enterstellar_compose_ui` | Assembles a `UISpec` from an array of zone assignments |
+| `enterstellar_validate_spec` | Validates a `UISpec` through the full compiler pipeline |
+| `enterstellar_analyze_traces` | Analyzes past `ZoneTrace` records for patterns |
+| `enterstellar_forge_component` | Triggers LocalForge for a novel intent with no registry match |
+| `enterstellar_get_component_schema` | Returns the full `ComponentContract` schema for a named component |
+
+Plus 1 composite tool:
+
+| Tool | What it does |
+|:---|:---|
+| `enterstellar_build_ui` | End-to-end: search → compose → validate in a single call |
+
+## Creating the MCP Server
+
+```ts
+import { createAgentSDK, createMCPServer } from '@enterstellar-ai/agent-sdk';
+
+const sdk = createAgentSDK({ registry, compiler, semanticIndex, forge });
+const server = createMCPServer(sdk);
+
+// List all available tools
+const tools = server.listTools();
+// → [{ name: 'enterstellar_search_components', description: '...', inputSchema: {...} }, ...]
+```
+
+## Tool Calls
+
+The server handles tool calls by name:
+
+```ts
+// Search the registry
+const searchResult = await server.handleToolCall(
+  'enterstellar_search_components',
+  { query: 'show patient vital signs with risk level' },
+);
+// → { content: [{ type: 'text', text: JSON.stringify([{ name: 'PatientVitals', ... }]) }] }
+
+// Compose a UI from zone assignments
+const composeResult = await server.handleToolCall(
+  'enterstellar_compose_ui',
+  {
+    zones: [
+      { name: 'header', component: 'PageHeader', props: { title: 'Patient Dashboard' }, determinism: 0.3 },
+      { name: 'main', component: 'PatientVitals', props: { patientId: 'P-001', riskLevel: 'high' }, determinism: 1.0 },
+    ],
+  },
+);
+
+// Validate the composed spec
+const validateResult = await server.handleToolCall(
+  'enterstellar_validate_spec',
+  { spec: composeResult.content[0].text },
+);
+```
+
+## The `UISpec` Schema
+
+`enterstellar_compose_ui` produces and `enterstellar_validate_spec` accepts a `UISpec`:
+
+```ts
+type UISpec = {
+  zones: ZoneSpec[];
+  metadata: {
+    createdAt: string;
+    sdkVersion: string;
+  };
+};
+
+type ZoneSpec = {
+  name: string;           // Zone identifier (kebab-case)
+  component: string;      // Resolved component name (PascalCase)
+  props: Record<string, unknown>; // Validated props
+  determinism: number;    // 0.0–1.0
+  confidence?: number;    // Semantic search confidence score
+};
+```
+
+The `UISpec` is a flat list — no nesting, no recursive layouts. Each zone is an independent assignment.
+
+## The Composite Tool: `enterstellar_build_ui`
+
+`enterstellar_build_ui` chains search → compose → validate in a single round-trip:
+
+```ts
+const result = await server.handleToolCall(
+  'enterstellar_build_ui',
+  {
+    intents: [
+      { zone: 'header', intent: 'Show a page header for Patient Dashboard' },
+      { zone: 'main', intent: 'Show patient vitals with high risk level for patient P-001' },
+      { zone: 'sidebar', intent: 'Show recent clinical notes' },
+    ],
+  },
+);
+// Returns a fully validated UISpec with all zones resolved, compiled, and ready to render
+```
+
+## Direct SDK Usage
+
+You can also call the SDK directly without the MCP server — useful for server-side rendering or custom agent backends:
+
+```ts
+// Search
+const results = await sdk.search('show patient vitals');
+// → [{ name: 'PatientVitals', confidence: 0.94, ... }]
+
+// Compose
+const spec = await sdk.compose([
+  { name: 'main', component: 'PatientVitals', props: { patientId: 'P-001', riskLevel: 'high' }, determinism: 1.0 },
+]);
+
+// Validate
+const validation = await sdk.validate(spec);
+// → { valid: true, errors: [] }
+```
+
+## Streaming
+
+For real-time intent streaming, the SDK exposes an async generator:
+
+```ts
+async function* streamIntents(userMessage: string) {
+  for await (const fragment of sdk.stream(userMessage)) {
+    yield fragment; // partial ComponentIntent fragments
+  }
+}
+```
+
+The streaming generator emits prop fragments as they arrive from the LLM. The Zone's `StreamingAssembler` accumulates them — `streaming → ready` transitions when the Zod schema passes a full parse.
+
+## Scenario: Agent Calling 3 Tools in Sequence
+
+```ts
+const sdk = createAgentSDK({ registry, compiler, semanticIndex, forge });
+const server = createMCPServer(sdk);
+
+// Step 1: Agent searches for relevant components
+const searchResponse = await server.handleToolCall(
+  'enterstellar_search_components',
+  { query: 'patient monitoring dashboard with alerts' },
+);
+const components = JSON.parse(searchResponse.content[0].text);
+// → [{ name: 'PatientVitals', confidence: 0.94 }, { name: 'AlertCard', confidence: 0.87 }]
+
+// Step 2: Agent composes the UI
+const composeResponse = await server.handleToolCall(
+  'enterstellar_compose_ui',
+  {
+    zones: [
+      { name: 'vitals', component: components[0].name, props: { patientId: 'P-001', riskLevel: 'critical' }, determinism: 1.0 },
+      { name: 'alerts', component: components[1].name, props: { message: 'Oxygen saturation low', severity: 'danger' }, determinism: 1.0 },
+    ],
+  },
+);
+
+// Step 3: Agent validates the spec
+const validateResponse = await server.handleToolCall(
+  'enterstellar_validate_spec',
+  { spec: composeResponse.content[0].text },
+);
+// → { valid: true, errors: [] }
+// UISpec is ready — send to the client
+```
+
+<Cards>
+  <Card title="Agent Connection →" description="How the client-side connection receives intents from your agent backend." href="/concepts/agent-connection" />
+  <Card title="Compilation →" description="How the compiler validates the UISpec props before they reach the screen." href="/concepts/compilation" />
+</Cards>

@@ -1,0 +1,296 @@
+---
+title: "@enterstellar-ai/types"
+description: Shared type definitions, Zod schemas, and type guards for the entire Enterstellar ecosystem. The single source of truth — every other package has this as a peer dependency.
+icon: Type
+---
+
+## Purpose
+
+`@enterstellar-ai/types` is the foundational type layer. It defines every domain type as a TypeScript interface, a Zod schema, and (where applicable) a type guard. No logic. No side effects. Just types.
+
+Every other package lists `@enterstellar-ai/types` as a `peerDependency` — never bundled, never duplicated.
+
+## Installation
+
+```bash
+npm install @enterstellar-ai/types zod
+```
+
+## Core Types
+
+### `ComponentContract<TProps>`
+
+The formal specification for a component the LLM can select. Defined in Bible §3.1.
+
+```typescript
+interface ComponentContract {
+  name: string;           // PascalCase. Unique within the registry.
+  description: string;    // ≤120 chars. LLM-readable.
+  category: string;       // Semantic grouping.
+  tags: string[];         // 1–10 search terms for Semantic Index.
+  props: TProps;          // Zod schema — compiler's validation source.
+  tokens: Record<string, string>;  // All values prefixed with 'token:'
+  accessibility: ComponentAccessibility; // WAI-ARIA role + announceOnUpdate
+  states: {
+    loading: string;
+    error: string;
+    empty: string;
+    ready: string;   // Must equal this component's name
+  };
+  examples: ComponentExample[];
+  dataSource?: ComponentDataSource;  // optional — omit for presentational components
+  auth?: ComponentAuth;
+  origin?: ContractOrigin;
+}
+```
+
+---
+
+### `ComponentIntent`
+
+The agent's output. What the LLM sends, what the normalizer produces, and what the compiler validates. Defined in Bible §3.2.
+
+```typescript
+interface ComponentIntent {
+  component: string;                  // PascalCase component name
+  props: Record<string, unknown>;     // Unvalidated — compiler runs Zod next
+  source?: IntentSource;              // 'agent' | 'forge' | 'cache' | 'test'
+  protocol?: IntentProtocol;          // 'ag-ui' | 'a2ui' | 'mcp' | 'raw'
+  confidence?: number;                // 0.0–1.0 from Semantic Index
+  layout?: IntentLayout;
+  interactions?: IntentInteraction[];
+}
+```
+
+Schema: `ComponentIntentSchema` (Zod)
+
+---
+
+### `CompilationResult`
+
+The compiler's output. Contains the validated props, errors, warnings, and provenance. Defined in Bible §3.3.
+
+```typescript
+interface CompilationResult {
+  status: 'pass' | 'corrected' | 'fail';
+  componentName: string;
+  props: Record<string, unknown>;  // Zod-parsed, safe to render
+  errors: CompilationError[];      // Empty when status is 'pass' or 'corrected'
+  selfCorrectionAttempts: number;
+  provenance: CompilationProvenance;
+  diff?: { raw: Record<string, unknown>; compiled: Record<string, unknown> }; // dev only
+}
+```
+
+Schema: `CompilationResultSchema` (Zod)
+
+---
+
+### `AgentTrace`
+
+Full trace for every render. 5 categories of information. Defined in Bible §3.4.
+
+```typescript
+interface AgentTrace {
+  traceId: TraceId;             // UUIDv7
+  sessionId: string;
+  zoneId: ZoneId;
+  intent: TraceIntent;          // raw string, classified intent, complexity score
+  resolution: TraceResolution;  // candidates, selected component, confidence
+  compilation: TraceCompilation;// raw LLM JSON, status, errors, self-correction attempts
+  determinism: TraceDeterminism;// zone policy, cache hit/miss, render source
+  metrics: TraceMetrics;        // per-stage latency (ms)
+  consent?: TraceConsent;
+  createdAt: number;            // Unix ms
+}
+```
+
+Schema: `AgentTraceSchema` (Zod)
+
+---
+
+### `ZoneTrace`
+
+Subset of `AgentTrace` stored per-zone in the `EnterstellarStore`. Contains only the fields needed for DevTools display and `useEnterstellarTrace()`.
+
+Schema: `ZoneTraceSchema` (Zod)
+
+---
+
+### `ZoneConfig`
+
+Configuration for a `<Zone>` (stored in state, not a React prop). Defined in Bible §3.5.
+
+```typescript
+interface ZoneConfig {
+  name: string;
+  determinism: number;             // 0.0–1.0
+  allowedComponents: string[];     // empty = all allowed
+  fallbackComponent: string;
+  cache?: ZoneCacheConfig;
+}
+```
+
+Schema: `ZoneConfigSchema` (Zod)
+
+---
+
+### `EnterstellarAgentConnection`
+
+Interface for the agent transport layer. Defined in Bible §3.9–3.10.
+
+```typescript
+interface EnterstellarAgentConnection {
+  dispatch(signal: UserSignal): void;
+  onIntent(handler: (intent: ComponentIntent) => void): () => void;
+  onError(handler: (error: Error) => void): () => void;
+  disconnect(): void;
+  readonly status: 'connected' | 'disconnected' | 'reconnecting';
+}
+```
+
+---
+
+### `EnterstellarStore`
+
+Interface for the state store. Defined in Bible §3.8. Full implementation: `@enterstellar-ai/state`.
+
+```typescript
+interface EnterstellarStore {
+  get<T>(key: string): T | undefined;
+  set<T>(key: string, value: T): void;
+  subscribe<T>(key: string, listener: (value: T) => void): () => void;
+  snapshot(): SerializedState;
+  restore(state: SerializedState): void;
+  registerMigration(config: MigrationConfig): void;
+  extend(name: string, schema: ZodType): void;
+  hasExtension(name: string): boolean;
+  destroy(): void;
+}
+```
+
+---
+
+### `SerializedState`
+
+The snapshot format for `store.snapshot()` and `store.restore()`.
+
+```typescript
+interface SerializedState {
+  schemaVersion: string;
+  sessionId: string;
+  zones: Record<string, ZoneState>;
+  traceIds: string[];
+  session: SessionState;
+  extensions: Record<string, unknown>;
+  createdAt: number;
+  updatedAt: number;
+}
+```
+
+Schema: `SerializedStateSchema` (Zod). 1MB size limit enforced on `snapshot()` (`ENS-4006`).
+
+---
+
+### `UserSignal`
+
+User interaction event emitted by `connection.dispatch()`.
+
+```typescript
+interface UserSignal {
+  type: UserSignalType;      // 'click' | 'input' | 'scroll' | 'custom'
+  zone: string;              // Zone name
+  component: string;         // Component name
+  payload?: unknown;         // Interaction data
+  timestamp: number;         // Unix ms
+}
+```
+
+Schema: `UserSignalSchema` (Zod)
+
+---
+
+### `ForgeSignal`
+
+Mandatory zero-PII telemetry event emitted on every render (L12). Defined in Bible §3.7.
+
+```typescript
+interface ForgeSignal {
+  intentHash: string;          // SHA-256 of intent string (NOT the raw intent)
+  componentName: string;
+  confidence: number;
+  forgeMode?: ForgeMode;       // 'local' | 'cloud' — only if Forge was invoked
+  compilationStatus: 'pass' | 'corrected' | 'fail';
+  latencyMs: number;
+  platform: SignalPlatform;    // 'web' | 'native' | 'desktop' | 'cli'
+  registryVersion: string;
+}
+```
+
+Schema: `ForgeSignalSchema` (Zod)
+
+---
+
+### `DesignTokenSet`
+
+W3C DTCG-compliant design token container. Defined in Bible §3.1b.
+
+```typescript
+type DesignTokenSet = Record<string, TokenCategory | DesignToken>;
+
+type DesignToken = {
+  $value: string;
+  $type: 'color' | 'dimension' | 'fontFamily' | 'shadow' | 'number' | string;
+  $description?: string;
+};
+```
+
+Schema: `DesignTokenSetSchema` (Zod)
+
+---
+
+## Branded Types
+
+| Type | Constructor | Description |
+|:---|:---|:---|
+| `ComponentId` | `createComponentId(name)` | Branded string for component names |
+| `ZoneId` | `createZoneId(name)` | Branded string for zone identifiers |
+| `TraceId` | `createTraceId()` | Branded UUIDv7 string |
+
+---
+
+## Type Guards
+
+| Guard | Signature | What It Checks |
+|:---|:---|:---|
+| `isComponentId(v)` | `(v: unknown) => v is ComponentId` | Branded component ID |
+| `isZoneId(v)` | `(v: unknown) => v is ZoneId` | Branded zone ID |
+| `isTraceId(v)` | `(v: unknown) => v is TraceId` | Branded trace ID |
+| `isForgeSignal(v)` | `(v: unknown) => v is ForgeSignal` | ForgeSignal shape |
+| `isCompilationResult(v)` | `(v: unknown) => v is CompilationResult` | CompilationResult shape |
+| `isComponentIntent(v)` | `(v: unknown) => v is ComponentIntent` | ComponentIntent shape |
+| `isAgentTrace(v)` | `(v: unknown) => v is AgentTrace` | AgentTrace shape |
+| `isUserSignal(v)` | `(v: unknown) => v is UserSignal` | UserSignal shape |
+
+---
+
+## `EnterstellarError`
+
+The universal error class for all Enterstellar packages.
+
+```typescript
+class EnterstellarError extends Error {
+  readonly code: string;       // e.g. 'ENS-2001'
+  readonly module: string;     // e.g. '@enterstellar-ai/compiler'
+  readonly recoverable: boolean;
+}
+```
+
+See [Contributing → Error Taxonomy](/architecture/contributing#error-taxonomy) for all error codes.
+
+---
+
+## See Also
+
+- [Bible §3](https://github.com/enterstellar-ai/enterstellar/blob/main/agent/03-enterstellar-implementation-bible.md) — Core type definitions (canonical)
+- [Design Choices T1–T17](https://github.com/enterstellar-ai/enterstellar/blob/main/agent/04-enterstellar-design-choices.md)

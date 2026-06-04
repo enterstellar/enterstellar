@@ -1,0 +1,53 @@
+---
+title: Project Structure
+description: What create-enterstellar-app scaffolds and how each file fits into the Enterstellar architecture.
+icon: FolderTree
+---
+
+Running `npx create-enterstellar-app my-app` creates this structure:
+
+```
+my-app/
+├── src/
+│   ├── enterstellar/
+│   │   ├── registry.ts              ← Your component deck
+│   │   ├── tokens.ts                ← Your design token set
+│   │   └── components/
+│   │       ├── ExampleCard.tsx      ← Example contract + renderer
+│   │       ├── ExampleList.tsx
+│   │       ├── ExampleChart.tsx
+│   │       ├── ExampleForm.tsx
+│   │       └── ExampleDetail.tsx
+│   │
+│   ├── app/
+│   │   ├── page.tsx                 ← Zone lives here (Next.js)
+│   │   └── layout.tsx               ← Provider wraps the app here
+│   │
+│   ├── tests/
+│   │   └── enterstellar.test.ts     ← Intent-based test suite
+│   │
+│   └── globals.css                  ← Design token CSS variables
+│
+├── package.json
+├── tsconfig.json
+├── .enterstellarignore
+└── README.md
+```
+
+## Key files
+
+<Cards>
+  <Card title="src/enterstellar/registry.ts" description="Your component deck. Every component the AI can select from is registered here via createRegistry(). The registry auto-generates the compact manifest sent to the LLM." />
+  <Card title="src/enterstellar/tokens.ts" description="Your design token set. Defines the colors, spacing, typography, radii, and shadows the LLM can reference — as token paths, not raw values." />
+  <Card title="src/enterstellar/components/" description="Five example ComponentContracts, each with a Zod props schema, tokens, accessibility config, and a React renderer. Your starting deck." />
+  <Card title="src/tests/enterstellar.test.ts" description="Intent-based test suite powered by @enterstellar-ai/test. No real LLM needed — mock responses, compile, assert." />
+  <Card title="src/globals.css" description="CSS custom properties generated from your design token set. Import once in your app root." />
+</Cards>
+
+## Where to go from here
+
+<Cards>
+  <Card title="Component Contracts →" description="Understand defineComponent: Zod schemas, design tokens, lifecycle states, and the 'Your First Component' walkthrough." href="/concepts/component-contracts" />
+  <Card title="Core Concepts →" description="Build the full mental model: Registry, Provider, Zones, Lifecycle, Compilation, Forge, and Agent Connection." href="/concepts/component-contracts" />
+  <Card title="Testing →" description="Write intent-based tests for your components without a real LLM." href="/guides/testing" />
+</Cards>

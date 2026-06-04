@@ -1,0 +1,260 @@
+---
+title: "@enterstellar-ai/test"
+description: Intent-based testing framework for Enterstellar GenUI — deterministic test harness, assertion helpers, Vitest matchers, VCR fixtures, intent coverage, and regression detection.
+icon: FlaskConical
+---
+
+## Purpose
+
+`@enterstellar-ai/test` provides a deterministic test harness that exercises the real Enterstellar compiler pipeline with mock intent responses — no real LLM calls. The compiler validation (Zod schema, design tokens, accessibility) is real. Only the intent resolution is mocked.
+
+**What you test:** Pipeline decisions, not rendered pixels.
+
+```bash
+npm install --save-dev @enterstellar-ai/test @enterstellar-ai/registry vitest
+```
+
+## Quick Start
+
+```ts
+import { createTestHarness } from '@enterstellar-ai/test';
+import { createRegistry, defineComponent } from '@enterstellar-ai/registry';
+import { describe, it } from 'vitest';
+
+const registry = createRegistry({ components: [PatientVitals] });
+const harness = createTestHarness({ registry });
+
+harness.mock('show patient vitals', {
+  component: 'PatientVitals',
+  props: { patientId: 'P-001', riskLevel: 'high' },
+  confidence: 1.0,
+});
+
+describe('PatientVitals pipeline', () => {
+  it('resolves and compiles correctly', async () => {
+    const trace = await harness.resolve('show patient vitals');
+    harness.expect.componentToBe(trace, 'PatientVitals');
+    harness.expect.compilationToPass(trace.compilation);
+    harness.expect.confidenceAbove(trace, 0.9);
+    harness.expect.tokenCompliant(trace.compilation);
+    harness.expect.accessibilityToPass(trace.compilation);
+    harness.expect.latencyBelow(trace, 500);
+  });
+});
+```
+
+---
+
+## Factory
+
+### `createTestHarness(config)`
+
+Creates an `EnterstellarTestHarness` instance. The harness creates a real `EnterstellarCompiler` internally using the provided registry — so Zod schemas, token checks, and accessibility audits are fully exercised.
+
+**Parameters:**
+
+| Field | Type | Required | Description |
+|:---|:---|:---:|:---|
+| `registry` | `EnterstellarRegistry` | ✅ | Registry to resolve and compile against |
+| `mockResponses` | `Record<string, ComponentIntent>` | — | Pre-loaded mock map (exact intent string → `ComponentIntent`) |
+
+```ts
+const harness = createTestHarness({
+  registry,
+  mockResponses: {
+    'show vitals': { component: 'PatientVitals', props: { patientId: 'P-001' }, confidence: 1.0 },
+  },
+});
+```
+
+---
+
+## `EnterstellarTestHarness` Interface
+
+### `harness.mock(intent, response)`
+
+Registers or overwrites a mock for a specific intent string. Existing mocks are not overwritten by `autoMock()`.
+
+```ts
+harness.mock('show patient vitals', {
+  component: 'PatientVitals',
+  props: { patientId: 'P-001' },
+  confidence: 1.0,
+});
+```
+
+---
+
+### `harness.autoMock()`
+
+Auto-generates mocks for all registered components. For each component, iterates `contract.examples[0].props` if present, otherwise creates a minimal `ComponentIntent`. Existing mocks are not overwritten.
+
+```ts
+harness.autoMock();
+// Mocks created for all components in the registry
+```
+
+---
+
+### `harness.resolve(intent, options?)`
+
+Resolves an intent string to a full `AgentTrace`. Runs:
+1. Looks up `mockResponses[intent]` → `ComponentIntent`
+2. Compiles via real `@enterstellar-ai/compiler`
+3. Builds a synthetic `AgentTrace` from the result + timing
+4. Returns the trace
+
+Throws `EnterstellarError` (`ENS-5010`) if the intent has no mock response.
+
+```ts
+const trace = await harness.resolve('show vitals');
+// trace.compilation.status === 'pass' | 'corrected' | 'fail'
+// trace.metrics.totalMs — total pipeline latency
+```
+
+**Options:**
+
+| Field | Type | Description |
+|:---|:---|:---|
+| `context` | `Record<string, unknown>` | Optional context included in the trace |
+
+---
+
+### `harness.compileRaw(raw)`
+
+Compiles raw JSON directly — skips intent resolution. Useful for testing specific prop combinations without mocking.
+
+```ts
+const result = await harness.compileRaw({
+  component: 'PatientVitals',
+  props: { patientId: 'P-001', riskLevel: 'very_high' }, // invalid enum
+});
+// result.status === 'fail'
+// result.errors[0].code === 'ENS-2001'
+```
+
+---
+
+### `harness.expect` — Assertion Helpers
+
+Framework-agnostic assertions. Each throws `EnterstellarError` on failure, returns `void` on success. Works in any test runner (Vitest, Jest, Mocha).
+
+| Assertion | Signature | Error Code |
+|:---|:---|:---:|
+| `componentToBe` | `(trace, componentName: string) => void` | `ENS-5001` |
+| `confidenceAbove` | `(trace, threshold: number) => void` | `ENS-5002` |
+| `compilationToPass` | `(result: CompilationResult) => void` | `ENS-5003` |
+| `tokenCompliant` | `(result: CompilationResult) => void` | `ENS-5004` |
+| `latencyBelow` | `(trace, maxMs: number) => void` | `ENS-5005` |
+| `accessibilityToPass` | `(result: CompilationResult) => void` | `ENS-5006` |
+
+```ts
+harness.expect.componentToBe(trace, 'PatientVitals');
+harness.expect.confidenceAbove(trace, 0.8);
+harness.expect.compilationToPass(trace.compilation);
+harness.expect.tokenCompliant(trace.compilation);
+harness.expect.latencyBelow(trace, 500);
+harness.expect.accessibilityToPass(trace.compilation);
+```
+
+---
+
+## Standalone Assertion Functions
+
+The same assertions are also exported as standalone functions (no harness needed):
+
+```ts
+import {
+  componentToBe,
+  confidenceAbove,
+  compilationToPass,
+  tokenCompliant,
+  latencyBelow,
+  accessibilityToPass,
+} from '@enterstellar-ai/test';
+
+componentToBe(trace, 'PatientVitals');
+compilationToPass(result);
+```
+
+---
+
+## Vitest Matchers
+
+```ts
+import { enterstellarMatchers } from '@enterstellar-ai/test';
+import { expect } from 'vitest';
+
+expect.extend(enterstellarMatchers);
+
+// Now use:
+expect(trace).toResolveToComponent('PatientVitals');
+expect(result).toPassValidation();
+expect(result).toBeTokenCompliant();
+```
+
+---
+
+## VCR Fixture Utilities
+
+```ts
+import { saveFixtures, loadFixtures, listFixtureFiles } from '@enterstellar-ai/test';
+
+// Save current mock responses as JSON fixtures
+await saveFixtures(harness, './fixtures/patient-vitals.json');
+
+// Load fixtures into a harness (integration testing with real trace data)
+const fixtures = await loadFixtures('./fixtures/patient-vitals.json');
+const integrationHarness = createTestHarness({ registry, mockResponses: fixtures });
+
+// List all saved fixture files
+const files = listFixtureFiles('./fixtures/');
+```
+
+---
+
+## Intent Coverage
+
+```ts
+import { computeIntentCoverage } from '@enterstellar-ai/test';
+
+const coverage = computeIntentCoverage(registry, testResults);
+// coverage.covered — number of components with at least one mock
+// coverage.uncovered — component names with no mocks
+// coverage.percentage — 0–100
+```
+
+---
+
+## Regression Detection
+
+```ts
+import { detectRegressions } from '@enterstellar-ai/test';
+
+const regressions = detectRegressions(currentTraces, baselineTraces);
+// regressions[] — traces where component or status changed from baseline
+```
+
+---
+
+## Types
+
+| Type | Description |
+|:---|:---|
+| `EnterstellarTestHarness` | Harness interface |
+| `TestHarnessConfig` | Factory config |
+| `ResolveOptions` | Options for `resolve()` |
+| `CompileRawInput` | Input for `compileRaw()` |
+| `TestAssertions` | Assertion helper interface |
+| `IntentCoverageResult` | Output of `computeIntentCoverage()` |
+| `TestResultRecord` | Record from test run |
+| `RegressionEntry` | Entry from `detectRegressions()` |
+| `FixtureEntry` | Single VCR fixture entry |
+
+---
+
+## See Also
+
+- [Bible §4.5](https://github.com/enterstellar-ai/enterstellar/blob/main/agent/03-enterstellar-implementation-bible.md) — test module specification
+- [Design Choices TE1–TE7](https://github.com/enterstellar-ai/enterstellar/blob/main/agent/04-enterstellar-design-choices.md) — all locked decisions for this package
+- [Testing Guide →](/guides/testing) — full testing strategy walkthrough

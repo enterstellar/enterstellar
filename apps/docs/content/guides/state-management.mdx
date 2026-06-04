@@ -1,0 +1,190 @@
+---
+title: State Management
+description: EnterstellarStore is the OS's memory — a persistent, framework-agnostic state container with pluggable backends, optional encryption, snapshot/restore, and semver migrations.
+icon: Database
+---
+
+## What Gets Stored
+
+Every zone render produces a `ZoneTrace`. The `EnterstellarStore` tracks them via the `'traceIds'` key — an ordered ID index (max 100, FIFO eviction). It also maintains:
+
+| Key | Type | What it holds |
+|:---|:---|:---|
+| `'zones'` | `Record<string, ZoneState>` | Per-zone render state summaries |
+| `'traceIds'` | `string[]` | Ordered trace ID index (lightweight, max 100) |
+| `'session'` | `SessionState` | Session ID, start time, optional `threadId` |
+| extensions | `unknown` (Zod-typed) | Any data you register via `store.extend()` |
+
+The store is auto-created by `Provider` with `persistence: 'indexed-db'` and `maxTraces: 100`. You can override it with a custom instance.
+
+## Persistence Backends
+
+```ts
+import { createEnterstellarStore } from '@enterstellar-ai/state';
+
+// Production default: IndexedDB
+const store = await createEnterstellarStore({
+  persistence: 'indexed-db',
+  maxTraces: 100,
+});
+
+// Memory only (recommended for tests)
+const testStore = await createEnterstellarStore({
+  persistence: 'memory',
+});
+
+// localStorage (for simpler apps without IndexedDB requirement)
+const lsStore = await createEnterstellarStore({
+  persistence: 'local-storage',
+});
+```
+
+`createEnterstellarStore()` is `async` — the IndexedDB adapter opens a connection during initialization. The auto-created store in `Provider` handles this asynchrony internally (Provider renders `fallback` for zones during init).
+
+## Why IndexedDB by Default
+
+IndexedDB is the only browser persistence layer that survives crashes. `localStorage` is synchronous and blocking — a CPU-intensive render can corrupt a write. `sessionStorage` vanishes on tab close.
+
+For clinical apps, losing conversation state on a browser crash is not acceptable. IndexedDB writes are atomic and survive hard page refreshes, tab closures, and unexpected crashes.
+
+## Encryption at Rest
+
+Pass an AES-GCM key to encrypt all persisted data:
+
+```ts
+const key = await crypto.subtle.generateKey(
+  { name: 'AES-GCM', length: 256 },
+  true,
+  ['encrypt', 'decrypt'],
+);
+
+const store = await createEnterstellarStore({
+  persistence: 'indexed-db',
+  encryption: {
+    key,
+    algorithm: 'AES-GCM',
+  },
+});
+```
+
+The encryption key never leaves the browser. All values written to IndexedDB are encrypted with AES-GCM before storage.
+
+## Snapshot / Restore
+
+`snapshot()` serializes the full store state to a plain `SerializedState` object. `restore()` overwrites the current state with a snapshot. This is the primary mechanism for cross-device sync and session handoff.
+
+```ts
+// Save a session before logout
+const snapshot = store.snapshot();
+await api.saveSession(snapshot);
+
+// Restore on next login
+const stored = await api.loadSession(userId);
+if (stored) {
+  store.restore(stored);
+}
+```
+
+`snapshot()` enforces a 1MB size limit (S9). If the serialized state exceeds 1MB, it throws `ENS-4006`. Use `maxTraces` to control snapshot growth.
+
+## The Thread ID
+
+Pass `threadId` to `Provider` (or directly to `createEnterstellarStore()`) to persist a conversation thread ID across sessions:
+
+```tsx
+<Provider registry={registry} connection={connection} threadId={session.threadId}>
+  {/* zones */}
+</Provider>
+```
+
+The thread ID is stored in `store.get<SessionState>('session')?.threadId` and included in all outbound `AgentTrace` records. Your backend can use it to restore LLM context on re-visit.
+
+## Schema Migrations
+
+When you add an extension or change the store shape across versions, register a migration:
+
+```ts
+store.registerMigration({
+  from: '1.0.0',
+  to: '1.1.0',
+  migrate: (state) => ({
+    ...state,
+    extensions: {
+      ...state.extensions,
+      preferences: { theme: 'system' }, // new field with default
+    },
+  }),
+});
+```
+
+Migrations run automatically when the persisted state's `schemaVersion` doesn't match the current `STATE_SCHEMA_VERSION`. They are chained in semver order — `1.0.0 → 1.1.0 → 1.2.0`.
+
+## Typed Extensions
+
+Extend the store with custom namespaced data via `store.extend()`:
+
+```ts
+import { z } from 'zod';
+
+// Register during Provider setup, before any zones render
+const preferencesSchema = z.object({
+  theme: z.enum(['light', 'dark', 'system']),
+  language: z.string(),
+});
+
+store.extend('preferences', preferencesSchema);
+store.set('preferences', { theme: 'dark', language: 'en' });
+
+// Type-safe read
+const prefs = store.get<{ theme: string; language: string }>('preferences');
+```
+
+`extend()` is idempotent only if the same name hasn't been registered — registering the same name twice throws immediately. Use `store.hasExtension('preferences')` to guard against double-registration.
+
+## Scenario: Encrypted Store with Session Restore
+
+```ts
+import { createEnterstellarStore } from '@enterstellar-ai/state';
+import { Provider } from '@enterstellar-ai/react';
+
+// 1. Create an AES-GCM key (in production: derive from user credentials)
+const encKey = await crypto.subtle.generateKey(
+  { name: 'AES-GCM', length: 256 },
+  true,
+  ['encrypt', 'decrypt'],
+);
+
+// 2. Create the store
+const store = await createEnterstellarStore({
+  persistence: 'indexed-db',
+  maxTraces: 50,
+  encryption: { key: encKey, algorithm: 'AES-GCM' },
+});
+
+// 3. Restore previous session if available
+const savedSnapshot = await myApi.loadSnapshot(userId);
+if (savedSnapshot) {
+  store.restore(savedSnapshot);
+}
+
+// 4. Pass to Provider
+function App() {
+  return (
+    <Provider registry={registry} store={store} connection={connection}>
+      {/* Your app — zones see the restored state immediately */}
+    </Provider>
+  );
+}
+
+// 5. Save on logout
+async function handleLogout() {
+  const snapshot = store.snapshot();
+  await myApi.saveSnapshot(userId, snapshot);
+  store.destroy();
+}
+```
+
+<Cards>
+  <Card title="Provider →" description="How Provider auto-creates the store and why you'd override it." href="/concepts/provider" />
+  <Card title="DevTools →" description="Inspect live store state and trace history in the DevTools panel." href="/guides/devtools" />
+</Cards>

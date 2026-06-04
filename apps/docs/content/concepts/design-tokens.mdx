@@ -1,0 +1,93 @@
+---
+title: Design Tokens
+description: Enterstellar treats your design system as firmware — the LLM never picks a color, it picks a token. The Compiler validates the token path exists. The renderer resolves its value at runtime, per theme.
+icon: Palette
+---
+
+## Design System as Firmware
+
+In a traditional UI, a developer picks `bg-red-500`. In a GenUI system without Enterstellar, the LLM picks `bg-red-500` — and nothing stops it from picking `#ff0000` on a patient alert card in a healthcare app that uses `#e53935` for danger.
+
+In Enterstellar, the LLM picks `token:danger`. That's all it can do.
+
+The Compiler validates that `token:danger` exists in the active `DesignTokenSet`. The renderer resolves `token:danger` to `#e53935` (or `#ff5252` in dark mode) at render time. The LLM never touches a hex value.
+
+**Your design system is firmware.** The LLM can compose UI from it, but it cannot override it.
+
+## W3C DTCG Format
+
+Enterstellar's design token set follows the [W3C Design Token Community Group](https://www.w3.org/community/design-tokens/) (DTCG) specification. This is the format natively exported by Figma, Penpot, and Adobe XD — enabling direct pipeline from design tool to Enterstellar.
+
+```json
+{
+  "colors": {
+    "semantic": {
+      "danger": { "$value": "#e53935", "$type": "color" },
+      "warning": { "$value": "#f9a825", "$type": "color" },
+      "success": { "$value": "#43a047", "$type": "color" }
+    },
+    "surface": {
+      "primary": { "$value": "#ffffff", "$type": "color" },
+      "secondary": { "$value": "#f5f5f5", "$type": "color" }
+    }
+  },
+  "spacing": {
+    "sm": { "$value": "8px", "$type": "dimension" },
+    "md": { "$value": "16px", "$type": "dimension" },
+    "lg": { "$value": "24px", "$type": "dimension" }
+  }
+}
+```
+
+## The `token:` Reference Format
+
+In a `ComponentContract`, every design token reference uses the `token:` prefix followed by the DTCG path:
+
+```ts
+tokens: {
+  background: 'token:colors.surface.primary',
+  statusColor: 'token:colors.semantic.danger',
+  padding: 'token:spacing.md',
+},
+```
+
+The `token:` prefix is enforced at registration time (rule R6 in `defineComponent()`). A value that doesn't start with `token:` throws `ENS-1007` immediately.
+
+## Compile-Time vs. Render-Time
+
+The Compiler and the renderer handle tokens at different phases:
+
+| Phase | What happens | Who does it |
+|:---|:---|:---|
+| **Registration** | R6 validates all `tokens` values start with `token:`. | `defineComponent()` |
+| **Compile-time** | Step 3 (Token) verifies the path exists in the `DesignTokenSet`. Error: `ENS-2003`. | `EnterstellarCompiler` |
+| **Render-time** | `token:colors.semantic.danger` resolves to the actual CSS custom property or value for the current theme. | `TokenResolver` (per renderer) |
+
+The Compiler never resolves token values — it only checks that the path exists. Rendering is the renderer's job. This separation is what makes Enterstellar renderer-agnostic: the same contract works on web (CSS custom properties), React Native (`StyleSheet` values), and Tauri (theme values) because token resolution is a renderer concern, not a compilation concern.
+
+## Token Categories
+
+A standard `DesignTokenSet` covers:
+
+| Category | Path pattern | Example |
+|:---|:---|:---|
+| Semantic colors | `token:colors.semantic.*` | `token:colors.semantic.danger` |
+| Surface colors | `token:colors.surface.*` | `token:colors.surface.primary` |
+| Text colors | `token:colors.text.*` | `token:colors.text.muted` |
+| Spacing | `token:spacing.*` | `token:spacing.md` |
+| Typography | `token:typography.*` | `token:typography.body` |
+| Radii | `token:radii.*` | `token:radii.card` |
+| Shadows | `token:shadows.*` | `token:shadows.elevated` |
+
+## Why Not Tailwind Classes?
+
+Tailwind classes are renderer-specific. `bg-red-500` is a CSS class that means nothing outside the web. `text-sm` requires a Tailwind build pipeline.
+
+Enterstellar tokens are renderer-agnostic. `token:colors.semantic.danger` resolves to `#e53935` on web, `{ red: 229, green: 57, blue: 53 }` on React Native, and a Tauri theme variable on desktop. One contract, every platform.
+
+There's also a safety dimension: Tailwind classes give the LLM free rein over visual decisions. Tokens constrain it to your design system — only the colors, sizes, and styles you've defined.
+
+<Cards>
+  <Card title="Configuring Tokens →" description="Define your DesignTokenSet, add custom token categories, and set up multi-brand theming." href="/guides/configuring-tokens" />
+  <Card title="Compilation →" description="How the Token step validates token paths during compilation." href="/concepts/compilation" />
+</Cards>

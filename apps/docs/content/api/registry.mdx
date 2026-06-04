@@ -1,0 +1,190 @@
+---
+title: "@enterstellar-ai/registry"
+description: Component Contract Registry — defineComponent(), createRegistry(), mergeRegistries(), and the EnterstellarRegistry interface.
+icon: Library
+---
+
+## Purpose
+
+`@enterstellar-ai/registry` is the Component Contract layer — M3 moat. It validates and stores `ComponentContract` definitions, generates the compact Agent Manifest injected into LLM system prompts, and exposes the runtime registry API (`get`, `list`, `getSchema`, `register`).
+
+No framework imports. Pure TypeScript (L15).
+
+## Installation
+
+```bash
+npm install @enterstellar-ai/registry @enterstellar-ai/types zod
+```
+
+## Factories
+
+### `defineComponent(contract)`
+
+Validates and returns a `ComponentContract`. The validator runs at module load time — invalid contracts throw immediately.
+
+```ts
+import { defineComponent } from '@enterstellar-ai/registry';
+import { z } from 'zod';
+
+export const StatusCard = defineComponent({
+  name: 'StatusCard',             // PascalCase, unique
+  description: 'Displays a service health metric with status badge', // ≤120 chars
+  category: 'data-display',       // semantic category
+  tags: ['status', 'health', 'metric', 'badge'], // 1–10 tags
+  props: z.object({
+    title: z.string(),
+    value: z.number().min(0).max(100),
+    status: z.enum(['healthy', 'warning', 'critical']),
+  }),
+  tokens: {
+    background: 'token:colors.surface.primary',
+    statusBadge: 'token:colors.semantic.success',
+    padding: 'token:spacing.md',
+  },
+  accessibility: {
+    role: 'status',
+    ariaLabel: 'Service health metric',
+    announceOnUpdate: true,
+  },
+  states: {
+    loading: 'EnterstellarSkeleton',  // All 4 required — missing any throws
+    error: 'EnterstellarErrorCard',
+    empty: 'EnterstellarEmptyState',
+    ready: 'StatusCard',              // Must equal the component's own name
+  },
+  examples: [
+    {
+      intent: 'Show API health status',
+      props: { title: 'API', value: 99.9, status: 'healthy' },
+    },
+  ],
+});
+```
+
+**Parameters:**
+
+| Field | Type | Required | Notes |
+|:---|:---|:---:|:---|
+| `name` | `string` | ✅ | PascalCase, unique within registry |
+| `description` | `string` | ✅ | ≤120 chars — injected into Agent Manifest |
+| `category` | `ComponentCategory` | ✅ | Used by Semantic Index for grouping |
+| `tags` | `string[]` | ✅ | Min 1, max 10 — Semantic Index search terms |
+| `props` | `ZodType` | ✅ | Zod schema — the compiler's validation source |
+| `tokens` | `Record<string, string>` | ✅ | All values must be `token:*` references |
+| `accessibility` | `ComponentAccessibility` | ✅ | WAI-ARIA `role`, `ariaLabel`, `announceOnUpdate` |
+| `states` | `ComponentStates` | ✅ | All 4 required (`loading`, `error`, `empty`, `ready`) |
+| `examples` | `ComponentExample[]` | ✅ | Used by `autoMock()` and intent coverage tooling |
+| `dataSource` | `ComponentDataSource` | — | Abstract data source config. Omit for presentational components |
+| `auth` | `ComponentAuth` | — | Auth requirements for RBAC gating |
+| `origin` | `ContractOrigin` | — | Federated/remote contract origin metadata |
+
+---
+
+### `createRegistry(config)`
+
+Creates an `EnterstellarRegistry` instance. Validates all contracts at creation time. Throws `EnterstellarError` on the first invalid contract.
+
+```ts
+import { createRegistry } from '@enterstellar-ai/registry';
+import type { DesignTokenSet } from '@enterstellar-ai/types';
+import { StatusCard, DataTable, MetricChart } from './contracts';
+
+const tokens: DesignTokenSet = {
+  colors: {
+    semantic: { success: { $value: '#43a047', $type: 'color' } },
+    surface: { primary: { $value: '#ffffff', $type: 'color' } },
+  },
+  spacing: { md: { $value: '16px', $type: 'dimension' } },
+};
+
+const registry = createRegistry({
+  components: [StatusCard, DataTable, MetricChart],
+  designTokens: tokens,
+});
+```
+
+**Parameters:**
+
+| Field | Type | Required | Description |
+|:---|:---|:---:|:---|
+| `components` | `ComponentContract[]` | ✅ | Array of validated contracts |
+| `designTokens` | `DesignTokenSet` | — | Token set used by the compiler's Token step |
+
+---
+
+### `mergeRegistries(...registries)`
+
+Merges two or more `EnterstellarRegistry` instances. Throws on duplicate component names.
+
+```ts
+import { mergeRegistries } from '@enterstellar-ai/registry';
+import { coreRegistry } from './enterstellar/registry-core';
+import { analyticsRegistry } from './enterstellar/registry-analytics';
+
+const registry = mergeRegistries(coreRegistry, analyticsRegistry);
+```
+
+---
+
+### `validateContract(contract)`
+
+Validates a single contract without registering it. Returns `{ valid, violations }`.
+
+```ts
+import { validateContract } from '@enterstellar-ai/registry';
+
+const result = validateContract(StatusCard);
+if (!result.valid) {
+  console.log(result.violations);
+  // [{ field: 'states.loading', message: 'Missing required lifecycle state' }]
+}
+```
+
+---
+
+### `generateManifest(registry)`
+
+Generates the compact Agent Manifest string for injection into an LLM system prompt. The manifest contains only `name`, `description`, and `keyProps` for each contract — not the full Zod schema (~200 tokens for a 50-component registry vs. ~50,000 for the full registry).
+
+```ts
+import { generateManifest } from '@enterstellar-ai/registry';
+
+const manifest = generateManifest(registry);
+// Inject into your LLM system prompt:
+// systemPrompt = `${baseSystemPrompt}\n\n${manifest}`;
+```
+
+---
+
+## `EnterstellarRegistry` Interface
+
+| Method | Signature | Description |
+|:---|:---|:---|
+| `get(name)` | `(name: string) => ComponentContract \| undefined` | Retrieve a contract by name |
+| `list()` | `() => ComponentContract[]` | All registered contracts |
+| `getManifest()` | `() => CompactManifestEntry[]` | Compact entries for Agent Manifest |
+| `getSchema(name)` | `(name: string) => ZodType \| undefined` | Zod schema for a specific component |
+| `register(contract)` | `(c: ComponentContract) => void` | Runtime registration (used by Forge) |
+| `has(name)` | `(name: string) => boolean` | Check if a component is registered |
+| `size` | `number` | Number of registered components |
+
+---
+
+## Types
+
+| Type | Description |
+|:---|:---|
+| `EnterstellarRegistry` | Registry instance interface |
+| `RegistryConfig` | Config for `createRegistry()` |
+| `ComponentContractInput` | Input type for `defineComponent()` (before normalization) |
+| `ValidationResult` | Return type of `validateContract()` |
+| `ValidationViolation` | Single violation from contract validation |
+| `CompactManifestEntry` | Entry in the Agent Manifest (from `@enterstellar-ai/types`) |
+
+---
+
+## See Also
+
+- [Bible §4.1](https://github.com/enterstellar-ai/enterstellar/blob/main/agent/03-enterstellar-implementation-bible.md) — Registry module specification
+- [Design Choices R1–R20](https://github.com/enterstellar-ai/enterstellar/blob/main/agent/04-enterstellar-design-choices.md) — All locked decisions for this package
+- [Component Contracts →](/concepts/component-contracts) — Conceptual guide to writing contracts

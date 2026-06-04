@@ -1,0 +1,204 @@
+---
+title: Architecture Overview
+description: The full Enterstellar pipeline — 6 processing layers, a Two-Speed Architecture, the Forge flywheel, and five strategic moats. The technical explainer for engineers who want to understand what they're building on.
+icon: Layers
+---
+
+## The One-Sentence Architecture
+
+Enterstellar is a **typed compilation layer** between any AI agent and any render target. It converts `{ component, props }` JSON into validated, token-compliant, accessible, observable UI — every time, without exception.
+
+---
+
+## The Full Pipeline
+
+Every user interaction that reaches a `Zone` traverses the following sequence:
+
+```mermaid
+graph TB
+    subgraph UserLayer["User Layer"]
+        User["👤 User Intent"]
+    end
+
+    subgraph TransportLayer["Transport Layer — Protocol-Agnostic"]
+        AGUI["AG-UI Events"]
+        A2UI["A2UI Blueprints"]
+        MCP["MCP App Widgets"]
+        Custom["Custom WebSocket / SSE"]
+    end
+
+    subgraph EnterstellarEngine["⚡ Enterstellar Engine"]
+        direction TB
+        Normalizer["① Normalizer\nProtocol → ComponentIntent"]
+        SemIndex["② Semantic Index\nIntent → Top-K Components\n(~200 tokens, not ~50K)"]
+        Resolver["③ Component Resolver\nIntent → Best Match"]
+        Forge["③b Component Forge\nNo match → Generate Contract\n(LocalForge / CloudForge)"]
+        Compiler["④ UI Compiler\nSchema Validation + Token Enforcement"]
+        DeterminismEngine["⑤ Determinism Engine\nCache Lookup + Zone Policy"]
+        LifecycleManager["⑥ Lifecycle Manager\nLoading / Error / Empty / Ready / Streaming"]
+    end
+
+    subgraph AdapterLayer["⚙️ Adapter Layer"]
+        AuthA["Auth Adapter"]
+        DataA["Data Adapter"]
+        ErrorA["Error Adapter"]
+        AnalyticsA["Analytics Adapter"]
+    end
+
+    subgraph RenderLayer["Render Layer — Platform-Agnostic Contract → Target"]
+        Web["@enterstellar-ai/react\nReact / Next.js"]
+        Native["@enterstellar-ai/render-native\nReact Native / Expo"]
+        Desktop["@enterstellar-ai/render-desktop\nTauri / Electron"]
+        Spatial["@enterstellar-ai/render-spatial\nvisionOS / WebXR"]
+        Voice["@enterstellar-ai/render-voice\nSSML / audio UI"]
+    end
+
+    User --> AGUI & A2UI & MCP & Custom
+    AGUI & A2UI & MCP & Custom --> Normalizer
+    Normalizer --> SemIndex
+    SemIndex --> Resolver
+    Resolver -->|"✅ Match"| Compiler
+    Resolver -->|"❌ No match"| Forge
+    Forge --> Compiler
+    Compiler --> DeterminismEngine
+    DeterminismEngine --> LifecycleManager
+    LifecycleManager --> Web & Native & Desktop & Spatial & Voice
+    AdapterLayer -.->|"auth / data / errors / analytics"| EnterstellarEngine
+```
+
+---
+
+## The 6 Processing Steps
+
+| Step | Name | Package | One Line |
+|:---:|:---|:---|:---|
+| **①** | **Normalizer** | `@enterstellar-ai/normalizer` | Converts AG-UI, A2UI, MCP, or raw JSON into a unified `ComponentIntent`. |
+| **②** | **Semantic Index** | `@enterstellar-ai/semantic-index` | Embeds the intent and retrieves top-K most relevant components (~200 tokens). |
+| **③** | **Component Resolver** | `@enterstellar-ai/registry` | Picks the best match. Below the confidence threshold → triggers the Forge. |
+| **③b** | **Component Forge** | `@enterstellar-ai/forge` | Generates a `ComponentContract` on-the-fly for novel intents. Logs every invocation for the Cold Path. |
+| **④** | **UI Compiler** | `@enterstellar-ai/compiler` | Validates props against the Zod schema. Enforces design tokens. Auto-corrects or falls back. |
+| **⑤** | **Determinism Engine** | `@enterstellar-ai/cache` | Checks zone policy (0.0–1.0). Serves from render cache on hit. |
+| **⑥** | **Lifecycle Manager** | `@enterstellar-ai/lifecycle` | Wraps the component in `loading`, `error`, `empty`, and `streaming` states. |
+
+**L3 (locked):** Every `ComponentIntent` — whether from the registry or the Forge — passes through the UI Compiler. There is no fast path that bypasses validation.
+
+---
+
+## The Two-Speed Architecture
+
+The pipeline separates into a Hot Path (milliseconds) and a Cold Path (hours to days):
+
+```mermaid
+graph TB
+    subgraph HotPath["⚡ Hot Path — Runtime (Milliseconds)"]
+        Intent["User Intent"] --> Resolver["Component Resolver"]
+        Resolver -->|"✅ Match found"| Compiler["UI Compiler"]
+        Resolver -->|"❌ No match"| Forge["Component Forge"]
+        Forge --> Compiler
+        Compiler --> Render["Render"]
+    end
+
+    subgraph ColdPath["🔄 Cold Path — Async (Hours / Days)"]
+        Forge -.->|"log trace"| TraceDB["Forge Trace DB"]
+        TraceDB --> Clusterer["Intent Clusterer"]
+        Clusterer --> Generator["Contract Generator"]
+        Generator --> AutoTest["Automated Tests"]
+        AutoTest --> HITL["HITL Review Queue"]
+        HITL -->|"✅ Approved"| Registry["Registry Update\n(canary rollout)"]
+        HITL -->|"❌ Rejected"| Discard["Discard / Feedback"]
+    end
+```
+
+The Hot Path serves the user. The Cold Path grows the registry. Every Forge invocation on the Hot Path feeds the Cold Path — the registry learns from every novel intent it sees.
+
+The Cold Path pipeline has 6 phases:
+
+| Phase | What Happens | Automation |
+|:---:|:---|:---|
+| **1. Collect** | Forge traces stored with intent, context, output. | Fully automated |
+| **2. Cluster** | Similar unmatched intents grouped by threshold. | Fully automated |
+| **3. Generate** | Full `ComponentContract` generated for cluster. | AI-assisted |
+| **4. Test** | Zod schema, token compliance, axe-core a11y, responsive, visual regression. | Fully automated |
+| **5. Review** | HITL queue — product/design team approves the contract. | Human decision |
+| **6. Promote** | Canary rollout: 5% → 25% → 100%. Registry version auto-increments. | Automated deploy |
+
+---
+
+## The Forge Flywheel
+
+The Forge is the runtime weapon. The Cold Path is the moat.
+
+```mermaid
+graph LR
+    Agent["AI Agent"] -->|"uses Enterstellar to write UI"| App["Application"]
+    App -->|"produces traces"| Traces["Agent Traces"]
+    Traces -->|"analyzed by"| Agent
+    Agent -->|"identifies forge patterns"| Forge["Cold Path Pipeline"]
+    Forge -->|"promotes new components"| Registry["Registry"]
+    Registry -->|"better components available for"| Agent
+```
+
+Every production render emits a mandatory `ForgeSignal` (L12 — zero PII, queued offline and synced on connectivity). Forged contracts are named `__forged_{name}_{8-char-hash}`, marked `_meta.forged: true`, and are ephemeral — they exist in memory only for the session.
+
+---
+
+## Strategic Moats
+
+Every design decision in Enterstellar reinforces one or more of five strategic moats:
+
+| Moat | What It Is | Where It Lives |
+|:---|:---|:---|
+| **M1: Compiler** | The type checker of GenUI. Schema + token + accessibility validation before any pixel renders. | `@enterstellar-ai/compiler` |
+| **M2: ForgeSignal Corpus** | Mandatory zero-PII telemetry that feeds the Intent Router and Forge Model. More users → smarter routing. | `@enterstellar-ai/telemetry` |
+| **M3: ComponentContract Standard** | The schema every component must conform to. If this becomes the industry standard, Enterstellar becomes the platform. | `@enterstellar-ai/registry`, `@enterstellar-ai/contract-protocol` |
+| **M4: Intent Router** | Learns from ForgeSignal which intents map to which components. Gets better with every compilation. | `@enterstellar-ai/semantic-index`, `@enterstellar-ai/global-index` |
+| **M5: Forge Model** | Fine-tuned on ForgeSignal to generate better contracts. Self-corrects from production data. | `@enterstellar-ai/forge` |
+
+---
+
+## The Compiler's 5-Step Pipeline
+
+```mermaid
+graph LR
+    A["LLM Output\n(raw JSON)"] --> B{"Schema\nParse"}
+    B -->|"✅ Valid"| C{"Design Token\nCheck"}
+    B -->|"❌ Invalid"| D["Self-Correct Loop\n(send error back to LLM)"]
+    D --> B
+    C -->|"✅ Compliant"| E{"Accessibility\nAudit"}
+    C -->|"❌ Hallucinated token"| F["Force Design Token\ne.g., '#ff0000' → 'token:danger'"]
+    F --> E
+    E -->|"✅ Complete"| G["✅ Compiled\nComponentIntent"]
+    E -->|"⚠️ Missing ARIA"| H["Auto-inject\nARIA attributes"]
+    H --> G
+```
+
+**Steps:**
+1. **Parse** — Zod schema validation against the contract's `props` schema.
+2. **Token check** — Every `token:*` reference resolved against the active `DesignTokenSet`. Raw hex values are coerced to nearest token (`ENS-2007` warning) or fail if no match (`ENS-2002`).
+3. **Accessibility audit** — WAI-ARIA `role`, `ariaLabel`, `announceOnUpdate` checked. Auto-injected if `autoAccessibility: true`.
+4. **Self-correction** — On schema parse failure, the error is sent back to the LLM as a structured message. Retry up to `maxRetries` times.
+5. **Trace** — Every step emits trace events. `CompilationResult.status` is `'pass'`, `'corrected'`, or `'fail'` — never silent.
+
+---
+
+## Universal Rendering
+
+The engine is platform-agnostic. Only renderers are platform-specific (L15 — enforced by CI):
+
+```mermaid
+graph TB
+    Contract["Component Contract\n(platform-agnostic semantic spec)"]
+    Contract --> Web["@enterstellar-ai/react — React / Next.js (v1.0)"]
+    Contract --> Native["@enterstellar-ai/render-native — React Native / Expo (v1.5)"]
+    Contract --> Desktop["@enterstellar-ai/render-desktop — Tauri / Electron (v2.0)"]
+    Contract --> Spatial["@enterstellar-ai/render-spatial — visionOS / WebXR (v3.0)"]
+    Contract --> Voice["@enterstellar-ai/render-voice — SSML + audio UI (v3.0)"]
+    Contract --> CLI["@enterstellar-ai/render-cli — TUI / terminal (v3.0)"]
+```
+
+`PatientVitals` on React renders as a card with charts. On Voice it renders as a spoken summary. The contract doesn't change. The renderer interprets it.
+
+<Cards>
+  <Card title="Design Principles →" description="The 15 non-negotiable principles (L1–L15) that govern every decision." href="/architecture/design-principles" />
+  <Card title="Package Map →" description="All packages, their dependency edges, and their role in the pipeline." href="/architecture/package-map" />
+</Cards>

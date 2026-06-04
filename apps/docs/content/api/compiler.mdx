@@ -1,0 +1,266 @@
+---
+title: "@enterstellar-ai/compiler"
+description: The Enterstellar UI Compiler — schema validation, design token enforcement, accessibility auditing, 3-tier self-correction, and middleware extensibility. The M1 moat.
+icon: ShieldCheck
+---
+
+## Purpose
+
+`@enterstellar-ai/compiler` is the M1 moat. Every `ComponentIntent` — whether from the registry, the Forge, or a test harness — passes through the compiler before rendering. No bypass, no escape hatch (L3). It is the type checker of GenUI.
+
+No framework imports. Pure TypeScript (L15).
+
+```bash
+npm install @enterstellar-ai/compiler @enterstellar-ai/registry @enterstellar-ai/types zod
+```
+
+---
+
+## Quick Start
+
+```ts
+import { createCompiler } from '@enterstellar-ai/compiler';
+import { createRegistry } from '@enterstellar-ai/registry';
+
+const registry = createRegistry({ components: [...] });
+
+const compiler = createCompiler({
+  registry,
+  onValidationFailure: {
+    strategy: 'self-correct',
+    maxRetries: 2,
+    fallbackComponent: 'GenericCard',
+  },
+  strictDesignTokens: true,
+  autoAccessibility: true,
+  maxNestingDepth: 10,
+  includeDiff: true,
+});
+
+const result = await compiler.compile(intent, { agent: 'gpt-4o' });
+// result.status === 'pass' | 'corrected' | 'fail'
+```
+
+---
+
+## Factory
+
+### `createCompiler(config)`
+
+Creates an `EnterstellarCompiler` instance. The registry is the only required field — all others have documented defaults.
+
+**Config (`CompilerConfig`):**
+
+| Field | Type | Required | Default | Description |
+|:---|:---|:---:|:---|:---|
+| `registry` | `EnterstellarRegistry` | ✅ | — | Registry to validate intents against |
+| `onValidationFailure` | `ValidationFailureConfig` | ✅ | — | Failure strategy, max retries, fallback component |
+| `strictDesignTokens` | `boolean` | — | `true` | Reject non-token visual values. If `false`, coerces to nearest token. |
+| `autoAccessibility` | `boolean` | — | `true` | Auto-inject `role` and `aria-*` attributes for missing ARIA |
+| `maxNestingDepth` | `number` | — | `10` | Max `ComponentIntent` nesting depth (range: 3–20) |
+| `includeDiff` | `boolean` | — | `true` | Include raw-vs-compiled props diff in result (for DevTools) |
+| `selfCorrection` | `SelfCorrectionConfig` | — | Deterministic enabled | 3-tier self-correction config |
+| `onCorrection` | `CorrectionCallback` | — | `undefined` | **Deprecated** — use `selfCorrection.llm` instead |
+| `onTelemetry` | `TelemetryRecorder` | — | `undefined` | Injected by `Provider` — records `ForgeSignal` on every compile |
+
+---
+
+## `EnterstellarCompiler` Interface
+
+### `compiler.compile(intent, options?)`
+
+Runs the full 5-step compilation pipeline. Never throws — always returns a `CompilationResult` with `status: 'pass'`, `'corrected'`, or `'fail'`.
+
+```ts
+const result = await compiler.compile(intent, {
+  agent: 'gpt-4o',
+  rawIntent: 'show patient vitals',
+  intentCategory: 'data-display',
+});
+```
+
+**Options (`CompileOptions`):**
+
+| Field | Type | Description |
+|:---|:---|:---|
+| `agent` | `string` | LLM identifier for telemetry (C12 locked — explicit injection) |
+| `rawIntent` | `string` | Raw user intent string — hashed to SHA-256 by telemetry |
+| `intentCategory` | `IntentCategory` | Classification for telemetry (defaults to `'utility'`) |
+
+**Returns `CompilationResult`:**
+
+| Field | Type | Description |
+|:---|:---|:---|
+| `status` | `'pass' \| 'corrected' \| 'fail'` | Compilation outcome |
+| `componentName` | `string` | PascalCase component name |
+| `props` | `Record<string, unknown>` | Validated, token-compliant, accessibility-injected props |
+| `errors` | `CompilationError[]` | Validation errors (empty when `status` is `'pass'` or `'corrected'`) |
+| `selfCorrectionAttempts` | `number` | How many correction attempts were made |
+| `provenance` | `CompilationProvenance` | Render source, forge mode, cache hit |
+| `diff` | `{ raw, compiled } \| undefined` | Raw vs. compiled props diff (dev only, when `includeDiff: true`) |
+
+---
+
+### `compiler.lint(intent)`
+
+Validates without a full `CompilationResult`. No provenance, no trace emission. Returns only errors and warnings.
+
+```ts
+const { errors, warnings } = await compiler.lint(intent);
+// errors: CompilationError[]    — fatal validation failures
+// warnings: CompilationWarning[] — non-fatal advisories
+```
+
+Used by the migration pipeline to determine outcomes:
+
+| Errors | Warnings | Outcome |
+|:---:|:---:|:---:|
+| 0 | 0 | `CLEAN` |
+| 0 | >0 | `WARN` |
+| >0 | any | `REVIEW` |
+
+---
+
+### `compiler.use(step)`
+
+Registers a custom middleware step in the pipeline. Custom steps are inserted after the built-in steps (resolve, parse, token, accessibility) and before the trace step.
+
+```ts
+import type { CompilationStep } from '@enterstellar-ai/compiler';
+
+const hipaaCheck: CompilationStep = async (context, next) => {
+  if (containsPHI(context.props)) {
+    context.errors.push(createHipaaError(context));
+    return context; // short-circuit — do not call next()
+  }
+  return next();
+};
+
+compiler.use(hipaaCheck);
+```
+
+A `CompilationStep` is an async middleware function:
+
+```ts
+type CompilationStep = (
+  context: CompilationContext,
+  next: () => Promise<CompilationContext>,
+) => Promise<CompilationContext>;
+```
+
+---
+
+## Validation Failure Config
+
+```ts
+type ValidationFailureConfig = {
+  strategy: 'self-correct' | 'fallback' | 'reject';
+  maxRetries: number;         // Max correction attempts before fallback (default: 2)
+  fallbackComponent: string;  // PascalCase name in registry
+};
+```
+
+| Strategy | What Happens |
+|:---|:---|
+| `'self-correct'` | Invokes `selfCorrection.llm` callback to retry. Falls back after `maxRetries`. |
+| `'fallback'` | Renders `fallbackComponent` immediately without retrying. |
+| `'reject'` | Returns `status: 'fail'` with errors. No fallback rendered. |
+
+---
+
+## 3-Tier Self-Correction
+
+The compiler applies corrections in tiers — cheapest first, LLM last:
+
+| Tier | Type | What It Fixes |
+|:---:|:---|:---|
+| **1** | Deterministic (Tier 1) | Type coercion (`"72"` → `72`), boolean coercion (`"yes"` → `true`), missing defaults from `z.default()`, enum fuzzy match (Levenshtein ≤2), token fuzzy match |
+| **2** | Template (Tier 2) | Missing required fields filled from `contract.examples[0].props` |
+| **3** | LLM (Tier 3) | Full error + context sent to `selfCorrection.llm` callback |
+
+```ts
+const compiler = createCompiler({
+  registry,
+  onValidationFailure: { strategy: 'self-correct', maxRetries: 3, fallbackComponent: 'GenericCard' },
+  selfCorrection: {
+    deterministic: true,          // Tier 1 + 2 enabled (default)
+    llm: async (errors, context) => {
+      // Send to your LLM — receives errors, original intent, and compact schema
+      const corrected = await callLLM(errors, context);
+      return { component: corrected.component, props: corrected.props };
+    },
+    trace: process.env.NODE_ENV === 'development', // Include correction trace in result
+    enumMatchThreshold: 2,        // Levenshtein distance for enum fuzzy matching
+  },
+});
+```
+
+**`SelfCorrectionConfig`:**
+
+| Field | Type | Default | Description |
+|:---|:---|:---|:---|
+| `deterministic` | `boolean` | `true` | Enable Tier 1 + 2 deterministic correction |
+| `llm` | `CorrectionCallback` | — | Tier 3 LLM correction callback |
+| `trace` | `boolean` | `false` | Include `CorrectionTraceEntry[]` in `CompilationResult` |
+| `enumMatchThreshold` | `number` | `2` | Levenshtein distance limit for enum fuzzy matching (1–5) |
+
+---
+
+## Error Factories
+
+Error factories for custom steps and testing:
+
+| Export | Code | Description |
+|:---|:---:|:---|
+| `schemaParseError` | `ENS-2001` | Zod schema parse failure |
+| `invalidTokenError` | `ENS-2002` | Hallucinated design token |
+| `missingAccessibilityError` | `ENS-2003` | Missing ARIA attribute |
+| `unknownComponentError` | `ENS-2004` | Unknown component name |
+| `selfCorrectionExhaustedError` | — | Max retries exceeded |
+| `fallbackRenderedError` | — | Fallback component triggered |
+| `tokenCoercionWarning` | `ENS-2007` | Token coerced to nearest valid token |
+| `propsStrippedWarning` | — | Unknown props removed |
+| `maxNestingDepthError` | — | Nesting depth exceeded |
+
+---
+
+## Utilities
+
+| Export | Description |
+|:---|:---|
+| `validateNestingDepth(intent, maxDepth)` | Returns `NestingValidationResult` with depth and violations |
+| `attemptDeterministicCorrection(errors, props, schema)` | Run Tier 1 + 2 deterministic correction standalone |
+| `COMPILER_VERSION` | Semver constant |
+
+---
+
+## Types
+
+| Type | Description |
+|:---|:---|
+| `EnterstellarCompiler` | Compiler interface |
+| `CompilerConfig` / `CompilerConfigInput` | Factory config |
+| `CompilationStep` | Middleware step signature |
+| `CompilationContext` | Mutable pipeline state |
+| `CompilationWarning` | Non-fatal warning |
+| `CompileOptions` | Options for `compile()` / `lint()` |
+| `ValidationFailureStrategy` | `'self-correct' \| 'fallback' \| 'reject'` |
+| `ValidationFailureConfig` | Failure handling config |
+| `SelfCorrectionConfig` | 3-tier self-correction config |
+| `CorrectionCallback` | Tier 3 LLM correction function |
+| `CorrectionContext` | Context passed to correction callback |
+| `CorrectionResult` | Return from correction callback |
+| `CorrectionStrategy` | Deterministic correction strategy union |
+| `CorrectionTraceEntry` | Single correction in trace |
+| `DeterministicCorrectionResult` | Result of Tier 1 + 2 attempt |
+| `LintResult` | Output of `compiler.lint()` |
+| `PipelineStepName` | Named built-in step identifier |
+| `NamedStep` | Custom step with name |
+
+---
+
+## See Also
+
+- [Bible §4.2](https://github.com/enterstellar-ai/enterstellar/blob/main/agent/03-enterstellar-implementation-bible.md) — compiler module specification (exact 5-step pipeline)
+- [Design Choices C1–C20, SC-01–SC-18](https://github.com/enterstellar-ai/enterstellar/blob/main/agent/04-enterstellar-design-choices.md)
+- [Architecture Overview →](/architecture/overview) — compiler's place in the 6-layer pipeline

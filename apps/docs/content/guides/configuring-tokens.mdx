@@ -1,0 +1,211 @@
+---
+title: Configuring Tokens
+description: Define your design system as a W3C DTCG DesignTokenSet. The Compiler validates every token:* reference at compile time. The renderer resolves them at render time — per theme, per platform.
+icon: Palette
+---
+
+## Define Your Token Set
+
+A `DesignTokenSet` is a plain JavaScript object following the W3C DTCG specification. Define it in `enterstellar/tokens.ts`:
+
+```ts
+import type { DesignTokenSet } from '@enterstellar-ai/types';
+
+export const tokens: DesignTokenSet = {
+  colors: {
+    semantic: {
+      success: { $value: '#43a047', $type: 'color' },
+      warning: { $value: '#f9a825', $type: 'color' },
+      danger:  { $value: '#e53935', $type: 'color' },
+    },
+    surface: {
+      primary:   { $value: '#ffffff', $type: 'color' },
+      secondary: { $value: '#f5f5f5', $type: 'color' },
+      elevated:  { $value: '#fafafa', $type: 'color' },
+    },
+    text: {
+      primary:  { $value: '#212121', $type: 'color' },
+      secondary:{ $value: '#757575', $type: 'color' },
+      muted:    { $value: '#9e9e9e', $type: 'color' },
+    },
+  },
+  spacing: {
+    xs: { $value: '4px',  $type: 'dimension' },
+    sm: { $value: '8px',  $type: 'dimension' },
+    md: { $value: '16px', $type: 'dimension' },
+    lg: { $value: '24px', $type: 'dimension' },
+    xl: { $value: '32px', $type: 'dimension' },
+  },
+  typography: {
+    body:    { $value: '14px/1.5 Inter, sans-serif', $type: 'fontFamily' },
+    heading: { $value: '20px/1.2 Inter, sans-serif', $type: 'fontFamily' },
+    mono:    { $value: '13px/1.4 "JetBrains Mono", monospace', $type: 'fontFamily' },
+  },
+  radii: {
+    sm:   { $value: '4px',  $type: 'dimension' },
+    md:   { $value: '8px',  $type: 'dimension' },
+    lg:   { $value: '12px', $type: 'dimension' },
+    full: { $value: '9999px', $type: 'dimension' },
+  },
+  shadows: {
+    card:     { $value: '0 1px 3px rgba(0,0,0,0.12)', $type: 'shadow' },
+    elevated: { $value: '0 4px 12px rgba(0,0,0,0.15)', $type: 'shadow' },
+    modal:    { $value: '0 20px 60px rgba(0,0,0,0.3)', $type: 'shadow' },
+  },
+};
+```
+
+## Reference Tokens in Contracts
+
+In a `ComponentContract`, reference tokens using the `token:` prefix with the DTCG path:
+
+```ts
+import { defineComponent } from '@enterstellar-ai/registry';
+import { z } from 'zod';
+
+export const AlertCard = defineComponent({
+  name: 'AlertCard',
+  description: 'Displays a system alert with severity styling',
+  category: 'feedback',
+  tags: ['alert', 'feedback', 'notification'],
+  props: z.object({
+    message: z.string(),
+    severity: z.enum(['info', 'warning', 'danger']),
+  }),
+  tokens: {
+    background:  'token:colors.surface.elevated',
+    borderColor: 'token:colors.semantic.warning',
+    textColor:   'token:colors.text.primary',
+    padding:     'token:spacing.md',
+    radius:      'token:radii.md',
+    shadow:      'token:shadows.card',
+  },
+  // ...
+});
+```
+
+The Compiler's Token step (step 3) verifies every `token:*` path exists in the active `DesignTokenSet`. Unknown paths throw `ENS-2002`.
+
+## Adding Custom Token Categories
+
+Add any key to `DesignTokenSet` beyond the standard categories. The DTCG spec allows arbitrary nesting:
+
+```ts
+export const tokens: DesignTokenSet = {
+  // ... standard categories
+
+  // Custom: brand tokens
+  brand: {
+    primary:   { $value: '#6366f1', $type: 'color' },
+    secondary: { $value: '#8b5cf6', $type: 'color' },
+    accent:    { $value: '#06b6d4', $type: 'color' },
+  },
+
+  // Custom: Z-index scale
+  zIndex: {
+    overlay: { $value: '100', $type: 'number' },
+    modal:   { $value: '200', $type: 'number' },
+    tooltip: { $value: '300', $type: 'number' },
+  },
+};
+```
+
+Then reference in contracts: `'token:brand.primary'`, `'token:zIndex.modal'`.
+
+## Light and Dark Mode
+
+The `DesignTokenSet` defines token *paths*, not final values. Token resolution happens in the renderer — which means you can provide different values per theme without touching the registry or contracts.
+
+```ts
+// tokens-light.ts
+export const lightTokens: DesignTokenSet = {
+  colors: {
+    surface: {
+      primary: { $value: '#ffffff', $type: 'color' },
+    },
+  },
+};
+
+// tokens-dark.ts
+export const darkTokens: DesignTokenSet = {
+  colors: {
+    surface: {
+      primary: { $value: '#1a1a1a', $type: 'color' },
+    },
+  },
+};
+```
+
+Select the active token set based on the current theme and pass it to your `createRegistry()` or `createCompiler()` config. The contracts don't change — only the token set they resolve against does.
+
+## Multi-Brand Support
+
+For multi-tenant or white-label applications, define one token set per brand:
+
+```ts
+// registries/brand-a.ts
+import { createRegistry } from '@enterstellar-ai/registry';
+import { brandATokens } from './tokens/brand-a';
+
+export const brandARegistry = createRegistry({
+  components: [...],
+  designTokens: brandATokens,
+});
+
+// registries/brand-b.ts
+export const brandBRegistry = createRegistry({
+  components: [...], // same components, different tokens
+  designTokens: brandBTokens,
+});
+```
+
+The compiler validates token paths against the registry's token set. A contract that references `token:brand.primary` will pass when `brand.primary` exists in the token set, and fail if it doesn't.
+
+## Scenario: Custom Brand Palette
+
+```ts
+import { defineComponent } from '@enterstellar-ai/registry';
+import { createRegistry } from '@enterstellar-ai/registry';
+import { z } from 'zod';
+import type { DesignTokenSet } from '@enterstellar-ai/types';
+
+// 1. Define your brand tokens
+const myTokens: DesignTokenSet = {
+  brand: {
+    primary:   { $value: '#0f172a', $type: 'color' },
+    highlight: { $value: '#38bdf8', $type: 'color' },
+  },
+  spacing: {
+    card: { $value: '20px', $type: 'dimension' },
+  },
+};
+
+// 2. Write a contract that references brand tokens
+const HeroCard = defineComponent({
+  name: 'HeroCard',
+  description: 'Brand-aligned hero section card',
+  category: 'marketing',
+  tags: ['hero', 'brand', 'card'],
+  props: z.object({ headline: z.string(), subtitle: z.string() }),
+  tokens: {
+    bg:       'token:brand.primary',   // ✓ exists in myTokens
+    accent:   'token:brand.highlight', // ✓ exists in myTokens
+    padding:  'token:spacing.card',    // ✓ exists in myTokens
+  },
+  // ...
+});
+
+// 3. Register with the token set
+const registry = createRegistry({
+  components: [HeroCard],
+  designTokens: myTokens,
+});
+
+// 4. Compiler step 3 now validates against myTokens
+// token:brand.unknown → ENS-2002 (invalid design token)
+```
+
+<Cards>
+  <Card title="Design Tokens →" description="Conceptual explainer: the firmware philosophy, DTCG format, and token path format." href="/concepts/design-tokens" />
+  <Card title="Component Contracts →" description="How to declare token references in the tokens field of defineComponent()." href="/concepts/component-contracts" />
+</Cards>

@@ -1,0 +1,204 @@
+---
+title: Custom Adapters
+description: Four adapters plug your infrastructure into Enterstellar — auth for RBAC, data for queries, error for retry and sanitization, analytics for tracking. All built from validated factories with AD5 error wrapping.
+icon: Plug
+---
+
+## The 4 Adapters
+
+Every adapter is created via a factory that validates the config and wraps method errors into `EnterstellarError` (AD5). Raw vendor exceptions never reach components.
+
+| Adapter | Factory | Key methods |
+|:---|:---|:---|
+| `AuthAdapter` | `createAuthAdapter()` | `getSession()`, `hasRole()`, `onAuthChange()` |
+| `DataAdapter` | `createDataAdapter()` | `query()`, `mutate()`, `subscribe()` |
+| `ErrorAdapter` | `createErrorAdapter()` | `report()`, `shouldRetry()`, `sanitize()` |
+| `AnalyticsAdapter` | `createAnalyticsAdapter()` | `track()`, `identify()` |
+
+All I/O methods (`getSession`, `hasRole`, `query`, `mutate`, `report`, `shouldRetry`, `sanitize`) are `async` (AD2 locked). Analytics methods (`track`, `identify`) are synchronous fire-and-forget.
+
+## AuthAdapter — Firebase Example
+
+```ts
+import { createAuthAdapter } from '@enterstellar-ai/adapters';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+
+const firebaseAuth = getAuth();
+
+const auth = createAuthAdapter({
+  name: 'firebase-auth',
+
+  getSession: async () => {
+    const user = firebaseAuth.currentUser;
+    if (!user) return null;
+
+    // Fetch custom claims for RBAC
+    const token = await user.getIdTokenResult();
+    const roles = (token.claims['roles'] as string[] | undefined) ?? [];
+
+    return { userId: user.uid, roles };
+  },
+
+  hasRole: async (role) => {
+    const user = firebaseAuth.currentUser;
+    if (!user) return false;
+    const token = await user.getIdTokenResult();
+    const roles = (token.claims['roles'] as string[] | undefined) ?? [];
+    return roles.includes(role);
+  },
+
+  onAuthChange: (callback) => {
+    return onAuthStateChanged(firebaseAuth, async (user) => {
+      if (!user) {
+        callback(null);
+        return;
+      }
+      const token = await user.getIdTokenResult();
+      const roles = (token.claims['roles'] as string[] | undefined) ?? [];
+      callback({ userId: user.uid, roles });
+    });
+  },
+});
+```
+
+`onAuthChange` returns an unsubscribe function. Zones re-evaluate visibility when the auth state changes — users who lose a `'clinician'` role see their clinical zones replaced immediately.
+
+## ErrorAdapter — Sentry Example
+
+```ts
+import { createErrorAdapter } from '@enterstellar-ai/adapters';
+import * as Sentry from '@sentry/browser';
+
+const errors = createErrorAdapter({
+  name: 'sentry-error',
+
+  report: async (error, context) => {
+    Sentry.captureException(error, { extra: context });
+  },
+
+  shouldRetry: async (error, attempt) => {
+    // Retry transient errors up to 3 times, skip on auth/validation errors
+    const isTransient = error.message.includes('network') || error.message.includes('timeout');
+    return isTransient && attempt < 3;
+  },
+
+  sanitize: async (error) => {
+    // Strip SSNs before logging (HIPAA)
+    const sanitized = new Error(
+      error.message.replace(/\d{3}-\d{2}-\d{4}/g, '[REDACTED-SSN]'),
+    );
+    sanitized.stack = error.stack;
+    return sanitized;
+  },
+});
+```
+
+The `ErrorAdapter` plugs into `Zone`'s retry pipeline:
+- `shouldRetry()` is called on every compilation failure before the FSM transitions `error → loading`.
+- `sanitize()` is called before `report()` — the sanitized error is what gets reported and displayed.
+- `report()` receives both the error and contextual metadata (`{ zone, intent, attempt }`).
+
+## AnalyticsAdapter — Mixpanel Example
+
+```ts
+import { createAnalyticsAdapter } from '@enterstellar-ai/adapters';
+import mixpanel from 'mixpanel-browser';
+
+const analytics = createAnalyticsAdapter({
+  name: 'mixpanel-analytics',
+
+  track: (event, properties) => {
+    mixpanel.track(event, properties);
+  },
+
+  identify: (userId, traits) => {
+    mixpanel.identify(userId);
+    if (traits) mixpanel.people.set(traits);
+  },
+});
+```
+
+Analytics methods are synchronous — no `async`, no Promise return. They're fire-and-forget: if Mixpanel fails, it doesn't affect zone rendering.
+
+## Wiring Adapters to Provider
+
+```tsx
+import { Provider } from '@enterstellar-ai/react';
+
+<Provider
+  registry={registry}
+  connection={connection}
+  adapters={{
+    auth,     // optional — omit if no RBAC
+    data,     // optional — omit if zones don't query data
+    error,    // optional — omit to use built-in retry policy
+    analytics // optional — omit if no analytics tracking
+  }}
+>
+  {/* zones */}
+</Provider>
+```
+
+All fields in `adapters` are optional. Wire only what you need.
+
+## No-Op Adapters for Testing
+
+`@enterstellar-ai/adapters` exports no-op factories for testing environments:
+
+```ts
+import {
+  createNoopAuthAdapter,
+  createNoopDataAdapter,
+  createNoopErrorAdapter,
+  createNoopAnalyticsAdapter,
+} from '@enterstellar-ai/adapters';
+
+// In test setup — adapters that do nothing
+const adapters = {
+  auth: createNoopAuthAdapter(),
+  data: createNoopDataAdapter(),
+  error: createNoopErrorAdapter(),
+  analytics: createNoopAnalyticsAdapter(),
+};
+```
+
+No-ops implement the full interface with safe defaults (`getSession` returns `null`, `query` returns `[]`, `shouldRetry` returns `false`, `track` is a no-op).
+
+## Scenario: Firebase AuthAdapter with RBAC Zone Gating
+
+```tsx
+import { createAuthAdapter } from '@enterstellar-ai/adapters';
+import { Provider, Zone } from '@enterstellar-ai/react';
+
+const auth = createAuthAdapter({
+  name: 'firebase-auth',
+  getSession: async () => { /* ... */ },
+  hasRole: async (role) => { /* ... */ },
+  onAuthChange: (cb) => { /* ... */ },
+});
+
+// In your app: clinical zone gated by 'clinician' role
+export default function Dashboard() {
+  return (
+    <Provider registry={registry} connection={connection} adapters={{ auth }}>
+
+      {/* Available to all authenticated users */}
+      <Zone name="overview" determinism={0.8} fallback={<OverviewSkeleton />} />
+
+      {/* Gated to clinicians — your backend enforces this via the auth adapter */}
+      <Zone
+        name="clinical-notes"
+        determinism={1.0}
+        allowedComponents={['ClinicalNoteEditor', 'PatientSummary']}
+        fallback={<AccessDenied />}
+      />
+
+    </Provider>
+  );
+}
+```
+
+<Cards>
+  <Card title="Data Integration →" description="Full DataAdapter setup guide with Supabase and custom backends." href="/guides/data-integration" />
+  <Card title="Custom Configuration →" description="Compose adapters with custom compiler, cache, and store in a single Provider." href="/guides/custom-configuration" />
+</Cards>

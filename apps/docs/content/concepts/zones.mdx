@@ -1,0 +1,120 @@
+---
+title: Zones
+description: A Zone is a determinism-controlled container for AI-generated content. The determinism dial — from 0.0 to 1.0 — is the mechanism that makes Enterstellar safe enough for clinical UI and expressive enough for conversational AI.
+icon: Layers
+---
+
+## The Determinism Dial
+
+`determinism` is a float from `0.0` to `1.0` on every `<Zone>`. It controls how much agency the AI has over what renders inside that zone.
+
+```
+0.0 ─────────────────────────────────────── 1.0
+│           │           │           │           │
+Locked    Guided      Hybrid      Fluid    Generative
+```
+
+| Value | Behavior | Example use case |
+|:---|:---|:---|
+| `0.0` | Agent is never called. `children` render statically. | Medication ordering confirmation screen |
+| `0.3` | Agent suggests a component, but only from a whitelist. | Guided onboarding flow |
+| `0.5` | Agent selects from the full registry, but confidence-weighted. | Dashboard sidebar |
+| `0.8` | Agent selects freely. High-confidence results render; low-confidence falls back. | Content feed |
+| `1.0` | Agent selects freely. All valid compilations render. | Conversational AI assistant |
+
+This is the key insight: **safety and expressiveness are not in conflict**. You tune them per zone. Lock the zones that need it. Free the ones that don't.
+
+## The `Zone` Component
+
+```tsx
+<Zone
+  name="dashboard-main"
+  determinism={0.8}
+  fallback={<DashboardSkeleton />}
+  allowedComponents={['MetricChart', 'DataTable', 'StatusCard']}
+  timeout={15000}
+  showProvenance
+/>
+```
+
+### Props
+
+| Prop | Type | Default | Description |
+|:---|:---|:---|:---|
+| `name` | `string` | required | Unique zone identifier. kebab-case per coding rules. |
+| `determinism` | `number` | `1.0` | The determinism dial (0.0–1.0). |
+| `fallback` | `ReactNode` | `null` | Rendered during `loading`, `error`, and during Provider initialization. |
+| `fallbackComponent` | `string` | `'GenericCard'` | Registry component name used as fallback on compilation failure. |
+| `allowedComponents` | `readonly string[]` | all allowed | Whitelist of component names. Restricts what the agent can select. |
+| `activateOn` | `'mount' \| 'visible' \| 'manual'` | `'mount'` | When the zone calls the agent. |
+| `showProvenance` | `boolean` | `false` | Show a provenance badge (trust indicator) in the zone corner. |
+| `timeout` | `number` | `30000` | Agent timeout in ms. Transitions to `error` state on expiry (LC3). |
+| `retryPolicy` | `RetryPolicy` | `{ auto: true, maxRetries: 3, backoff: 'exponential' }` | Auto-retry config for agent failures. |
+| `onError` | `(error, trace) => void` | — | Error callback. Receives the error and the current `ZoneTrace`. |
+| `children` | `ReactNode` | — | Static children. Rendered only when `determinism === 0.0`. |
+
+## Rendering Rules
+
+A zone's rendering behavior follows 6 rules (from Bible §4.3):
+
+1. If `determinism === 0.0`, render `children`. Never call the agent.
+2. If `Provider` is still initializing (context is `null`), render `fallback`.
+3. If there is no `connection` on `Provider`, render `fallback`.
+4. When an intent arrives, compile it. If compilation succeeds, render the result.
+5. If compilation fails after all retries, render `fallback` (or `fallbackComponent` from the registry).
+6. Never show an empty zone. If there is nothing to render, render `fallback`.
+
+## Activation Strategies
+
+```tsx
+{/* Default: calls agent on mount */}
+<Zone name="sidebar" determinism={1.0} fallback={<Spinner />} />
+
+{/* Lazy: calls agent when the zone scrolls into view */}
+<Zone name="below-fold" determinism={1.0} activateOn="visible" fallback={<Skeleton />} />
+
+{/* Manual: you control when the zone activates */}
+<Zone name="search-results" determinism={1.0} activateOn="manual" fallback={null} />
+```
+
+## Multiple Zones: A Dashboard Example
+
+Each zone in an app is independent — different determinism, different allowed components, different fallbacks.
+
+```tsx
+export default function Dashboard() {
+  return (
+    <Provider registry={registry} connection={connection}>
+
+      {/* Navigation: locked — never AI-generated */}
+      <Zone name="nav" determinism={0.0}>
+        <Navigation />
+      </Zone>
+
+      {/* Main content: fluid — AI picks from full registry */}
+      <Zone
+        name="main-content"
+        determinism={0.8}
+        fallback={<ContentSkeleton />}
+        timeout={10000}
+      />
+
+      {/* Sidebar assistant: fully generative */}
+      <Zone
+        name="assistant"
+        determinism={1.0}
+        fallback={<ChatSkeleton />}
+        showProvenance
+      />
+
+    </Provider>
+  );
+}
+```
+
+The locked nav renders instantly from `children`. The main content waits for the agent and falls back to a skeleton. The assistant is fully generative and shows a provenance badge so users know it's AI-generated.
+
+<Cards>
+  <Card title="Lifecycle →" description="How a Zone transitions between idle, loading, streaming, ready, error, and empty states." href="/concepts/lifecycle" />
+  <Card title="Compilation →" description="What happens inside the Zone between intent arrival and the final render." href="/concepts/compilation" />
+</Cards>

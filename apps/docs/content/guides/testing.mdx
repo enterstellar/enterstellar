@@ -1,0 +1,225 @@
+---
+title: Testing
+description: Enterstellar ships intent-based tests — no LLM, no network, no flakiness. createTestHarness() runs the real compiler pipeline with deterministic mock responses so you can assert component resolution, Zod validation, and token compliance in milliseconds.
+icon: TestTube
+---
+
+## The Problem with Testing GenUI
+
+You can't unit test an LLM. But you can test everything Enterstellar does with that LLM's output.
+
+`@enterstellar-ai/test` provides a `TestHarness` that:
+- **Mocks** intent resolution (you control what the "LLM" returns)
+- **Runs the real compiler** — Zod validation, token enforcement, accessibility checks
+- **Produces** a full `AgentTrace` with timing metrics
+
+No real LLM. No network. Deterministic. Fast.
+
+## Installation
+
+```bash
+npm install --save-dev @enterstellar-ai/test
+```
+
+## Basic Setup
+
+```ts
+import { createTestHarness } from '@enterstellar-ai/test';
+import { createRegistry } from '@enterstellar-ai/registry';
+import { StatusCard } from './components/status-card/StatusCard.contract';
+
+const registry = createRegistry({ components: [StatusCard] });
+const harness = createTestHarness({ registry });
+```
+
+## Registering Mock Responses
+
+You control exactly what intent maps to what component. The harness never calls an LLM — it returns your mock as the "resolved" component intent:
+
+```ts
+harness.mock('show API health', {
+  component: 'StatusCard',
+  props: {
+    title: 'API Status',
+    value: 99.9,
+    status: 'healthy',
+  },
+});
+```
+
+## Running a Test
+
+```ts
+const trace = await harness.resolve('show API health');
+
+// Framework-agnostic assertions (work in any test runner)
+harness.expect.componentToBe(trace, 'StatusCard');
+harness.expect.latencyBelow(trace, 500); // ms
+```
+
+Each `resolve()` call:
+1. Looks up `mockResponses['show API health']` → `ComponentIntent`
+2. Runs it through the real `@enterstellar-ai/compiler`
+3. Returns a synthetic `AgentTrace` with timing
+
+If the intent has no mock, `resolve()` throws `ENS-5010`.
+
+## Vitest Matchers
+
+For a more expressive syntax, register the Enterstellar matchers in your Vitest setup file:
+
+```ts
+// vitest.setup.ts
+import { enterstellarMatchers } from '@enterstellar-ai/test';
+import { expect } from 'vitest';
+
+expect.extend(enterstellarMatchers);
+```
+
+Then use in tests:
+
+```ts
+import { describe, it, expect } from 'vitest';
+
+describe('StatusCard', () => {
+  it('resolves from "show API health"', async () => {
+    harness.mock('show API health', {
+      component: 'StatusCard',
+      props: { title: 'API Status', value: 99.9, status: 'healthy' },
+    });
+
+    const trace = await harness.resolve('show API health');
+
+    expect(trace).toResolveToComponent('StatusCard');
+    expect(trace.compilation).toPassValidation();
+    expect(trace.compilation).toBeTokenCompliant();
+  });
+
+  it('rejects invalid status enum', async () => {
+    harness.mock('show broken status', {
+      component: 'StatusCard',
+      props: { title: 'API', value: 0, status: 'catastrophic' }, // invalid
+    });
+
+    const trace = await harness.resolve('show broken status');
+    expect(trace.compilation.status).toBe('fail');
+  });
+});
+```
+
+## Testing Raw Props (Skip Intent Resolution)
+
+Use `compileRaw()` to test specific prop combinations directly, bypassing intent resolution:
+
+```ts
+const result = await harness.compileRaw({
+  component: 'StatusCard',
+  props: { title: 'Test', value: 42, status: 'warning' },
+});
+
+harness.expect.compilationToPass(result);
+harness.expect.tokenCompliant(result);
+harness.expect.accessibilityToPass(result);
+```
+
+## Auto-Mock All Components
+
+For smoke-testing your entire registry, `autoMock()` generates a mock from each contract's `examples` field:
+
+```ts
+const harness = createTestHarness({ registry });
+harness.autoMock(); // generates mocks from every contract's examples[]
+
+// Now you can resolve by any registered example intent
+const trace = await harness.resolve('Show system health for the API');
+```
+
+Components without `examples` get a minimal mock with just the component name. `autoMock()` does not overwrite existing mocks.
+
+## Intent Coverage
+
+Run intent coverage analysis across your test results to find uncovered components:
+
+```ts
+import { computeIntentCoverage } from '@enterstellar-ai/test';
+
+const results = [
+  { intent: 'show API health', resolvedComponent: 'StatusCard', compilationPassed: true },
+  { intent: 'show data table', resolvedComponent: 'DataTable', compilationPassed: true },
+];
+
+const coverage = computeIntentCoverage(registry, results);
+console.log(`Coverage: ${coverage.percentage}%`);
+console.log('Uncovered:', coverage.uncovered); // ['MetricChart']
+```
+
+## VCR Fixtures for Integration Tests
+
+Record real LLM responses as fixtures for deterministic replay in CI:
+
+```ts
+import { saveFixtures, loadFixtures } from '@enterstellar-ai/test';
+
+// Record (run once against a real LLM)
+await saveFixtures('./fixtures/status-card.json', [
+  { intent: 'show API health', response: { component: 'StatusCard', props: {...} }, recordedAt: Date.now() },
+]);
+
+// Replay (in CI, no LLM needed)
+const fixtures = await loadFixtures('./fixtures/status-card.json');
+for (const { intent, response } of fixtures) {
+  harness.mock(intent, response);
+}
+```
+
+## Scenario: 3 Intent Tests for StatusCard
+
+```ts
+import { describe, it, expect, beforeEach } from 'vitest';
+import { createTestHarness } from '@enterstellar-ai/test';
+import { enterstellarMatchers } from '@enterstellar-ai/test';
+import { registry } from './enterstellar/registry';
+
+expect.extend(enterstellarMatchers);
+
+describe('StatusCard intent tests', () => {
+  let harness: ReturnType<typeof createTestHarness>;
+
+  beforeEach(() => {
+    harness = createTestHarness({ registry });
+  });
+
+  it('resolves healthy status', async () => {
+    harness.mock('show API health', {
+      component: 'StatusCard',
+      props: { title: 'API', value: 99.9, status: 'healthy' },
+    });
+    const trace = await harness.resolve('show API health');
+    expect(trace).toResolveToComponent('StatusCard');
+    expect(trace.compilation).toPassValidation();
+  });
+
+  it('rejects invalid enum value', async () => {
+    harness.mock('show unknown status', {
+      component: 'StatusCard',
+      props: { title: 'X', value: 0, status: 'unknown' }, // not in enum
+    });
+    const trace = await harness.resolve('show unknown status');
+    expect(trace.compilation.status).toBe('fail');
+  });
+
+  it('passes token compliance check', async () => {
+    const result = await harness.compileRaw({
+      component: 'StatusCard',
+      props: { title: 'API', value: 42, status: 'warning' },
+    });
+    harness.expect.tokenCompliant(result);
+    harness.expect.accessibilityToPass(result);
+  });
+});
+```
+
+<Cards>
+  <Card title="Component Contracts →" description="Add examples[] to contracts to enable autoMock() and coverage tracking." href="/concepts/component-contracts" />
+  <Card title="DevTools →" description="Inspect AgentTraces from your test harness in the DevTools replay panel." href="/guides/devtools" />
+</Cards>

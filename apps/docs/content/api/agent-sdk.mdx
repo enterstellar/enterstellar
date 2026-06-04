@@ -1,0 +1,283 @@
+---
+title: "@enterstellar-ai/agent-sdk"
+description: AI agent SDK with MCP server — 6 atomic tools + 1 composite enterstellar_build_ui. Exposes Enterstellar as a Model Context Protocol server for Claude, GPT, Gemini, or any custom agent.
+icon: Bot
+---
+
+## Purpose
+
+`@enterstellar-ai/agent-sdk` exposes Enterstellar as a **Model Context Protocol (MCP) server** so any AI agent (Claude, GPT-4o, Gemini, custom) can interact with the component registry, compiler, semantic index, and forge as composable tools — programmatically, without a browser.
+
+Two consumers: the `EnterstellarAgentSDK` for direct TypeScript access, and `EnterstellarMCPServer` for MCP-compliant tool dispatch.
+
+No framework imports (L15).
+
+```bash
+npm install @enterstellar-ai/agent-sdk @enterstellar-ai/registry @enterstellar-ai/compiler @enterstellar-ai/semantic-index
+```
+
+---
+
+## Quick Start
+
+```ts
+import { createAgentSDK, createMCPServer } from '@enterstellar-ai/agent-sdk';
+
+const sdk = createAgentSDK({
+  registry,
+  compiler,
+  semanticIndex,
+  forge,   // optional — required for enterstellar_forge_component
+  store,   // optional — required for enterstellar_analyze_traces
+});
+
+// Direct usage
+const results = await sdk.search('show patient vitals', 5);
+const spec = await sdk.compose([
+  { name: 'main', component: 'PatientVitals', props: { patientId: 'P-001' }, determinism: 0.5 },
+]);
+const validation = await sdk.validate(spec);
+
+// MCP server
+const server = createMCPServer(sdk);
+const tools = server.listTools();
+const result = await server.handleToolCall(
+  'enterstellar_search_components',
+  { query: 'show patient vitals', topK: 5 }
+);
+```
+
+---
+
+## Factories
+
+### `createAgentSDK(config)`
+
+Creates an `EnterstellarAgentSDK` instance.
+
+**Config (`AgentSDKConfig`):**
+
+| Field | Type | Required | Description |
+|:---|:---|:---:|:---|
+| `registry` | `AgentSDKRegistry` | ✅ | Component registry (must implement `get()`, `list()`) |
+| `compiler` | `AgentSDKCompiler` | ✅ | UI compiler (must implement `compile()`, `lint()`) |
+| `semanticIndex` | `AgentSDKSemanticIndex` | ✅ | Semantic index (must implement `search()`) |
+| `forge` | `AgentSDKForge` | — | Forge (must implement `forge()`). Required for `enterstellar_forge_component`. |
+| `store` | `AgentSDKStore` | — | State store (must implement `get()`). Required for `enterstellar_analyze_traces`. |
+
+The SDK uses structural typing (duck typing) for all dependencies (L15). The real packages (`@enterstellar-ai/registry`, `@enterstellar-ai/compiler`, etc.) satisfy these interfaces — as do lightweight mocks.
+
+---
+
+### `createMCPServer(sdk)`
+
+Wraps an `EnterstellarAgentSDK` as a MCP-compliant server.
+
+```ts
+const server = createMCPServer(sdk);
+
+// Introspect available tools
+const tools: MCPToolDefinition[] = server.listTools();
+
+// Handle a tool call
+const result = await server.handleToolCall('enterstellar_search_components', { query: '...', topK: 5 });
+```
+
+---
+
+## `EnterstellarAgentSDK` Interface
+
+### `sdk.search(query, topK?)`
+
+Search the component registry by natural-language intent. Delegates to `SemanticIndex.search()`.
+
+```ts
+const results = await sdk.search('show patient vitals', 5);
+// results: SemanticSearchResult[] sorted by descending similarity score
+```
+
+| Parameter | Type | Default | Description |
+|:---|:---|:---|:---|
+| `query` | `string` | — | Natural-language intent |
+| `topK` | `number` | `5` | Max results (1–20) |
+
+Throws `EnterstellarError` (`ENS-8002`) if the search fails.
+
+---
+
+### `sdk.compose(zones, layout?)`
+
+Composes a `UISpec` from zone assignments. Validates that each component exists in the registry and that determinism values are 0.0–1.0.
+
+```ts
+const spec = await sdk.compose([
+  {
+    name: 'main-dashboard',        // kebab-case zone name
+    component: 'PatientVitals',    // PascalCase — must exist in registry
+    props: { patientId: 'P-001' },
+    determinism: 0.5,              // 0.0 (locked) → 1.0 (generative)
+  },
+  {
+    name: 'sidebar',
+    component: 'AlertCard',
+    props: { severity: 'high' },
+    determinism: 0.0,              // fully locked — safety-critical
+  },
+]);
+// spec: UISpec = { zones: ZoneSpec[] }
+```
+
+Throws `EnterstellarError` (`ENS-8003`) if any zone references an unknown component.
+
+---
+
+### `sdk.validate(spec)`
+
+Validates a `UISpec` through the Enterstellar compiler pipeline (L3 — no bypass). Returns the `CompilationResult` for the composed spec.
+
+```ts
+const validation = await sdk.validate(spec);
+// validation.status === 'pass' | 'corrected' | 'fail'
+```
+
+---
+
+### `sdk.analyzeTraces(timeRange, groupBy)`
+
+Analyzes agent traces from the local session store (AS5 — queries `traceIds` from `EnterstellarStore`).
+
+```ts
+const analysis = await sdk.analyzeTraces('last-hour', 'component');
+// {
+//   timeRange: 'last-hour',
+//   groupBy: 'component',
+//   totalTraces: 147,
+//   groups: [
+//     { key: 'PatientVitals', count: 89, avgLatencyMs: 213, successRate: 0.97 },
+//     { key: 'AlertCard', count: 41, avgLatencyMs: 180, successRate: 1.0 },
+//   ]
+// }
+```
+
+| Parameter | Values | Description |
+|:---|:---|:---|
+| `timeRange` | ISO 8601 range or `'last-hour'`, `'last-24h'`, `'last-7d'` | Filter window |
+| `groupBy` | `'component'`, `'zone'`, `'status'`, `'strategy'` | Aggregation dimension |
+
+Throws `EnterstellarError` (`ENS-8005`) if store is not configured.
+
+---
+
+### `sdk.forgeComponent(intent, constraints?)`
+
+Generates a runtime `ComponentContract` for an intent with no registry match. Delegates to `ComponentForge.forge()`. The forged contract passes through the compiler (L3, L13).
+
+```ts
+const result = await sdk.forgeComponent(
+  'show treatment comparison for immunotherapy vs chemotherapy',
+  { pattern: 'table', maxColumns: 4 }
+);
+// result.contract.name === '__forged_treatment_comparison_7f3a90bc'
+// result.contract._meta.forged === true
+```
+
+Throws `EnterstellarError` (`ENS-8001`) if forge is not configured.
+
+---
+
+### `sdk.getComponentSchema(componentName)`
+
+Returns the JSON Schema for a component's props, extracted from its Zod schema via Zod v4's native `.json()` method (R8).
+
+```ts
+const schema = sdk.getComponentSchema('PatientVitals');
+// {
+//   componentName: 'PatientVitals',
+//   schema: { type: 'object', properties: { patientId: { type: 'string' }, ... } }
+// }
+```
+
+Throws `EnterstellarError` (`ENS-8004`) if the component is not found.
+
+---
+
+### `sdk.buildUI(query, zones)` — Composite Tool
+
+Combines `search → compose → validate` in one call. Saves 2 round-trips for the 90% use case (AS2 locked).
+
+```ts
+const build = await sdk.buildUI('show patient vitals', [
+  { name: 'main', component: '', props: {}, determinism: 0.8 },
+]);
+// {
+//   searchResults: SemanticSearchResult[],
+//   spec: UISpec,
+//   validation: CompilationResult,
+// }
+```
+
+---
+
+## The 7 MCP Tools
+
+| Tool Name | Atomic/Composite | Maps to SDK Method |
+|:---|:---:|:---|
+| `enterstellar_search_components` | Atomic | `sdk.search()` |
+| `enterstellar_compose_ui` | Atomic | `sdk.compose()` |
+| `enterstellar_validate_spec` | Atomic | `sdk.validate()` |
+| `enterstellar_analyze_traces` | Atomic | `sdk.analyzeTraces()` |
+| `enterstellar_forge_component` | Atomic | `sdk.forgeComponent()` |
+| `enterstellar_get_component_schema` | Atomic | `sdk.getComponentSchema()` |
+| `enterstellar_build_ui` | **Composite** (AS2 locked) | `sdk.buildUI()` |
+
+Access tool definitions programmatically:
+
+```ts
+const { tools } = sdk;
+// tools: MCPToolDefinition[] — name, description, inputSchema, handler
+```
+
+---
+
+## `UISpec` and `ZoneSpec`
+
+```ts
+// A flat list of zone assignments — NOT a tree (AS3 locked)
+type UISpec = {
+  zones: readonly ZoneSpec[];
+};
+
+type ZoneSpec = {
+  name: string;          // kebab-case zone identifier
+  component: string;     // PascalCase — must exist in registry
+  props: Record<string, unknown>;
+  determinism: number;   // 0.0 (locked) → 1.0 (generative)
+};
+```
+
+---
+
+## Types
+
+| Type | Description |
+|:---|:---|
+| `EnterstellarAgentSDK` | SDK interface |
+| `AgentSDKConfig` | Factory config |
+| `ZoneSpec` | Single zone assignment |
+| `UISpec` | Flat zone assignment list |
+| `TraceAnalysis` | Output of `analyzeTraces()` |
+| `TraceAnalysisGroup` | Aggregated group entry |
+| `BuildUIResult` | Output of `buildUI()` composite tool |
+| `ComponentSchemaResult` | Output of `getComponentSchema()` |
+| `MCPToolDefinition` | Tool name, description, schema, handler |
+| `EnterstellarMCPServer` | MCP server interface |
+| `MCPToolResponse` | Successful tool response |
+| `MCPCallResult` | `handleToolCall()` return shape |
+
+---
+
+## See Also
+
+- [Bible §4.16](https://github.com/enterstellar-ai/enterstellar/blob/main/agent/03-enterstellar-implementation-bible.md) — agent-sdk module specification (canonical tool definitions)
+- [Design Choices AS1–AS6](https://github.com/enterstellar-ai/enterstellar/blob/main/agent/04-enterstellar-design-choices.md) — all locked decisions for this package
+- [Agent Integration Guide →](/guides/agent-integration) — full MCP server setup walkthrough

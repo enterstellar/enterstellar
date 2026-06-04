@@ -1,0 +1,209 @@
+---
+title: Contributing
+description: Coding rules, naming conventions, error taxonomy, the 3-step workflow, and the PR checklist. Everything a contributor needs to know before writing a line of code.
+icon: GitPullRequest
+---
+
+## The Prime Directive
+
+**Zero improvisation.** Design decisions are locked in `04-enterstellar-design-choices.md`. Do not change them mid-implementation. If you hit a genuine blocker or a decision that wasn't anticipated, raise it before writing code — not after. Ad-hoc changes break strategic moats.
+
+---
+
+## The 3-Step Workflow
+
+Every unit of work follows this order — no exceptions:
+
+**1. Plan**
+
+Before writing implementation code for any package, create its `README.md` first (Module README Standard below). Define the API surface area before filling it in. This prevents scope creep and API drift — once the README is written, the API is locked for that session.
+
+**2. Execute**
+
+Write strict TypeScript against the Bible's API signatures (`03-enterstellar-implementation-bible.md`). No `any`. No improvisation on types. Reference the Design Choices doc for every non-trivial decision.
+
+**3. Verify**
+
+Run `pnpm turbo run test` and confirm coverage ≥90% before marking anything done. For intent pipeline work, run `enterstellar test --intent="your intent"` to prove the pipeline resolves correctly.
+
+---
+
+## Naming Conventions
+
+| Entity | Convention | Example |
+|:---|:---|:---|
+| Package names | `@enterstellar-ai/kebab-case` | `@enterstellar-ai/semantic-index` |
+| Component names | `PascalCase` | `PatientVitals` |
+| Zone names | `kebab-case` | `main-dashboard` |
+| Design tokens | `token:kebab-case` | `token:colors.semantic.danger` |
+| Forged components | `__forged_{name}_{8-char-hash}` | `__forged_treatment_comparison_7f3a90bc` |
+| Trace IDs | UUIDv7 | — |
+| Adapter names | `kebab-case-adapter` | `supabase-auth-adapter` |
+| File names | `kebab-case.ts` | `create-registry.ts` |
+| Test files | `*.test.ts` next to source | `create-registry.test.ts` |
+| Exported functions | `camelCase` | `createRegistry()`, `defineComponent()` |
+| Exported interfaces | `PascalCase` | `EnterstellarRegistry`, `ComponentContract` |
+
+---
+
+## TypeScript Rules
+
+- `strict: true` in every `tsconfig.json`. No overrides.
+- No `any` — not explicit, not implicit. Use `unknown` with Zod parsing.
+- `catch` clauses use `unknown`, narrowed before use.
+- All public exports have JSDoc (`/** ... */`).
+- All schemas use Zod. No hand-rolled type assertions.
+
+---
+
+## Error Handling
+
+All Enterstellar packages throw `EnterstellarError extends Error` with three mandatory fields:
+
+```typescript
+class EnterstellarError extends Error {
+  code: string;       // e.g. 'ENS-2001'
+  module: string;     // e.g. '@enterstellar-ai/compiler'
+  recoverable: boolean;
+}
+```
+
+### Error Taxonomy
+
+| Code | Scenario | Recovery |
+|:---|:---|:---|
+| `ENS-1001` | Duplicate component name in registry | **Fatal** — throw immediately at registration time |
+| `ENS-2001` | Zod schema parse failure | Self-correct |
+| `ENS-2002` | Hallucinated design token | Reject; coerce to nearest valid token (ENS-2007 warning) after retries |
+| `ENS-2003` | Missing accessibility attribute | Auto-inject (if `autoAccessibility: true`) |
+| `ENS-2004` | Unknown component name from LLM | Self-correct (send error to LLM, retry) |
+| `ENS-3001` | Invalid zone config | **Fatal** — dev error, throw immediately |
+| `ENS-3002` | Agent timeout | Fallback component |
+| `ENS-4001` | Forge generation fail | Fallback component |
+| `ENS-4007` | State schema major version mismatch | **Fatal** — hard reject, no data loss |
+
+### Error Rules
+
+- **LLM errors** → recoverable (self-correct or coerce)
+- **Infrastructure errors** → fallback component, log to trace
+- **Developer errors** (bad config, invalid zone) → fatal throw
+- All error messages must match the exact spec in `03-enterstellar-implementation-bible.md §4.2`
+
+---
+
+## Dependency Rules
+
+| Rule | Detail |
+|:---|:---|
+| **`@enterstellar-ai/types` is always a peer dep** | Every package lists it in `peerDependencies`, not `dependencies` |
+| **Engine packages have zero framework deps** | No `react`, `react-dom`, `react-native`, or any framework import in engine packages (L15) |
+| **L15 is CI-enforced** | Custom ESLint rule fails CI if any engine package imports a framework dep |
+| **Syncpack enforces version consistency** | No two packages may depend on different versions of the same library |
+
+`@enterstellar-ai/react` is the single exception: it lists all engine packages (`compiler`, `registry`, `state`, `telemetry`, `cache`, `lifecycle`, `connection`, `adapters`, `types`) as regular `dependencies` — not peer deps. Consumers install `@enterstellar-ai/react` and get the full engine transitively.
+
+---
+
+## Testing Requirements
+
+Every module ships with tests before it ships features.
+
+| Test Type | Requirement |
+|:---|:---|
+| **Unit tests** | ≥90% line coverage. Every exported function has dedicated tests. |
+| **Integration tests** | Each module tested with its direct dependencies (no mocks for internal deps). |
+| **Contract tests** | Every `ComponentContract` in `examples/` passes `registry.validate()`. |
+| **Compilation tests** | Every `CompilationError` message text matches the exact spec in Bible §4.2. |
+| **Snapshot tests** | DevTools panel renders match approved Storybook snapshots. |
+
+### Running Tests
+
+```bash
+# All packages
+pnpm turbo run test
+
+# Single package
+pnpm --filter @enterstellar-ai/compiler test
+
+# With coverage report
+pnpm turbo run test -- --coverage
+```
+
+---
+
+## Versioning
+
+**Package versioning** is independent per package (Babel model), managed with Changesets:
+
+```bash
+# Start a changeset for your PR
+pnpm changeset
+
+# Releases are handled in CI on merge to main
+```
+
+- Never manually bump `package.json` versions — always use Changesets.
+- `@enterstellar-ai/types` may be `v1.x` while `@enterstellar-ai/forge` is `v0.x`.
+
+**ComponentContract versioning:** Contracts include a `version: string` field (semver). Registry serves latest only — no multi-version serving. If Zod parse succeeds → accept. If Zod parse fails (breaking change) → self-correction loop → fallback. Zod is the migration layer.
+
+---
+
+## Commit Convention
+
+```
+feat: add createGlobalIndex() to @enterstellar-ai/global-index
+fix: correct 8-char hash truncation in forge naming
+chore: bump @enterstellar-ai/types to 1.2.0
+breaking: rename AgentTrace.compilation.result → compilation.compilationResult
+docs: update Bible §4.5 with new EnterstellarTestHarness.expect API
+```
+
+Types: `feat`, `fix`, `chore`, `breaking`, `docs`, `test`, `refactor`, `perf`
+
+---
+
+## Module README Standard
+
+Every package's `README.md` must contain, in order:
+
+1. **Purpose** — 1 paragraph. What this package does and why it exists.
+2. **Quick Start** — minimal working code example.
+3. **API Reference** — all exported functions and interfaces with parameter descriptions.
+4. **Configuration** — all config options with defaults and valid values.
+5. **Link to Bible** — `See [Implementation Bible §4.x](../../../agent/03-enterstellar-implementation-bible.md)` for canonical spec.
+
+This is the first thing a developer or AI agent reads. If someone needs to open the Bible to understand the README, the README is incomplete.
+
+---
+
+## Per-PR Checklist
+
+Before opening a PR:
+
+- [ ] `pnpm turbo run typecheck` — zero errors
+- [ ] `pnpm turbo run lint` — zero warnings or errors
+- [ ] `pnpm turbo run test` — all tests pass, coverage ≥90%
+- [ ] `pnpm changeset` — changeset created for any user-facing change
+- [ ] All new exports have JSDoc (`/** ... */`)
+- [ ] No `any` — not explicit, not implicit
+- [ ] No hardcoded visual values (colors, spacing) — only `token:*` references
+- [ ] No engine package imports a framework dep (`react`, `react-native`, etc.)
+- [ ] All new `ComponentContract`s have all 4 lifecycle states defined
+- [ ] `README.md` updated if the public API changed
+
+---
+
+## Canonical References
+
+| Need | Document |
+|:---|:---|
+| API signatures | [`03-enterstellar-implementation-bible.md`](https://github.com/enterstellar-ai/enterstellar/blob/main/agent/03-enterstellar-implementation-bible.md) |
+| Design decisions | [`04-enterstellar-design-choices.md`](https://github.com/enterstellar-ai/enterstellar/blob/main/agent/04-enterstellar-design-choices.md) |
+| System architecture | [`02-enterstellar-system-architecture.md`](https://github.com/enterstellar-ai/enterstellar/blob/main/agent/02-enterstellar-system-architecture.md) |
+| Coding rules | [`05-enterstellar-coding-rules.md`](https://github.com/enterstellar-ai/enterstellar/blob/main/agent/05-enterstellar-coding-rules.md) |
+
+<Cards>
+  <Card title="Design Principles →" description="The 15 non-negotiable principles that underpin every coding rule." href="/architecture/design-principles" />
+  <Card title="Package Map →" description="Dependency graph and package classification — know what you're touching before you touch it." href="/architecture/package-map" />
+</Cards>

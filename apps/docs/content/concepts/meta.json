@@ -1,0 +1,16 @@
+{
+  "$schema": "../../.source/json-schema/docs.meta.json",
+  "title": "Core Concepts",
+  "icon": "BookOpen",
+  "pages": [
+    "component-contracts",
+    "registry",
+    "provider",
+    "zones",
+    "lifecycle",
+    "compilation",
+    "design-tokens",
+    "forge",
+    "agent-connection"
+  ]
+}

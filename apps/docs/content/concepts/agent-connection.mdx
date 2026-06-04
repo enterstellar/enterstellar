@@ -1,0 +1,119 @@
+---
+title: Agent Connection
+description: Enterstellar is the Body. Your LLM is the Brain. The EnterstellarAgentConnection is the protocol that lets them talk — over WebSocket, SSE, or any transport you implement.
+icon: Cable
+---
+
+## The Brain/Body Split
+
+Enterstellar handles rendering, compilation, state, telemetry, and action. It doesn't make decisions — it executes them.
+
+Your LLM agent makes decisions. It chooses which component to render, what props to set, and when to update. It doesn't render anything — it emits structured intents.
+
+The `EnterstellarAgentConnection` is the bridge between them. It carries intents from the Brain to the Body, and `UserSignal` events from the Body back to the Brain.
+
+## `createAgentConnection()`
+
+The simplest way to connect is `createAgentConnection()` from `@enterstellar-ai/connection`:
+
+```ts
+import { createAgentConnection } from '@enterstellar-ai/connection';
+
+export const connection = createAgentConnection({
+  url: process.env.NEXT_PUBLIC_AGENT_URL!,
+});
+```
+
+`createAgentConnection()` negotiates the transport automatically:
+1. **WebSocket** — tried first. Full-duplex, ideal for streaming.
+2. **SSE** — fallback if WebSocket fails. Server-sent events, HTTP-based.
+3. **Polling** — last resort. Long-polling for environments that block SSE.
+
+Pass `connection` to `Provider`:
+
+```tsx
+<Provider registry={registry} connection={connection}>
+  {/* zones */}
+</Provider>
+```
+
+## The Event Protocol
+
+The connection carries 5 event types:
+
+| Event | Direction | Description |
+|:---|:---|:---|
+| `intent` | Agent → Zone | The agent selects a component: `{ zone, component, props }` |
+| `lifecycle` | Agent → Zone | Agent signals a lifecycle transition: `{ zone, state }` |
+| `data` | Agent → Zone | Live data update for an already-rendered component |
+| `message` | Both | Conversational message (for chat-style UIs) |
+| `reconnect` | System | Connection restored after disconnect |
+
+The most common event is `intent`. Each zone filters intents by `name` — a zone named `"dashboard"` only processes intents where `event.zone === "dashboard"`.
+
+## `UserSignal`
+
+When users interact with AI-rendered components — clicking a button, submitting a form — Enterstellar sends a `UserSignal` back to the agent:
+
+```ts
+type UserSignal = {
+  type: 'click' | 'submit' | 'focus' | 'blur' | 'custom';
+  zone: string;
+  component: string;
+  payload?: Record<string, unknown>;
+  timestamp: string;
+};
+```
+
+Your agent backend receives this signal and decides what to render next. This is the feedback loop that makes Enterstellar interactive — not just a one-way display system.
+
+## Bringing Your Own Connection
+
+If you need full control over the transport — custom auth headers, a proprietary binary protocol, an existing WebSocket you don't want to replace — implement `EnterstellarAgentConnection` directly:
+
+```ts
+import type { EnterstellarAgentConnection } from '@enterstellar-ai/connection';
+
+export class MyCustomConnection implements EnterstellarAgentConnection {
+  private listeners = new Map<string, Set<(data: unknown) => void>>();
+
+  on(event: string, handler: (data: unknown) => void): () => void {
+    if (!this.listeners.has(event)) {
+      this.listeners.set(event, new Set());
+    }
+    this.listeners.get(event)!.add(handler);
+    return () => this.listeners.get(event)?.delete(handler);
+  }
+
+  emit(event: string, data: unknown): void {
+    this.listeners.get(event)?.forEach((h) => h(data));
+  }
+
+  async disconnect(): Promise<void> {
+    // close your transport
+  }
+}
+```
+
+Pass an instance to `Provider`:
+
+```tsx
+const connection = new MyCustomConnection();
+
+<Provider registry={registry} connection={connection}>
+  {/* zones will receive events from your custom transport */}
+</Provider>
+```
+
+## Connection Lifecycle
+
+The connection is separate from the `Provider` context (`EnterstellarAgentContext` — RE9). This separation means:
+
+- You can swap connections at runtime without remounting `Provider`.
+- Zones that don't need an agent (static zones with `determinism={0.0}`) are unaffected.
+- A missing connection (`connection` prop omitted) doesn't break anything — zones stay in `idle` state.
+
+<Cards>
+  <Card title="Agent Integration →" description="Set up an MCP server with createAgentSDK() to expose Enterstellar tools to your LLM." href="/guides/agent-integration" />
+  <Card title="Zones →" description="How zones receive intents from the connection and activate based on determinism." href="/concepts/zones" />
+</Cards>

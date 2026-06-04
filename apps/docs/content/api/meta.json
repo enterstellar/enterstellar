@@ -1,0 +1,18 @@
+{
+  "$schema": "../../.source/json-schema/docs.meta.json",
+  "title": "API Reference",
+  "icon": "FileCode",
+  "pages": [
+    "react",
+    "registry",
+    "types",
+    "cli",
+    "test",
+    "adapters",
+    "state",
+    "devtools",
+    "adapter-supabase",
+    "compiler",
+    "agent-sdk"
+  ]
+}

@@ -1,0 +1,181 @@
+---
+title: Cross-Language Renderers
+description: @enterstellar-ai/contract-protocol publishes 8 JSON Schema Draft-07 files. Any language that can parse JSON Schema can validate Enterstellar contracts — Swift, Kotlin, Python, Go, Rust.
+icon: Globe
+---
+
+## The Protocol
+
+Enterstellar's TypeScript implementation is the reference. `@enterstellar-ai/contract-protocol` is the language-agnostic spec that makes Enterstellar renderers possible in any language.
+
+It publishes 8 JSON Schema files (CP5 locked) that describe every data structure in the Enterstellar pipeline:
+
+| Schema | What it describes |
+|:---|:---|
+| `component-contract.json` | The full `ComponentContract` definition |
+| `component-intent.json` | The agent's output: `{ component, props }` |
+| `compilation-result.json` | The compiler's output: validated props + errors |
+| `agent-trace.json` | Full trace: every pipeline step, timing, errors |
+| `zone-config.json` | Zone configuration: determinism, fallback, allowed components |
+| `forge-signal.json` | LocalForge trigger signal and template selection result |
+| `user-signal.json` | User interaction event: `{ type, zone, component, payload }` |
+| `design-tokens-dtcg.json` | W3C DTCG-compliant design token set |
+
+## Schema Constraints
+
+Three locked constraints govern the schemas (CP2, CP7, CP8):
+
+- **Draft-07** (CP2 locked) — widest tooling support. `ajv`, `jsonschema`, SwiftyJSON, KotlinX Serialization, `serde_json` all support Draft-07. Not Draft-2019 or Draft-2020.
+- **Relative `$ref` only** (CP7 locked) — all cross-schema references use `./` relative paths. Absolute URIs break airgap-compatible deployments.
+- **Conformance test suite** (CP8 locked) — every schema ships with a valid/invalid fixture set in `conformance/`.
+
+## CLI Validator
+
+Validate any JSON file against a schema using the CLI:
+
+```bash
+npx @enterstellar-ai/contract-protocol validate \
+  component-contract \
+  schemas/component-contract.json \
+  my-contract.json
+```
+
+Arguments:
+1. Schema name (without `.json`)
+2. Path to the schema file
+3. Path to the JSON file to validate
+
+Exit code 0 = valid. Exit code 1 = invalid (errors printed to stderr in JSON).
+
+## Swift Renderer Example
+
+```swift
+import Foundation
+
+// 1. Load the component-contract schema
+let schemaURL = Bundle.main.url(forResource: "component-contract", withExtension: "json")!
+let schemaData = try Data(contentsOf: schemaURL)
+
+// 2. Decode a ComponentContract from the agent
+let intentData = """
+  { "component": "PatientVitals", "props": { "patientId": "P-001", "riskLevel": "high" } }
+""".data(using: .utf8)!
+
+// 3. Validate against component-intent.json schema
+// Use any Draft-07 compliant validator (e.g., JSONSchema Swift package)
+let validator = JSONSchemaValidator(schema: schemaData)
+let result = validator.validate(intentData)
+
+if result.isValid {
+  // Render the component
+  renderPatientVitals(props: result.decoded)
+} else {
+  // Fall back
+  renderFallback(errors: result.errors)
+}
+```
+
+## Kotlin Renderer Example
+
+```kotlin
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+
+// Validate a ComponentIntent against the schema
+fun validateIntent(intentJson: String, schemaPath: String): Boolean {
+    val schema = loadSchema(schemaPath) // load component-intent.json
+    val intent = Json.parseToJsonElement(intentJson) as JsonObject
+    return JsonSchemaValidator.validate(schema, intent)
+}
+
+// In your renderer
+val intentJson = """{"component": "TaskList", "props": {"tasks": [], "totalCount": 0}}"""
+if (validateIntent(intentJson, "schemas/component-intent.json")) {
+    renderTaskList(parseProps(intentJson))
+} else {
+    renderFallback()
+}
+```
+
+## Running the Conformance Suite
+
+Every schema ships with valid and invalid fixtures in `conformance/`:
+
+```
+conformance/
+  component-contract/
+    valid/
+      minimal.json        # Minimum required fields
+      full.json           # All fields populated
+    invalid/
+      missing-name.json   # name field absent
+      invalid-category.json # unknown category
+```
+
+### From Swift (XCTest)
+
+```swift
+import XCTest
+
+class EnterstellarConformanceTests: XCTestCase {
+
+  func testValidComponentContracts() throws {
+    let validFixtures = loadFixtures(from: "conformance/component-contract/valid")
+    let schema = loadSchema("component-contract.json")
+
+    for fixture in validFixtures {
+      XCTAssertTrue(
+        JSONSchemaValidator.validate(schema, fixture.data),
+        "Expected \(fixture.name) to be valid"
+      )
+    }
+  }
+
+  func testInvalidComponentContracts() throws {
+    let invalidFixtures = loadFixtures(from: "conformance/component-contract/invalid")
+    let schema = loadSchema("component-contract.json")
+
+    for fixture in invalidFixtures {
+      XCTAssertFalse(
+        JSONSchemaValidator.validate(schema, fixture.data),
+        "Expected \(fixture.name) to be invalid"
+      )
+    }
+  }
+}
+```
+
+### From Node.js
+
+```ts
+import Ajv from 'ajv';
+import { loadFixtures } from '@enterstellar-ai/contract-protocol/conformance';
+
+const ajv = new Ajv({ strict: true });
+const schema = require('./schemas/component-contract.json');
+const validate = ajv.compile(schema);
+
+const fixtures = await loadFixtures('component-contract');
+
+for (const { name, data, expectedValid } of fixtures) {
+  const valid = validate(data);
+  console.assert(valid === expectedValid, `Fixture ${name}: expected ${expectedValid}, got ${valid}`);
+}
+```
+
+## Protocol Versioning
+
+The protocol version is in `PROTOCOL_VERSION.md`. Breaking schema changes increment the major version. Non-breaking additions increment the minor version.
+
+Your renderer should declare which protocol version it targets:
+
+```swift
+let SUPPORTED_PROTOCOL_VERSION = "1.0"
+```
+
+Check `PROTOCOL_VERSION.md` before updating the schemas in a native renderer.
+
+<Cards>
+  <Card title="Design Tokens →" description="The design-tokens-dtcg.json schema follows W3C DTCG — compatible with Figma, Penpot, and Adobe XD exports." href="/concepts/design-tokens" />
+  <Card title="Component Contracts →" description="The TypeScript reference implementation of component-contract.json." href="/concepts/component-contracts" />
+</Cards>

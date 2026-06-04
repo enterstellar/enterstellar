@@ -1,0 +1,154 @@
+---
+title: "@enterstellar-ai/adapter-supabase"
+description: Supabase adapter — pre-built auth and data adapters that map Supabase SDK calls to Enterstellar adapter interfaces.
+icon: Database
+---
+
+## Purpose
+
+`@enterstellar-ai/adapter-supabase` provides `createSupabaseAuthAdapter()` and `createSupabaseDataAdapter()` — concrete factory functions that map Supabase SDK calls to the `AuthAdapter` and `DataAdapter` interfaces from `@enterstellar-ai/adapters`. P0 priority — ships with core.
+
+Each factory delegates to `createAuthAdapter()` / `createDataAdapter()` from `@enterstellar-ai/adapters` internally, so all AD5 error wrapping is applied automatically.
+
+```bash
+npm install @enterstellar-ai/adapter-supabase @supabase/supabase-js
+```
+
+---
+
+## Quick Start
+
+```ts
+import { createClient } from '@supabase/supabase-js';
+import {
+  createSupabaseAuthAdapter,
+  createSupabaseDataAdapter,
+} from '@enterstellar-ai/adapter-supabase';
+import { Provider } from '@enterstellar-ai/react';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+);
+
+const auth = createSupabaseAuthAdapter({ client: supabase });
+const data = createSupabaseDataAdapter({ client: supabase });
+
+export default function App() {
+  return (
+    <Provider registry={registry} adapters={{ auth, data }}>
+      {/* Your app */}
+    </Provider>
+  );
+}
+```
+
+---
+
+## `createSupabaseAuthAdapter(config)`
+
+Creates a validated `AuthAdapter` that uses the Supabase Auth client.
+
+**What it maps:**
+
+| `AuthAdapter` method | Supabase call |
+|:---|:---|
+| `getSession()` | `supabase.auth.getSession()` |
+| `hasRole(role)` | Checks session roles via `roleExtractor` |
+| `onAuthChange(cb)` | `supabase.auth.onAuthStateChange()` |
+
+**Config (`SupabaseAuthConfig`):**
+
+| Field | Type | Default | Description |
+|:---|:---|:---|:---|
+| `client` | `SupabaseClient` | — | **Required.** Initialized Supabase client |
+| `name` | `string` | `'supabase-auth'` | Adapter identifier for DevTools and error messages |
+| `roleExtractor` | `(user: unknown) => string[]` | Extracts from `user.user_metadata.roles` | Custom role extraction from the Supabase user object |
+
+```ts
+// Default: extracts roles from user_metadata.roles
+const auth = createSupabaseAuthAdapter({ client: supabase });
+
+// Custom: extract from app_metadata (JWT custom claims)
+const auth = createSupabaseAuthAdapter({
+  client: supabase,
+  roleExtractor: (user) => (user as any).app_metadata?.roles ?? [],
+});
+```
+
+---
+
+## `createSupabaseDataAdapter(config)`
+
+Creates a validated `DataAdapter` that maps abstract resource names (dot-notation, AD3) to Supabase table operations. Includes real-time subscription support via Postgres Changes (AD4 — realtime at v1).
+
+**What it maps:**
+
+| `DataAdapter` method | Supabase call |
+|:---|:---|
+| `query(resource, params)` | `supabase.from(resource).select('*').match(params)` |
+| `mutate(resource, 'create', data)` | `supabase.from(resource).insert(data).select().single()` |
+| `mutate(resource, 'update', data)` | `supabase.from(resource).update(data).match(params)` |
+| `mutate(resource, 'delete', data)` | `supabase.from(resource).delete().match(data)` |
+| `subscribe(resource, callback)` | Postgres Changes channel on `resource` table |
+
+**Config (`SupabaseDataConfig`):**
+
+| Field | Type | Default | Description |
+|:---|:---|:---|:---|
+| `client` | `SupabaseClient` | — | **Required.** Initialized Supabase client |
+| `name` | `string` | `'supabase-data'` | Adapter identifier for DevTools and error messages |
+
+```ts
+const data = createSupabaseDataAdapter({ client: supabase });
+```
+
+---
+
+## Real-Time Subscriptions
+
+The data adapter's `subscribe()` method uses Supabase Realtime Postgres Changes. Component Contracts that declare `dataSource.type: 'subscription'` receive live data updates:
+
+```ts
+// In your ComponentContract:
+dataSource: {
+  type: 'subscription',
+  source: 'patient_vitals',      // → supabase.channel('patient_vitals')
+  params: ['patientId'],
+  errorStrategy: 'retry-then-fallback',
+}
+```
+
+The zone automatically re-renders when the `patient_vitals` table changes for the subscribed `patientId`.
+
+---
+
+## Resource Naming Convention
+
+Resource names follow dot-notation convention (AD3). The data adapter maps the first segment to the Supabase table name:
+
+| `dataSource.source` | Supabase table |
+|:---|:---|
+| `'patients.vitals'` | `patient_vitals` (or `patients` + filter) |
+| `'orders'` | `orders` |
+| `'auth.sessions'` | `auth.sessions` (schema-qualified) |
+
+Implement a custom `DataAdapter` for complex mapping logic that differs from this convention.
+
+---
+
+## Types
+
+| Type | Description |
+|:---|:---|
+| `SupabaseAuthConfig` | Config for `createSupabaseAuthAdapter()` |
+| `SupabaseDataConfig` | Config for `createSupabaseDataAdapter()` |
+
+---
+
+## See Also
+
+- [Bible §4.15](https://github.com/enterstellar-ai/enterstellar/blob/main/agent/03-enterstellar-implementation-bible.md) — adapters module specification (pre-built packages table)
+- [Design Choice AD4](https://github.com/enterstellar-ai/enterstellar/blob/main/agent/04-enterstellar-design-choices.md) — Supabase P0 priority (auth + queries + realtime)
+- [`@enterstellar-ai/adapters` →](/api/adapters) — build your own custom adapter
+- [Data Integration Guide →](/guides/data-integration) — full data adapter walkthrough

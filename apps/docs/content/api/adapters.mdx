@@ -1,0 +1,266 @@
+---
+title: "@enterstellar-ai/adapters"
+description: Pluggable infrastructure adapters — auth, data, error handling, analytics. Factory functions that bridge Enterstellar components to your external services.
+icon: Plug
+---
+
+## Purpose
+
+`@enterstellar-ai/adapters` provides factory functions for creating validated adapter instances. Every adapter method is wrapped in error handling (AD5) — raw vendor errors never leak to consumers. This package defines the adapter contract; concrete implementations live in provider-specific packages (`@enterstellar-ai/adapter-supabase`, etc.).
+
+No framework imports. Pure TypeScript (L15).
+
+```bash
+npm install @enterstellar-ai/adapters @enterstellar-ai/types
+```
+
+---
+
+## Core Concept: Infrastructure Abstraction
+
+Component Contracts reference adapters via abstract names — never concrete implementations:
+
+```ts
+// In a ComponentContract:
+dataSource: {
+  type: 'query',
+  source: 'patients.vitals', // abstract — resolved by DataAdapter at runtime
+  params: ['patientId'],
+  errorStrategy: 'retry-then-fallback',
+}
+```
+
+Swapping from Supabase to Firebase requires changing one adapter instantiation — zero changes to contracts or renderers (L7).
+
+---
+
+## Auth Adapter
+
+### `createAuthAdapter(config)`
+
+Creates a validated `AuthAdapter` instance. All methods are async. Errors from your implementation are wrapped into `EnterstellarError` before being re-thrown (AD5).
+
+**Config:**
+
+| Field | Type | Required | Description |
+|:---|:---|:---:|:---|
+| `name` | `string` | ✅ | Adapter identifier for DevTools and error messages |
+| `getSession` | `() => Promise<{ userId: string; roles: string[] } \| null>` | ✅ | Returns the current auth session |
+| `hasRole` | `(role: string) => Promise<boolean>` | ✅ | RBAC check — used for zone visibility gating |
+| `onAuthChange` | `(cb) => () => void` | ✅ | Reactive auth state subscription; returns unsubscribe |
+
+```ts
+import { createAuthAdapter } from '@enterstellar-ai/adapters';
+import { supabase } from './supabase';
+
+const auth = createAuthAdapter({
+  name: 'supabase-auth',
+  getSession: async () => {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) return null;
+    return { userId: data.session.user.id, roles: ['clinician'] };
+  },
+  hasRole: async (role) => {
+    const { data } = await supabase.auth.getSession();
+    return data.session?.user.user_metadata?.role === role;
+  },
+  onAuthChange: (cb) => {
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      cb(session ? { userId: session.user.id, roles: ['clinician'] } : null);
+    });
+    return () => data.subscription.unsubscribe();
+  },
+});
+```
+
+---
+
+## Data Adapter
+
+### `createDataAdapter(config)`
+
+Creates a validated `DataAdapter` instance. Resolves abstract `dataSource.source` names (dot-notation convention, AD3) to actual data.
+
+**Config:**
+
+| Field | Type | Required | Description |
+|:---|:---|:---:|:---|
+| `name` | `string` | ✅ | Adapter identifier |
+| `query` | `(resource: string, params?) => Promise<Record[]>` | ✅ | Fetch records from a named resource |
+| `mutate` | `(resource, action, data) => Promise<Record \| null>` | ✅ | Create, update, or delete a record |
+| `subscribe` | `(resource, callback) => () => void` | ✅ | Real-time subscription; returns unsubscribe |
+
+```ts
+import { createDataAdapter } from '@enterstellar-ai/adapters';
+
+const data = createDataAdapter({
+  name: 'supabase-data',
+  query: async (resource, params) => {
+    const { data } = await supabase.from(resource).select('*').match(params ?? {});
+    return data ?? [];
+  },
+  mutate: async (resource, action, payload) => {
+    if (action === 'create') {
+      const { data } = await supabase.from(resource).insert(payload).select().single();
+      return data;
+    }
+    return null;
+  },
+  subscribe: (resource, callback) => {
+    const channel = supabase.channel(resource)
+      .on('postgres_changes', { event: '*', schema: 'public', table: resource },
+        () => { void supabase.from(resource).select('*').then(({ data }) => { if (data) callback(data); }); })
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  },
+});
+```
+
+**Action values for `mutate`:** `'create'`, `'update'`, `'delete'`
+
+---
+
+## Error Adapter
+
+### `createErrorAdapter(config)`
+
+Creates a validated `ErrorAdapter` instance. All methods are async (AD2) — `shouldRetry` and `sanitize` support remote circuit breakers and external PII detection services.
+
+**Config:**
+
+| Field | Type | Required | Description |
+|:---|:---|:---:|:---|
+| `name` | `string` | ✅ | Adapter identifier |
+| `report` | `(error, context?) => Promise<void>` | ✅ | Report to external error tracker |
+| `shouldRetry` | `(error, attemptNumber) => Promise<boolean>` | ✅ | 1-based retry decision — async for circuit-breaker support |
+| `sanitize` | `(error) => Promise<Error>` | ✅ | Strip PII before logging (HIPAA/GDPR compliance) |
+
+```ts
+import { createErrorAdapter } from '@enterstellar-ai/adapters';
+import * as Sentry from '@sentry/browser';
+
+const errors = createErrorAdapter({
+  name: 'sentry-error',
+  report: async (error, context) => {
+    Sentry.captureException(error, { extra: context });
+  },
+  shouldRetry: async (error, attempt) => attempt < 3 && isTransientError(error),
+  sanitize: async (error) => {
+    const sanitized = new Error(error.message.replace(/\d{3}-\d{2}-\d{4}/g, '[REDACTED]'));
+    sanitized.stack = error.stack;
+    return sanitized;
+  },
+});
+```
+
+---
+
+## Analytics Adapter
+
+### `createAnalyticsAdapter(config)`
+
+Creates a validated `AnalyticsAdapter` instance. Both methods are fire-and-forget (void return).
+
+**Config:**
+
+| Field | Type | Required | Description |
+|:---|:---|:---:|:---|
+| `name` | `string` | ✅ | Adapter identifier |
+| `track` | `(event: string, properties?) => void` | ✅ | Track a named event |
+| `identify` | `(userId: string, traits?) => void` | ✅ | Identify user for attribution |
+
+```ts
+import { createAnalyticsAdapter } from '@enterstellar-ai/adapters';
+
+const analytics = createAnalyticsAdapter({
+  name: 'mixpanel-analytics',
+  track: (event, properties) => {
+    mixpanel.track(event, properties);
+  },
+  identify: (userId, traits) => {
+    mixpanel.identify(userId);
+    if (traits) mixpanel.people.set(traits);
+  },
+});
+```
+
+---
+
+## No-Op Adapters (Testing)
+
+For testing and development, no-op factories create adapters that do nothing:
+
+```ts
+import {
+  createNoopAuthAdapter,
+  createNoopDataAdapter,
+  createNoopErrorAdapter,
+  createNoopAnalyticsAdapter,
+} from '@enterstellar-ai/adapters';
+
+const auth = createNoopAuthAdapter();     // getSession → null, hasRole → false
+const data = createNoopDataAdapter();     // query → [], mutate → null
+const errors = createNoopErrorAdapter();  // report → void, shouldRetry → false
+const analytics = createNoopAnalyticsAdapter(); // track/identify → void
+```
+
+---
+
+## Passing Adapters to `<Provider>`
+
+```tsx
+import { Provider } from '@enterstellar-ai/react';
+
+<Provider
+  registry={registry}
+  adapters={{ auth, data, errors, analytics }}
+>
+  {/* zones now have access to all adapters */}
+</Provider>
+```
+
+---
+
+## Adapter Interfaces (from `@enterstellar-ai/types`)
+
+The runtime interfaces (what the engine calls) are defined in `@enterstellar-ai/types` and re-exported here for convenience:
+
+| Interface | Re-exported from `@enterstellar-ai/types` | Used by |
+|:---|:---:|:---|
+| `AuthAdapter` | ✅ | Zone auth gating |
+| `DataAdapter` | ✅ | `dataSource` resolution |
+| `ErrorAdapter` | ✅ | Retry and error reporting |
+| `AnalyticsAdapter` | ✅ | Render event tracking |
+
+---
+
+## Error Factories
+
+| Export | Error Code | When Thrown |
+|:---|:---:|:---|
+| `adapterValidationError` | `ENS-7001` | Invalid adapter config |
+| `adapterMethodError` | `ENS-7002` | Adapter method threw |
+| `adapterQueryError` | `ENS-7003` | `query()` failed |
+| `adapterMutationError` | `ENS-7004` | `mutate()` failed |
+| `adapterAuthError` | `ENS-7005` | `getSession()` or `hasRole()` failed |
+
+---
+
+## Config Types
+
+| Type | Description |
+|:---|:---|
+| `AuthAdapterConfig` | Input to `createAuthAdapter()` |
+| `DataAdapterConfig` | Input to `createDataAdapter()` |
+| `ErrorAdapterConfig` | Input to `createErrorAdapter()` |
+| `AnalyticsAdapterConfig` | Input to `createAnalyticsAdapter()` |
+| `AdapterType` | `'auth' \| 'data' \| 'error' \| 'analytics'` |
+
+---
+
+## See Also
+
+- [Bible §4.15](https://github.com/enterstellar-ai/enterstellar/blob/main/agent/03-enterstellar-implementation-bible.md) — adapters module specification
+- [Design Choices AD1–AD5](https://github.com/enterstellar-ai/enterstellar/blob/main/agent/04-enterstellar-design-choices.md) — all locked decisions for this package
+- [`@enterstellar-ai/adapter-supabase` →](/api/adapter-supabase) — concrete Supabase implementation
+- [Custom Adapters Guide →](/guides/custom-adapters) — building your own adapter

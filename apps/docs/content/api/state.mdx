@@ -1,0 +1,260 @@
+---
+title: "@enterstellar-ai/state"
+description: Framework-agnostic persistent state management for Enterstellar OS — createEnterstellarStore(), snapshot/restore, AES-GCM encryption, semver migrations, and cross-device sync.
+icon: Database
+---
+
+## Purpose
+
+`@enterstellar-ai/state` provides the `createEnterstellarStore()` factory that implements the `EnterstellarStore` interface. It is the OS's memory — persistent zone state, trace ID history, session metadata, and typed extension points. No framework imports (L15).
+
+The store's async factory model is deliberate — `indexed-db` initialization is async. The `<Provider>` renders a fallback during init.
+
+```bash
+npm install @enterstellar-ai/state @enterstellar-ai/types
+```
+
+## Key Behaviors
+
+| Rule | Detail |
+|:---|:---|
+| **S1** | Single global store per app |
+| **S2** | Fixed schema (`zones`, `traceIds`, `session`) + typed `extend()` |
+| **S3** | Dev-mode Zod validation on `get()` (zero overhead in production) |
+| **S4** | Subscriptions fire only on actual value change (shallow equality) |
+| **S8** | Write-behind debounce (default 200ms). Locked zones are write-through. |
+| **S9** | 1MB snapshot size limit (`ENS-4006` on exceed) |
+| **S14** | Trace ID FIFO eviction (default 100) |
+
+---
+
+## Factory
+
+### `createEnterstellarStore(config?)`
+
+Creates an `EnterstellarStore` instance. Returns a `Promise<EnterstellarStore>`.
+
+```ts
+import { createEnterstellarStore } from '@enterstellar-ai/state';
+
+const store = await createEnterstellarStore({
+  persistence: 'indexed-db',
+  maxTraces: 50,
+  devMode: process.env.NODE_ENV === 'development',
+});
+```
+
+**Configuration:**
+
+| Field | Type | Default | Description |
+|:---|:---|:---|:---|
+| `persistence` | `PersistenceStrategy` | `'memory'` | Where state is stored (`'memory'`, `'local-storage'`, `'indexed-db'`, `'custom'`) |
+| `customAdapter` | `PersistenceAdapter` | — | Required when `persistence: 'custom'` |
+| `encryption` | `EncryptionConfig` | — | Optional AES-GCM encryption at rest (Web Crypto API) |
+| `sync` | `SyncConfig` | — | Cross-device sync config (`enabled`, `endpoint`) |
+| `maxTraces` | `number` | `100` | Max trace IDs before FIFO eviction (S14) |
+| `devMode` | `boolean` | `false` | Enable Zod validation on `get()` (S3) |
+| `threadId` | `string` | — | Persistent conversation thread ID (Appendix E P3) |
+| `debounceMs` | `number` | `200` | Write-behind debounce interval (S8) |
+
+**Persistence strategies:**
+
+| Value | Storage | Use Case |
+|:---|:---|:---|
+| `'memory'` | None (ephemeral) | Testing, demos |
+| `'local-storage'` | `localStorage` via `JSON.stringify` | Simple browser apps |
+| `'indexed-db'` | IndexedDB via `idb-keyval` | **Recommended for production** |
+| `'custom'` | `customAdapter.load()` / `customAdapter.save()` | Server-side, Electron, React Native |
+
+---
+
+## `EnterstellarStore` Interface
+
+### `store.get<T>(key)`
+
+Reads a value from the store. Supports dot-notation paths for nested access:
+
+```ts
+const allZones = store.get<Record<string, ZoneState>>('zones');
+const sidebarZone = store.get<ZoneState>('zones.sidebar');
+const session = store.get<SessionState>('session');
+const traceIds = store.get<string[]>('traceIds');
+// Extension:
+const prefs = store.get<UserPreferences>('preferences');
+```
+
+In `devMode: true`, the value is Zod-validated and throws on schema mismatch.
+
+---
+
+### `store.set<T>(key, value)`
+
+Writes a value. Memory update is immediate; persistence is debounced (200ms default, S8). Locked zone writes are synchronous (write-through).
+
+```ts
+store.set('zones.main-dashboard', { component: 'PatientVitals', props: {...} });
+store.set('session', { threadId: 'patient-123-consult' });
+```
+
+---
+
+### `store.subscribe(key, listener)`
+
+Subscribes to changes on a key. Fires only when the value actually changes (shallow equality, S4). Returns an unsubscribe function.
+
+```ts
+const unsubscribe = store.subscribe<ZoneState>('zones.sidebar', (value) => {
+  console.log('Sidebar zone changed:', value);
+});
+
+// Later:
+unsubscribe();
+```
+
+---
+
+### `store.snapshot()`
+
+Serializes the full store state to a `SerializedState` object. Enforces 1MB size limit (throws `EnterstellarError ENS-4006` on exceed, S9).
+
+```ts
+const snapshot = store.snapshot();
+// {
+//   schemaVersion: '1.0.0',
+//   sessionId: 'uuid-v7',
+//   zones: { ... },
+//   traceIds: ['...'],
+//   session: { ... },
+//   extensions: { ... },
+//   createdAt: 1717500000000,
+//   updatedAt: 1717500001234,
+// }
+```
+
+Use for cross-device session handoff: `snapshot()` on web, `restore()` on mobile.
+
+---
+
+### `store.restore(state)`
+
+Full overwrite of current state with the provided `SerializedState` (S10). Triggers schema version check — if the major version mismatches, throws `EnterstellarError ENS-4007` (fatal, no data loss).
+
+```ts
+store.restore(snapshot);
+```
+
+---
+
+### `store.registerMigration(config)`
+
+Registers a state migration for a schema version upgrade. Migrations run automatically on `restore()` when the snapshot's `schemaVersion` is older than the current version.
+
+```ts
+store.registerMigration({
+  from: '1.0.0',
+  to: '1.1.0',
+  migrate: (state) => ({
+    ...state,
+    session: { ...state.session, preferredLocale: 'en' },
+  }),
+});
+```
+
+---
+
+### `store.extend(name, schema)`
+
+Registers a typed extension key. Extensions are persisted alongside the core schema and are accessible via `store.get()` and `store.set()`.
+
+```ts
+import { z } from 'zod';
+
+store.extend('preferences', z.object({
+  theme: z.enum(['light', 'dark']),
+  compactMode: z.boolean().default(false),
+}));
+
+store.set('preferences', { theme: 'dark', compactMode: true });
+const prefs = store.get<{ theme: string; compactMode: boolean }>('preferences');
+```
+
+Throws `EnterstellarError` if the extension name is already registered or if the value fails Zod validation in `devMode`.
+
+---
+
+### `store.hasExtension(name)`
+
+Returns `true` if the named extension has been registered via `extend()`.
+
+```ts
+if (store.hasExtension('preferences')) {
+  const prefs = store.get('preferences');
+}
+```
+
+---
+
+### `store.destroy()`
+
+Tears down subscriptions, clears the write-behind debounce timer, and (for `indexed-db`) closes the database connection. Call in test teardown.
+
+```ts
+afterEach(() => store.destroy());
+```
+
+---
+
+## AES-GCM Encryption
+
+When `encryption.enabled: true`, state is encrypted before being passed to the underlying persistence adapter. Uses the Web Crypto API — Enterstellar does not store or manage keys.
+
+```ts
+const store = await createEnterstellarStore({
+  persistence: 'indexed-db',
+  encryption: {
+    enabled: true,
+    keySource: async () => {
+      // Derive a CryptoKey from a user passphrase, HSM, or key management service
+      return await window.crypto.subtle.importKey('raw', keyBuffer, 'AES-GCM', false, ['encrypt', 'decrypt']);
+    },
+  },
+});
+```
+
+---
+
+## Utility
+
+### `createEmptyState()`
+
+Returns a fresh `SerializedState` with all fields at their zero values. Useful for test setup and store initialization.
+
+```ts
+import { createEmptyState } from '@enterstellar-ai/state';
+const fresh = createEmptyState();
+```
+
+---
+
+## Types
+
+| Type | Description |
+|:---|:---|
+| `EnterstellarStore` | Store interface (from `@enterstellar-ai/types`) |
+| `SerializedState` | Snapshot format |
+| `ZoneState` | Per-zone state shape |
+| `SessionState` | Session metadata |
+| `MigrationConfig` | Migration registration shape |
+| `PersistenceStrategy` | `'memory' \| 'local-storage' \| 'indexed-db' \| 'custom'` |
+| `SyncConfig` | Cross-device sync configuration |
+| `EnterstellarStoreConfig` | Factory config |
+| `PersistenceAdapter` | Custom persistence adapter interface |
+| `EncryptionConfig` | AES-GCM encryption config |
+
+---
+
+## See Also
+
+- [Bible §3.8](https://github.com/enterstellar-ai/enterstellar/blob/main/agent/03-enterstellar-implementation-bible.md) — `EnterstellarStore` type definition
+- [Design Choices S1–S15](https://github.com/enterstellar-ai/enterstellar/blob/main/agent/04-enterstellar-design-choices.md) — all locked decisions for this package
+- [State Management Guide →](/guides/state-management) — full usage walkthrough

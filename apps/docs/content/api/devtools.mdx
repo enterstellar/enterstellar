@@ -1,0 +1,214 @@
+---
+title: "@enterstellar-ai/devtools"
+description: React DevTools for Enterstellar — trace timeline, component inspector, validation log, and JSON export. Zero bytes in production.
+icon: Bug
+---
+
+## Purpose
+
+`@enterstellar-ai/devtools` provides the `<EnterstellarDevTools />` component — an embedded panel for debugging, inspecting, and profiling Enterstellar-powered applications. It is the "React DevTools for GenUI."
+
+**Zero production overhead.** `<EnterstellarDevTools />` is tree-shaken in production builds (`NODE_ENV=production`). Add it unconditionally — it ships no bytes to users.
+
+```bash
+npm install --save-dev @enterstellar-ai/devtools
+```
+
+---
+
+## Quick Start
+
+```tsx
+import { EnterstellarDevTools } from '@enterstellar-ai/devtools';
+import { Provider } from '@enterstellar-ai/react';
+
+export default function App() {
+  return (
+    <Provider registry={registry} connection={connection}>
+      {/* Your app */}
+      <EnterstellarDevTools />
+    </Provider>
+  );
+}
+```
+
+Toggle the panel with `Ctrl+Shift+A` (default), or click the floating ⚡ button.
+
+---
+
+## `<EnterstellarDevTools />`
+
+The primary DevTools component. Renders a floating panel overlay inside the Provider context.
+
+**Props:**
+
+`<EnterstellarDevTools />` accepts two props:
+
+| Prop | Type | Required | Description |
+|:---|:---|:---:|:---|
+| `config` | `DevToolsConfig` | — | Panel configuration (all fields optional). Sensible defaults applied per DT2/DT5. |
+| `cache` | `DevToolsCacheAdapter` | — | Cache adapter for the Cache Dashboard tab. If omitted, the Cache Dashboard shows an empty state. |
+
+**`DevToolsConfig` fields:**
+
+| Field | Type | Default | Description |
+|:---|:---|:---|:---|
+| `maxTraces` | `number` | `500` | Max traces retained in the ring buffer (oldest evicted on overflow) |
+| `defaultOpen` | `boolean` | `false` | Whether the panel is open on mount |
+| `shortcut` | `string` | `'ctrl+shift+a'` | Keyboard shortcut to toggle the panel |
+| `position` | `'bottom-left' \| 'bottom-right' \| 'top-left' \| 'top-right'` | `'bottom-right'` | Position of the floating ⚡ toggle button |
+
+```tsx
+<EnterstellarDevTools
+  config={{
+    maxTraces: 200,
+    defaultOpen: process.env.NODE_ENV === 'development',
+    shortcut: 'ctrl+shift+d',
+    position: 'bottom-left',
+  }}
+/>
+```
+
+---
+
+## Panels
+
+### Trace Timeline
+
+The primary debugging surface. Every `Zone` render produces a `ZoneTrace` that appears as a row in the timeline.
+
+- **Filter** by zone name, component name, or compilation status (`pass` / `fail` / `corrected`)
+- **Free-text search** across intent, component name, and error messages
+- **Click any row** to expand the full trace in the right panel
+
+### Component Inspector
+
+Click any rendered Enterstellar component in the UI → inspect its:
+- `ComponentContract` — name, description, tags, lifecycle states
+- Raw LLM props vs. compiled props (diff view)
+- Design tokens applied
+- Provenance metadata
+
+### Validation Log
+
+The "TypeScript errors panel" for GenUI. Shows every:
+- Compilation error (schema parse failures, token violations)
+- Self-correction loop (what was wrong, what was corrected)
+- Fallback event (why the fallback component was rendered)
+
+### Cache Dashboard *(v1.5, deferred)*
+
+Hit/miss ratio per zone, entries count, `hitRate` (0.0–1.0). "Clear Cache" button triggers `cache.invalidateAll()`.
+
+### Performance Profiler *(v1.5, deferred)*
+
+Latency statistics for all traces in the ring buffer: P50, P95, P99, mean, min, max (`LatencyStats`).
+
+### Replay Mode *(v1.5, deferred)*
+
+Step-by-step replay of any recorded trace — intent → compilation → validation → output.
+
+---
+
+## `DevToolsTab`
+
+Union type identifying each panel tab:
+
+```ts
+type DevToolsTab =
+  | 'trace-timeline'         // P0 (v1.0)
+  | 'component-inspector'    // P0 (v1.0)
+  | 'validation-log'         // P0 (v1.0)
+  | 'cache-dashboard'        // Deferred
+  | 'performance-profiler'   // Deferred
+  | 'replay-mode';           // Deferred
+```
+
+---
+
+## Cache Dashboard Integration
+
+To enable the Cache Dashboard, pass a `DevToolsCacheAdapter` to `<EnterstellarDevTools />`. The `RenderCache` from `@enterstellar-ai/cache` satisfies this interface:
+
+```tsx
+import { createRenderCache } from '@enterstellar-ai/cache';
+
+const cache = createRenderCache({ maxEntries: 1000 });
+
+<Provider registry={registry} cache={cache}>
+  <EnterstellarDevTools cache={cache} />
+</Provider>
+```
+
+**`DevToolsCacheAdapter` interface:**
+
+```ts
+type DevToolsCacheAdapter = {
+  getStats: () => {
+    hits: number;
+    misses: number;
+    entries: number;
+    hitRate: number;    // 0.0–1.0
+  };
+  invalidateAll: () => void;
+};
+```
+
+---
+
+## JSON Export
+
+```ts
+import { exportTraces } from '@enterstellar-ai/devtools';
+
+const bundle = exportTraces(traces, zoneConfigs);
+// {
+//   exportedAt: '2026-06-04T15:00:00.000Z',
+//   sdkVersion: '1.0.0',
+//   traces: ZoneTrace[],
+//   zoneConfigs: Record<string, unknown>
+// }
+
+// Download in a browser:
+const blob = new Blob([JSON.stringify(bundle)], { type: 'application/json' });
+const url = URL.createObjectURL(blob);
+```
+
+`exportTraces()` produces a `TraceExportBundle` — a self-contained, shareable snapshot of all recorded traces and zone configurations.
+
+---
+
+## `LatencyStats`
+
+Aggregated percentile statistics for the Performance Profiler (computed from all traces in the ring buffer):
+
+```ts
+type LatencyStats = {
+  p50: number;   // median latency (ms)
+  p95: number;
+  p99: number;
+  mean: number;
+  min: number;
+  max: number;
+  count: number; // total data points
+};
+```
+
+---
+
+## Types
+
+| Type | Description |
+|:---|:---|
+| `DevToolsConfig` | Props for `<EnterstellarDevTools />` |
+| `DevToolsTab` | Panel tab identifier union |
+| `DevToolsCacheAdapter` | Structural cache interface for Cache Dashboard |
+| `LatencyStats` | P50/P95/P99 latency statistics |
+
+---
+
+## See Also
+
+- [Bible §4.4](https://github.com/enterstellar-ai/enterstellar/blob/main/agent/03-enterstellar-implementation-bible.md) — DevTools module specification
+- [Design Choices DT1–DT8](https://github.com/enterstellar-ai/enterstellar/blob/main/agent/04-enterstellar-design-choices.md) — all locked decisions for this package
+- [DevTools Guide →](/guides/devtools) — debugging walkthrough and common patterns

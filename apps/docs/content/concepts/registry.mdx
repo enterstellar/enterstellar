@@ -1,0 +1,95 @@
+---
+title: Registry
+description: The Registry is your component deck — the closed set of ComponentContracts the AI can select from. createRegistry() assembles it, validates it, and auto-generates the agent manifest.
+icon: Library
+---
+
+## Assembling the Deck
+
+`createRegistry()` takes an array of `ComponentContract` objects and returns an `EnterstellarRegistry` instance.
+
+```ts
+import { createRegistry } from '@enterstellar-ai/registry';
+import { StatusCard } from './components/status-card/StatusCard.contract';
+import { DataTable } from './components/data-table/DataTable.contract';
+import { MetricChart } from './components/metric-chart/MetricChart.contract';
+
+export const registry = createRegistry({
+  components: [StatusCard, DataTable, MetricChart],
+});
+```
+
+This is the only thing `Provider` requires. Every other service — compiler, store, telemetry — is auto-created from the registry.
+
+## The Agent Manifest
+
+When `createRegistry()` runs, it auto-generates a compact manifest from your contracts. This manifest is what the LLM sees in its system prompt — not the full contracts (which include Zod schemas, token refs, and React-specific config the LLM doesn't need), but a distilled, token-efficient summary.
+
+Each manifest entry contains:
+- `name` — the exact component name the LLM must emit
+- `description` — a semantic description the Semantic Index uses for embedding-based search
+- `category` — component category for classification
+- `props` — a compact summary of key prop types (e.g., `{ "patientId": "string", "riskLevel": "enum: low|medium|high|critical" }`)
+- `examples` — example intents that resolve to this component (used for warmup and testing)
+
+The LLM never sees your Zod schemas, your token references, or your React renderer. It sees a compact, structured manifest — and it selects from that.
+
+## Registration-Time Validation
+
+`defineComponent()` validates contracts at the call site (R5 — fail fast). `createRegistry()` runs a second validation pass to catch cross-contract issues:
+
+| Rule | What it checks |
+|:---|:---|
+| **R1** | Name is PascalCase, no special characters |
+| **R2** | Description ≤ 120 characters |
+| **R3** | 1–10 tags, all lowercase kebab-case |
+| **R4** | All 4 states declared: `loading`, `error`, `empty`, `ready` |
+| **R5** | `states.ready` matches the contract `name` exactly |
+| **R6** | All token values start with `token:` |
+| **R7** | `props` is a Zod object schema |
+| **R8** | `accessibility.role` is a valid W3C ARIA role |
+| **R9** | `description` is non-empty |
+
+These checks run synchronously at initialization — never at render time. A contract violation throws an `EnterstellarError` in the `ENS-1xxx` range before your app ever mounts.
+
+## Duplicate Name Detection
+
+If two contracts in the same registry share a name, `createRegistry()` throws immediately:
+
+```ts
+// ✗ Throws ENS-1001: Duplicate component name 'StatusCard'
+const registry = createRegistry({
+  components: [StatusCard, StatusCardV2], // StatusCardV2.name === 'StatusCard'
+});
+```
+
+Names are the LLM's only reference to components. Duplicates are unresolvable — the registry refuses to register them.
+
+## `mergeRegistries()`
+
+For multi-domain applications, merge independent registries:
+
+```ts
+import { mergeRegistries } from '@enterstellar-ai/registry';
+import { dashboardRegistry } from './registries/dashboard';
+import { reportingRegistry } from './registries/reporting';
+
+export const appRegistry = mergeRegistries(
+  dashboardRegistry,
+  reportingRegistry,
+);
+```
+
+`mergeRegistries()` runs the same duplicate name check across registries. If two registries define a component with the same name, it throws — no silent overwrite.
+
+## Registry Size and the Semantic Index
+
+The size of your registry matters for two reasons:
+
+1. **Manifest token budget.** Larger registries produce larger manifests. The `generateManifest()` function generates the compact form — you can inspect it and trim if needed.
+2. **Semantic Index warmup.** At startup, the Semantic Index embeds every contract description + tags. Larger registries take longer to embed on first load. Consider splitting large registries across multiple `Provider` subtrees.
+
+<Cards>
+  <Card title="Provider →" description="How Provider receives the registry and auto-creates all services from it." href="/concepts/provider" />
+  <Card title="Component Contracts →" description="How to define contracts with defineComponent()." href="/concepts/component-contracts" />
+</Cards>

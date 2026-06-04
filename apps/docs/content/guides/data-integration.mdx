@@ -1,0 +1,208 @@
+---
+title: Data Integration
+description: DataAdapter bridges Enterstellar zones to your data layer. Abstract resource names (dot-notation) decouple components from backends — swap Supabase for Firebase without touching a single contract.
+icon: DatabaseZap
+---
+
+## The DataAdapter Interface
+
+`DataAdapter` has 3 methods. All names use dot-notation convention to reference resources:
+
+| Method | Signature | When it's called |
+|:---|:---|:---|
+| `query` | `(resource, params?) → Promise<Record[]>` | Component needs read access to a data source |
+| `mutate` | `(resource, action, data) → Promise<Record \| null>` | Component triggers create/update/delete |
+| `subscribe` | `(resource, callback) → unsubscribe` | Component needs live data updates |
+
+`resource` is always a dot-notation string: `'patients.vitals'`, `'tasks.list'`, `'orders.recent'`. Your adapter maps these names to real queries.
+
+## Quickstart: Supabase
+
+`@enterstellar-ai/adapter-supabase` provides ready-made factories for Supabase:
+
+```bash
+npm install @enterstellar-ai/adapter-supabase @supabase/supabase-js
+```
+
+```tsx
+import { createClient } from '@supabase/supabase-js';
+import {
+  createSupabaseAuthAdapter,
+  createSupabaseDataAdapter,
+} from '@enterstellar-ai/adapter-supabase';
+import { Provider, Zone } from '@enterstellar-ai/react';
+import { registry } from './enterstellar/registry';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+);
+
+const auth = createSupabaseAuthAdapter({ client: supabase });
+const data = createSupabaseDataAdapter({ client: supabase });
+
+export default function App() {
+  return (
+    <Provider
+      registry={registry}
+      connection={connection}
+      adapters={{ auth, data }}
+    >
+      <Zone name="tasks" determinism={1.0} fallback={<Loading />} />
+    </Provider>
+  );
+}
+```
+
+## Building a Custom DataAdapter
+
+For any backend, implement the 3-method interface via `createDataAdapter()`:
+
+```ts
+import { createDataAdapter } from '@enterstellar-ai/adapters';
+
+const data = createDataAdapter({
+  name: 'my-api',
+
+  query: async (resource, params) => {
+    // resource = 'tasks.list', params = { status: 'open' }
+    const url = `/api/${resource.replace('.', '/')}`;
+    const response = await fetch(url + '?' + new URLSearchParams(params as Record<string, string>));
+    return response.json();
+  },
+
+  mutate: async (resource, action, payload) => {
+    const url = `/api/${resource.replace('.', '/')}`;
+    const response = await fetch(url, {
+      method: action === 'create' ? 'POST' : action === 'update' ? 'PUT' : 'DELETE',
+      body: JSON.stringify(payload),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    return response.ok ? response.json() : null;
+  },
+
+  subscribe: (resource, callback) => {
+    const ws = new WebSocket(`wss://api.example.com/live/${resource}`);
+    ws.onmessage = (event) => callback(JSON.parse(event.data));
+    return () => ws.close();
+  },
+});
+```
+
+`createDataAdapter()` validates the config and wraps all method errors into `EnterstellarError` (AD5) — raw fetch errors never leak to components.
+
+## Write a Contract with a Data Source
+
+```ts
+import { defineComponent } from '@enterstellar-ai/registry';
+import { z } from 'zod';
+
+export const TaskList = defineComponent({
+  name: 'TaskList',
+  description: 'Displays a list of tasks with status and priority',
+  category: 'productivity',
+  tags: ['tasks', 'list', 'dashboard'],
+  props: z.object({
+    tasks: z.array(z.object({
+      id: z.string(),
+      title: z.string(),
+      status: z.enum(['open', 'in-progress', 'done']),
+      priority: z.enum(['low', 'medium', 'high']),
+    })),
+    totalCount: z.number(),
+  }),
+  tokens: {
+    background: 'token:colors.surface.primary',
+    itemBorder:  'token:colors.surface.secondary',
+  },
+  states: {
+    loading: 'TaskListSkeleton',
+    error: 'EnterstellarErrorCard',
+    empty: 'EnterstellarEmptyState',
+    ready: 'TaskList',
+  },
+  // ...
+});
+```
+
+## How the Data Adapter Connects
+
+The `DataAdapter` doesn't automatically inject data into your components. It's available to your renderers via the `useEnterstellarAdapters()` hook:
+
+```tsx
+import { useEnterstellarAdapters } from '@enterstellar-ai/react';
+import { useEffect, useState } from 'react';
+import type { TaskListProps } from './TaskList.contract';
+
+export function TaskList({ tasks, totalCount }: TaskListProps) {
+  const { data } = useEnterstellarAdapters();
+  const [liveTasks, setLiveTasks] = useState(tasks);
+
+  useEffect(() => {
+    if (!data) return;
+
+    // Subscribe to live updates from 'tasks.list'
+    return data.subscribe('tasks.list', (updated) => {
+      setLiveTasks(updated as typeof tasks);
+    });
+  }, [data, tasks]);
+
+  return (
+    <ul>
+      {liveTasks.map((task) => (
+        <li key={task.id}>{task.title} — {task.status}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+## Swapping Adapters
+
+This is the payoff: to swap Supabase for Firebase, replace the adapter. The contracts, renderers, and zones don't change:
+
+```ts
+// Before: Supabase
+import { createSupabaseDataAdapter } from '@enterstellar-ai/adapter-supabase';
+const data = createSupabaseDataAdapter({ client: supabase });
+
+// After: Firebase
+import { createFirebaseDataAdapter } from '@enterstellar-ai/adapter-firebase';
+const data = createFirebaseDataAdapter({ app: firebaseApp });
+
+// Pass to Provider — nothing else changes
+<Provider adapters={{ data }} ... />
+```
+
+`@enterstellar-ai/adapter-firebase` follows the same pattern as `@enterstellar-ai/adapter-supabase`.
+
+## Scenario: Connecting Tasks to Supabase
+
+```ts
+// 1. Create Supabase client
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// 2. Create adapters
+const data = createSupabaseDataAdapter({ client: supabase });
+const auth = createSupabaseAuthAdapter({ client: supabase });
+
+// 3. Pass to Provider
+<Provider registry={registry} connection={connection} adapters={{ auth, data }}>
+  {/* Zone receives intents from the agent */}
+  <Zone
+    name="task-board"
+    determinism={0.8}
+    allowedComponents={['TaskList', 'TaskCard', 'KanbanBoard']}
+    fallback={<TaskBoardSkeleton />}
+  />
+</Provider>
+
+// 4. In TaskList renderer — query via adapter
+const { data: adapter } = useEnterstellarAdapters();
+const tasks = await adapter.query('tasks.list', { status: 'open' });
+```
+
+<Cards>
+  <Card title="Custom Adapters →" description="Build custom AuthAdapter, ErrorAdapter, and AnalyticsAdapter for your infrastructure." href="/guides/custom-adapters" />
+  <Card title="Provider →" description="How adapters are injected at the Provider level and accessed by hooks." href="/concepts/provider" />
+</Cards>

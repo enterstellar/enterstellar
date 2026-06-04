@@ -1,0 +1,90 @@
+---
+title: Quick Start
+description: One command. A working Enterstellar app in under 30 seconds.
+icon: Zap
+---
+
+<Steps>
+
+<Step>
+
+## Create your app
+
+```bash
+npx create-enterstellar-app my-app
+```
+
+This scaffolds a complete Enterstellar project: a registry with 5 example `ComponentContract` definitions, a design token set, a pre-wired `Zone`, and a test file.
+
+</Step>
+
+<Step>
+
+## Start the dev server
+
+```bash
+cd my-app
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000). You'll see a live `Zone` rendering a component from your registry, driven by the example agent.
+
+</Step>
+
+<Step>
+
+## See the compiler in action
+
+Open `src/enterstellar/components/ExampleCard.tsx` and try passing an invalid value to the contract's `status` enum:
+
+```ts
+props: z.object({
+  title: z.string(),
+  body: z.string(),
+  status: z.enum(['active', 'inactive', 'pending']).optional(),
+  //             ^ try passing 'unknown' via your agent — the compiler will reject it
+}),
+```
+
+Save. The compiler catches the invalid value before anything renders, logs it to the DevTools trace, and falls back to the `fallback` component.
+
+</Step>
+
+<Step>
+
+## Your first Enterstellar app
+
+This is all it takes:
+
+```tsx
+import { Provider, Zone } from '@enterstellar-ai/react';
+import { createAgentConnection } from '@enterstellar-ai/connection';
+import { registry } from './enterstellar/registry';
+
+const connection = createAgentConnection({
+  url: process.env.NEXT_PUBLIC_AGENT_URL!,
+});
+
+export default function App() {
+  return (
+    <Provider registry={registry} connection={connection}>
+      <Zone name="main" determinism={1.0} fallback={<div>Loading...</div>} />
+    </Provider>
+  );
+}
+```
+
+</Step>
+
+</Steps>
+
+<Callout type="info" title="What just happened?">
+Your intent flowed through all seven pipeline layers: the **Normalizer** cleaned the input, the **Semantic Index** found the best matching component, the **Resolver** looked it up in your registry, the **Compiler** validated every prop against the Zod schema and your design tokens, the **Determinism Engine** applied your zone's `determinism` dial, and the **Lifecycle Manager** tracked the state transition from `idle → loading → streaming → ready`.
+
+All of that happened before a single pixel rendered.
+</Callout>
+
+<Cards>
+  <Card title="Your First Contract →" description="Learn how defineComponent works and build your first ComponentContract." href="/concepts/component-contracts" />
+  <Card title="Manual Installation →" description="Add Enterstellar to an existing Next.js or React app." href="/getting-started/manual-installation" />
+</Cards>

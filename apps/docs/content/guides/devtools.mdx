@@ -1,0 +1,151 @@
+---
+title: DevTools
+description: EnterstellarDevTools is an embedded panel that gives you a real-time window into every zone render — trace timeline, component inspector, validation log, and JSON export.
+icon: MonitorDot
+---
+
+## Setup
+
+Add `<EnterstellarDevTools />` anywhere inside your `<Provider>` tree. It renders a floating panel that is automatically excluded from production builds (zero bytes in `NODE_ENV=production`):
+
+```tsx
+import { Provider, Zone } from '@enterstellar-ai/react';
+import { EnterstellarDevTools } from '@enterstellar-ai/devtools';
+import { registry } from './enterstellar/registry';
+
+export default function App() {
+  return (
+    <Provider registry={registry} connection={connection}>
+      {/* Your app */}
+      <Zone name="main" determinism={1.0} fallback={<Loading />} />
+
+      {/* DevTools — excluded from production automatically */}
+      <EnterstellarDevTools />
+    </Provider>
+  );
+}
+```
+
+### Installation
+
+```bash
+npm install --save-dev @enterstellar-ai/devtools
+```
+
+<Callout type="info">
+  `@enterstellar-ai/devtools` is a dev dependency. Your production bundle has zero devtools bytes — tree shaking removes the entire import when `NODE_ENV=production`.
+</Callout>
+
+## Toggle
+
+Open and close the panel with `Ctrl+Shift+A`. The panel renders at 420px wide, 80% of viewport height, floating over the bottom-right of the page.
+
+You can configure the shortcut:
+
+```tsx
+<EnterstellarDevTools
+  config={{ shortcut: 'ctrl+shift+d' }}
+/>
+```
+
+## The 3 Panels
+
+### Timeline
+
+The Trace Timeline is the primary panel. Every zone render — from `idle → loading → ready` — produces a `ZoneTrace` that appears as a row in the timeline.
+
+Each row shows:
+- Zone name and component that rendered
+- Total compilation time (ms)
+- Lifecycle states visited
+- Self-correction attempts (if any)
+- Cache hit indicator
+
+Click any row to open it in the **Inspector**.
+
+### Inspector
+
+The Component Inspector shows the full `ZoneTrace` for the selected render:
+
+| Section | What you see |
+|:---|:---|
+| **Intent** | The raw `ComponentIntent` the agent sent |
+| **Compiled Props** | The validated props after the compiler ran |
+| **Provenance** | How the component was selected (semantic match, cache hit, forged) |
+| **Pipeline Steps** | Per-step results from resolve → parse → token → accessibility → trace |
+| **Errors** | Compilation errors with field paths and Zod messages |
+| **Metrics** | Total ms, retry count, streaming fragments received |
+
+This is where you compare what the LLM sent vs. what the compiler accepted.
+
+### Validation Log
+
+The Validation Log is a chronological feed of every compilation attempt — including failures, self-corrections, and retries. Filter by:
+- Zone name
+- Component name
+- Status (`pass` / `corrected` / `fail`)
+- Error code (`ENS-2001`, `ENS-2002`, etc.)
+
+## Inspecting a Trace: Step-by-Step
+
+```tsx
+// Render a zone
+<Zone
+  name="status-overview"
+  determinism={1.0}
+  fallback={<Skeleton />}
+/>
+```
+
+1. **Press `Ctrl+Shift+A`** to open DevTools.
+2. In the **Timeline**, find the `status-overview` row.
+3. Click to open in the **Inspector**.
+4. Expand **Intent** to see what the agent sent.
+5. Expand **Compiled Props** to see what passed validation.
+6. If there were errors, expand **Pipeline Steps → Parse** to see the Zod failure.
+
+## JSON Export
+
+Export all traces for bug reports or offline analysis:
+
+```tsx
+import { exportTraces } from '@enterstellar-ai/devtools';
+
+// Programmatic export
+const json = exportTraces(store);
+const blob = new Blob([json], { type: 'application/json' });
+const url = URL.createObjectURL(blob);
+// ... trigger download
+
+// Or use the built-in export button in the DevTools header
+```
+
+The DevTools panel includes an **Export** button in the header that triggers a JSON download of the current trace buffer (up to 500 traces in memory — DT5).
+
+## Configuration
+
+```tsx
+<EnterstellarDevTools
+  config={{
+    shortcut: 'ctrl+shift+a',  // Default — override here
+    defaultTab: 'trace-timeline', // 'trace-timeline' | 'component-inspector' | 'validation-log'
+  }}
+/>
+```
+
+Available tabs: `'trace-timeline'`, `'component-inspector'`, `'validation-log'`. Additional panels (Cache Dashboard, Performance Profiler, Replay Mode) are shipped but available as future phases.
+
+## The DevTools Bridge
+
+`Provider` exposes a `__Enterstellar_DEVTOOLS_HOOK__` global on `window` in non-production environments. The Chrome Extension reads from this hook for advanced DevTools features outside the embedded panel.
+
+The hook provides:
+- `getTraces()` — all `ZoneTrace` objects in the store
+- `getState()` — full `SerializedState` snapshot
+
+This hook is cleaned up automatically when `Provider` unmounts.
+
+<Cards>
+  <Card title="State Management →" description="How the store persists traces and how snapshot/restore works." href="/guides/state-management" />
+  <Card title="Testing →" description="Replay fixtures from the DevTools trace timeline in your test harness." href="/guides/testing" />
+</Cards>

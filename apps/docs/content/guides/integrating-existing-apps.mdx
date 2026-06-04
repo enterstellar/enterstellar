@@ -1,0 +1,203 @@
+---
+title: Integrating Existing Apps
+description: Enterstellar is incrementally adoptable. Add one Zone to your existing React app — 30 minutes or less. The rest of your app stays exactly as it is.
+icon: GitMerge
+---
+
+## The TypeScript Analogy
+
+The TypeScript playbook: rename `.js` to `.ts`, fix the errors one file at a time. You don't rewrite the app.
+
+The Enterstellar playbook: add one `<Zone>`, write one contract, wire `<Provider>`. Your existing routes, state, and components are untouched. Expand from there at your own pace.
+
+## Two Integration Paths
+
+| Path | When to use | Outcome |
+|:---|:---|:---|
+| **Manual** | New projects or targeted zones | Full control, hand-authored contracts |
+| **CLI-assisted** *(planned)* | Large existing apps | Auto-generates `.contract.ts` from codebase analysis |
+
+> [!NOTE]
+> The CLI-assisted migration (`enterstellar migrate`) is a planned feature. The manual path is the current recommended approach.
+
+## Phase 1: One Zone (< 30 minutes)
+
+### Step 1: Install
+
+```bash
+npm install @enterstellar-ai/react @enterstellar-ai/registry
+```
+
+### Step 2: Define one contract
+
+Create `src/enterstellar/components/SearchResults.contract.ts`:
+
+```ts
+import { defineComponent } from '@enterstellar-ai/registry';
+import { z } from 'zod';
+
+export const SearchResults = defineComponent({
+  name: 'SearchResults',
+  description: 'Displays search results with title, snippet, and relevance score',
+  category: 'data-display',
+  tags: ['search', 'results', 'list'],
+  props: z.object({
+    query: z.string(),
+    results: z.array(z.object({
+      id: z.string(),
+      title: z.string(),
+      snippet: z.string(),
+      score: z.number().min(0).max(1),
+    })),
+    totalCount: z.number(),
+  }),
+  tokens: {
+    background: 'token:colors.surface.primary',
+    highlight: 'token:colors.semantic.success',
+  },
+  accessibility: {
+    role: 'region',
+    ariaLabel: 'Search results',
+    announceOnUpdate: false,
+  },
+  states: {
+    loading: 'EnterstellarSkeleton',
+    error: 'EnterstellarErrorCard',
+    empty: 'EnterstellarEmptyState',
+    ready: 'SearchResults',
+  },
+  examples: [
+    {
+      intent: 'Show search results for TypeScript',
+      props: {
+        query: 'TypeScript',
+        results: [{ id: '1', title: 'TypeScript Handbook', snippet: 'Learn TypeScript...', score: 0.95 }],
+        totalCount: 1,
+      },
+    },
+  ],
+});
+```
+
+### Step 3: Create the registry
+
+`enterstellar/registry.ts`:
+
+```ts
+import { createRegistry } from '@enterstellar-ai/registry';
+import { SearchResults } from './contracts/search-results.contract';
+
+export const registry = createRegistry({
+  components: [SearchResults],
+});
+```
+
+### Step 4: Add Provider to your app root
+
+**Next.js App Router (`app/layout.tsx`):**
+
+```tsx
+import { Provider } from '@enterstellar-ai/react';
+import { registry } from '@/enterstellar/registry';
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html>
+      <body>
+        {/* Your existing providers stay here */}
+        <Provider registry={registry}>
+          {children}
+        </Provider>
+      </body>
+    </html>
+  );
+}
+```
+
+`Provider` is client-only. In Next.js, wrap it in a `'use client'` client component if `layout.tsx` is a server component.
+
+### Step 5: Add one Zone
+
+Replace a static section with an AI-powered Zone. Your existing UI stays adjacent:
+
+```tsx
+// Before: static search results
+export default function SearchPage({ query }: { query: string }) {
+  const results = useSearch(query);
+  return (
+    <div>
+      <SearchBar />
+      {/* Static results list */}
+      <ul>{results.map(r => <li key={r.id}>{r.title}</li>)}</ul>
+    </div>
+  );
+}
+
+// After: Enterstellar Zone alongside static UI
+import { Zone } from '@enterstellar-ai/react';
+
+export default function SearchPage({ query }: { query: string }) {
+  return (
+    <div>
+      <SearchBar />
+      {/* Zone replaces the static results — everything else stays */}
+      <Zone
+        name="search-results"
+        determinism={0.8}
+        allowedComponents={['SearchResults']}
+        fallback={<ResultsSkeleton />}
+      />
+    </div>
+  );
+}
+```
+
+## Phase 2: Expand Zones
+
+Once Phase 1 works, add more zones to other sections:
+
+```tsx
+<Layout>
+  {/* Navigation: locked — never AI-generated */}
+  <Zone name="nav" determinism={0.0}>
+    <Navigation />
+  </Zone>
+
+  {/* Main content: AI-powered */}
+  <Zone name="main" determinism={0.8} fallback={<ContentSkeleton />} />
+
+  {/* Sidebar: fully generative */}
+  <Zone name="sidebar" determinism={1.0} fallback={<SidebarSkeleton />} />
+</Layout>
+```
+
+Grow the registry as you add zones. Each new contract is a `defineComponent()` call.
+
+## Phase 3: Full GenUI App
+
+The entire app is driven by the agent. Every page section is a Zone. The registry has dozens of contracts. The agent selects layout, content, and interactions.
+
+At this stage, most teams also wire:
+- `<EnterstellarDevTools />` for trace inspection
+- An `AuthAdapter` for RBAC zone gating
+- A `RenderCache` for repeated intents
+- Regression tests for the registry via `@enterstellar-ai/test`
+
+## Working Alongside Existing State Management
+
+Enterstellar's `EnterstellarStore` is independent of Redux, Zustand, or any existing state manager. They coexist without conflict:
+
+```tsx
+// Redux/Zustand for your app state
+// EnterstellarStore for trace history and session data
+<ReduxProvider store={reduxStore}>
+  <Provider registry={registry} connection={connection}>
+    {/* Both stores are active — no interference */}
+  </Provider>
+</ReduxProvider>
+```
+
+<Cards>
+  <Card title="Quick Start →" description="Start fresh with create-enterstellar-app for new projects." href="/getting-started/quick-start" />
+  <Card title="Custom Configuration →" description="Override the auto-created compiler, store, and cache for enterprise setups." href="/guides/custom-configuration" />
+</Cards>

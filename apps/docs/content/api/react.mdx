@@ -1,0 +1,221 @@
+---
+title: "@enterstellar-ai/react"
+description: React integration for Enterstellar OS — Provider, Zone, lifecycle management, hooks, and renderer registry.
+icon: Atom
+---
+
+## Purpose
+
+`@enterstellar-ai/react` is the React render target for the Enterstellar engine. It provides the `<Provider>` context root, the `<Zone>` component that renders AI-generated content, six hooks for accessing engine services, and the renderer registry that maps contract names to React component implementations.
+
+This is the only Enterstellar package that imports React. All engine packages (`compiler`, `registry`, `state`, etc.) are framework-agnostic (L15).
+
+## Installation
+
+```bash
+npm install @enterstellar-ai/react @enterstellar-ai/registry zod react react-dom
+```
+
+## Components
+
+### `<Provider>`
+
+The root context provider. Wrap your app (or a section of it) with `<Provider>` to give all child zones access to the Enterstellar engine.
+
+**Props:**
+
+| Prop | Type | Required | Default | Description |
+|:---|:---|:---:|:---|:---|
+| `registry` | `EnterstellarRegistry` | ✅ | — | The component contract registry |
+| `connection` | `EnterstellarAgentConnection` | — | `undefined` | Agent connection (zones operate static-only without it) |
+| `compiler` | `EnterstellarCompiler` | — | Auto-created | Override the default compiler |
+| `store` | `EnterstellarStore` | — | Auto-created | Override the default store (IndexedDB, maxTraces: 100) |
+| `telemetry` | `TelemetryCollector` | — | Auto-created | Override the default telemetry collector |
+| `cache` | `RenderCache` | — | `null` | Render cache (opt-in — Provider does NOT auto-create) |
+| `adapters` | `EnterstellarAdapters` | — | `{}` | Auth, data, error, and analytics adapters |
+| `threadId` | `string` | — | `undefined` | Persists conversation thread ID across sessions |
+| `children` | `ReactNode` | ✅ | — | Children to render inside the Provider context |
+
+**Example:**
+
+```tsx
+import { Provider } from '@enterstellar-ai/react';
+import { registry } from './enterstellar/registry';
+import { connection } from './enterstellar/connection';
+
+export default function App() {
+  return (
+    <Provider registry={registry} connection={connection}>
+      {/* Your app */}
+    </Provider>
+  );
+}
+```
+
+Auto-created defaults (RE1, RE2):
+- `compiler`: `createCompiler({ registry, onValidationFailure: { strategy: 'fallback', fallbackComponent: 'GenericCard' } })`
+- `store`: `createEnterstellarStore({ persistence: 'indexed-db' })` (async, Provider renders fallback during init)
+
+---
+
+### `<Zone>`
+
+Renders AI-generated content within a determinism-controlled, error-isolated container. Each Zone has its own lifecycle FSM, retry policy, and fallback.
+
+**Props:**
+
+| Prop | Type | Default | Description |
+|:---|:---|:---|:---|
+| `name` | `string` | — | Zone identifier (kebab-case, unique per app) |
+| `determinism` | `number` | `1.0` | 0.0 (fully static) to 1.0 (fully generative) |
+| `fallback` | `ReactNode` | `undefined` | Rendered during `loading` / `error` states |
+| `fallbackComponent` | `string` | `'GenericCard'` | Registry component name to use as fallback |
+| `allowedComponents` | `readonly string[]` | `[]` (all allowed) | Allowlist of component names for this zone |
+| `activateOn` | `'mount' \| 'visible' \| 'manual'` | `'mount'` | When to trigger the agent call |
+| `showProvenance` | `boolean` | `false` | Show the trust indicator badge |
+| `timeout` | `number` | `30000` | Agent timeout in ms (LC3 locked) |
+| `debounce` | `{ click?: number; input?: number }` | `{ click: 0, input: 300 }` | Per-interaction debounce |
+| `retryPolicy` | `RetryPolicy` | `{ auto: true, maxRetries: 3, backoff: 'exponential' }` | Agent failure retry policy |
+| `onError` | `(error: Error, trace: ZoneTrace \| null) => void` | — | Error callback |
+| `className` | `string` | — | CSS class for the zone wrapper `<div>` |
+| `style` | `CSSProperties` | — | Inline styles for the zone wrapper `<div>` |
+| `children` | `ReactNode` | — | Static children (for `determinism: 0.0`) |
+
+**Example:**
+
+```tsx
+import { Zone } from '@enterstellar-ai/react';
+
+<Zone
+  name="patient-overview"
+  determinism={1.0}
+  allowedComponents={['PatientVitals', 'AlertCard', 'MetricChart']}
+  fallback={<Skeleton />}
+  timeout={15000}
+  onError={(err, trace) => console.error(err, trace?.metrics)}
+/>
+```
+
+---
+
+### `<LifecycleWrapper>`
+
+Internal FSM wrapper. Public for advanced usage (custom renderers, testing). Resolves `loading → streaming → ready → error → empty` transitions. See `LifecycleWrapperProps` for the full interface.
+
+---
+
+### Default State Components
+
+| Component | When It Renders |
+|:---|:---|
+| `<EnterstellarSkeleton />` | Zone is in `loading` state and no `fallback` is set |
+| `<EnterstellarErrorCard />` | Zone is in `error` state and no `fallback` is set |
+| `<EnterstellarEmptyState />` | Zone is in `empty` state and no `fallback` is set |
+| `<GenericCard />` | Fallback component when `fallbackComponent` is not found in registry |
+
+---
+
+### `<ProvenanceBadge />`
+
+Renders a trust indicator badge inside a zone wrapper when `showProvenance={true}`. Shows the render source (`cache`, `llm`, `forge`, `fallback`) and confidence score.
+
+---
+
+## Hooks
+
+### `useEnterstellar()`
+
+Returns the full Enterstellar context value. Use this to access the registry, compiler, store, cache, and adapters directly.
+
+```tsx
+import { useEnterstellar } from '@enterstellar-ai/react';
+
+function MyComponent() {
+  const { registry, compiler, store, cache, adapters } = useEnterstellar();
+  // ...
+}
+```
+
+**Returns:** `UseEnterstellarContextResult`
+
+| Field | Type | Description |
+|:---|:---|:---|
+| `registry` | `EnterstellarRegistry` | The component registry |
+| `compiler` | `EnterstellarCompiler` | The UI compiler |
+| `store` | `EnterstellarStore` | The state store |
+| `cache` | `RenderCache \| null` | The render cache (null if not provided to Provider) |
+| `adapters` | `EnterstellarAdapters` | The adapter bag |
+
+---
+
+### `useEnterstellarAgent()`
+
+Returns the agent connection instance (or `null` if no connection was passed to `<Provider>`).
+
+```tsx
+const connection = useEnterstellarAgent();
+connection?.dispatch(userSignal);
+```
+
+---
+
+### `useEnterstellarStore()`
+
+Returns the `EnterstellarStore` instance from context.
+
+```tsx
+const store = useEnterstellarStore();
+const session = store.get<SessionState>('session');
+```
+
+---
+
+### `useEnterstellarTrace(zoneName: string)`
+
+Subscribes to the latest `ZoneTrace` for a given zone. Re-renders when the trace updates.
+
+```tsx
+const trace = useEnterstellarTrace('patient-overview');
+// trace?.compilation.status === 'pass' | 'corrected' | 'fail'
+```
+
+---
+
+### `useEnterstellarAdapters()`
+
+Returns the `EnterstellarAdapters` bag from context.
+
+```tsx
+const { auth, data } = useEnterstellarAdapters();
+const session = await auth?.getSession();
+```
+
+---
+
+### `useSpatialContext()`
+
+Returns spatial context for visionOS / WebXR renders. Returns `null` in non-spatial environments.
+
+```tsx
+const spatial = useSpatialContext();
+// spatial?.depth, spatial?.anchors, etc.
+```
+
+---
+
+## Factories (Re-exports from `@enterstellar-ai/registry`)
+
+`@enterstellar-ai/react` also re-exports `defineComponent()` for convenience — this is the same function exported by `@enterstellar-ai/registry`.
+
+```tsx
+import { defineComponent } from '@enterstellar-ai/react';
+// equivalent to:
+import { defineComponent } from '@enterstellar-ai/registry';
+```
+
+---
+
+## See Also
+
+- [Bible §5.3](https://github.com/enterstellar-ai/enterstellar/blob/main/agent/03-enterstellar-implementation-bible.md) — React package specification
+- [Design Choices RE1–RE18](https://github.com/enterstellar-ai/enterstellar/blob/main/agent/04-enterstellar-design-choices.md) — All locked decisions for this package

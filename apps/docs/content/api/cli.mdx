@@ -1,0 +1,192 @@
+---
+title: "@enterstellar-ai/cli"
+description: The Enterstellar CLI — init, add component, migrate, review. Four commands for project scaffolding, component generation, codebase migration, and annotation review.
+icon: Terminal
+---
+
+## Purpose
+
+`@enterstellar-ai/cli` provides the `enterstellar` binary and `create-enterstellar-app` for project scaffolding, contract generation, codebase migration (existing components → Enterstellar contracts), and annotation review.
+
+The CLI has 4 commands. Manual arg parsing is used instead of a framework — 4 commands don't justify the ~300KB dependency weight.
+
+## Installation
+
+```bash
+# Global install
+npm install -g @enterstellar-ai/cli
+
+# Or use via npx (no install)
+npx @enterstellar-ai/cli init
+```
+
+## Commands
+
+### `enterstellar init [directory]`
+
+Scaffold a new Enterstellar project. Creates the project structure, installs dependencies, and generates starter files.
+
+```bash
+# Scaffold in current directory
+enterstellar init
+
+# Scaffold in a new directory
+enterstellar init my-app
+```
+
+**What it generates:**
+- `enterstellar/registry.ts` — empty registry with `createRegistry()`
+- `src/enterstellar/components/` — components directory (contracts + renderers + tests)
+- `enterstellar/connection.ts` — `createAgentConnection()` setup
+- `enterstellar/tokens.ts` — starter `DesignTokenSet`
+- `package.json` additions — `@enterstellar-ai/react`, `@enterstellar-ai/registry`, `zod`
+
+---
+
+### `enterstellar add component <Name>`
+
+Scaffold a new component contract file. `Name` must be PascalCase.
+
+```bash
+enterstellar add component PatientVitals
+enterstellar add component StatusCard
+```
+
+**What it generates** (in `src/enterstellar/components/`):
+- `<Name>.contract.ts` — `defineComponent()` call with all required fields pre-populated
+- `<Name>.tsx` — React render function stub
+- `<Name>.test.ts` — Intent test with `harness.mock()` + `harness.resolve()`
+- `<Name>.fixture.json` — Example props fixture
+
+---
+
+### `enterstellar migrate <path> [flags]`
+
+Analyze existing React components and generate Enterstellar contract stubs. Uses static analysis (`ts-morph`) to extract prop types and component structure.
+
+```bash
+# Migrate all components in src/components/
+enterstellar migrate src/components/
+
+# Migrate with AI enrichment (fills description, tags, semantic category)
+enterstellar migrate src/ --enrich --provider openai
+
+# Output as JSON for CI pipelines
+enterstellar migrate src/ --json
+```
+
+**Flags:**
+
+| Flag | Description |
+|:---|:---|
+| `--enrich` | Use AI to fill in `description`, `tags`, and `semantics` fields |
+| `--provider <name>` | AI provider for enrichment: `openai` \| `anthropic` |
+| `--json` | Output machine-readable JSON instead of terminal output |
+| `--dry-run` | Preview what would be generated without writing files |
+
+**Output:** One `.contract.ts` file per analyzed component, with `@enterstellar-review` annotations marking fields that need manual review.
+
+---
+
+### `enterstellar review [path] [flags]`
+
+List all `@enterstellar-review` annotations in your codebase — the fields that the migrate command marked as needing human review.
+
+```bash
+# Review annotations in current directory
+enterstellar review
+
+# Review a specific directory
+enterstellar review src/components/
+
+# JSON output for CI
+enterstellar review --json
+```
+
+**Flags:**
+
+| Flag | Description |
+|:---|:---|
+| `--json` | Output machine-readable JSON |
+
+**Example output:**
+```
+PatientVitals.contract.ts
+  Line 14: @enterstellar-review description — "Displays patient vitals" (auto-generated, verify)
+  Line 22: @enterstellar-review tags — ['patient', 'vitals'] (auto-generated, verify)
+
+StatusCard.contract.ts
+  Line 8: @enterstellar-review semantics.importance — 'standard' (auto-generated, verify)
+```
+
+---
+
+### `create-enterstellar-app`
+
+Alias for `enterstellar init`. Available as a standalone binary:
+
+```bash
+npx create-enterstellar-app my-app
+# equivalent to:
+npx @enterstellar-ai/cli init my-app
+```
+
+---
+
+## Programmatic API
+
+The CLI commands are also available as importable functions for use in build scripts, CI pipelines, or custom tooling:
+
+```ts
+import {
+  initCommand,
+  addComponentCommand,
+  migrateCommand,
+  reviewCommand,
+} from '@enterstellar-ai/cli';
+
+// Programmatic init
+await initCommand('./my-project');
+
+// Programmatic add component
+await addComponentCommand('StatusCard');
+
+// Programmatic migrate
+await migrateCommand(['src/components/'], ['--enrich', '--provider', 'openai']);
+
+// Programmatic review
+await reviewCommand([], ['--json']);
+```
+
+## Utilities
+
+| Export | Signature | Description |
+|:---|:---|:---|
+| `detectPackageManager()` | `() => PackageManager` | Auto-detect npm/pnpm/yarn/bun from lockfiles |
+| `getInstallCommand(pm)` | `(pm: PackageManager) => string` | Get the install command for a given PM |
+| `validateProjectName(name)` | `(name: string) => boolean` | Validate kebab-case project names |
+| `validateComponentName(name)` | `(name: string) => boolean` | Validate PascalCase component names |
+| `handleTopLevelError(error)` | `(error: unknown) => void` | Shared CLI error handler |
+
+## Types
+
+| Type | Description |
+|:---|:---|
+| `ProjectTemplate` | `'minimal' \| 'full' \| 'nextjs' \| 'vite-react'` |
+| `PackageManager` | `'npm' \| 'pnpm' \| 'yarn' \| 'bun'` |
+| `MigrateFlags` | Flags parsed by `parseMigrateFlags()` |
+| `ReviewFlags` | Flags parsed by `parseReviewFlags()` |
+| `MigrationResult` | Result of a single component migration |
+| `MigrateBatchSummary` | Aggregated summary of a migration batch |
+
+## Exit Codes
+
+| Code | Meaning |
+|:---|:---|
+| `0` | Success or user cancellation |
+| `1` | Error (`EnterstellarError` or unknown) |
+
+## See Also
+
+- [Bible §4.17](https://github.com/enterstellar-ai/enterstellar/blob/main/agent/03-enterstellar-implementation-bible.md) — CLI module specification
+- [Quick Start →](/getting-started/quick-start) — Creating your first project
