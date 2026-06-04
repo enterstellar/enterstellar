@@ -1,9 +1,14 @@
 {
   "name": "@enterstellar-ai/compiler",
-  "version": "0.0.0",
-  "private": true,
-  "type": "module",
   "description": "UI compiler — schema validation, design token enforcement, accessibility audits, self-correction.",
+  "author": "Enterstellar",
+  "version": "0.0.0",
+  "type": "module",
+  "private": false,
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",

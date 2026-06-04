@@ -1,9 +1,14 @@
 {
   "name": "@enterstellar-ai/cli",
-  "version": "0.0.0",
-  "private": true,
-  "type": "module",
   "description": "Enterstellar CLI — interactive project scaffolding (enterstellar init) and component generation (enterstellar add component).",
+  "author": "Enterstellar",
+  "version": "0.0.0",
+  "type": "module",
+  "private": false,
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "bin": {
     "enterstellar": "./dist/bin.js",
     "ens": "./dist/bin.js",

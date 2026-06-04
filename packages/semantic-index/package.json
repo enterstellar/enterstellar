@@ -1,9 +1,14 @@
 {
   "name": "@enterstellar-ai/semantic-index",
-  "version": "0.0.0",
-  "private": true,
-  "type": "module",
   "description": "Embedding-based component retrieval — cloud, local, or hybrid provider.",
+  "author": "Enterstellar",
+  "version": "0.0.0",
+  "type": "module",
+  "private": false,
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",

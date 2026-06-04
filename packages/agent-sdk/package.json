@@ -1,9 +1,14 @@
 {
   "name": "@enterstellar-ai/agent-sdk",
-  "version": "0.0.0",
-  "private": true,
-  "type": "module",
   "description": "AI agent SDK with MCP server — 7 tools (6 atomic + 1 composite) for component search, compose, validate, analyze, forge, schema, and build.",
+  "author": "Enterstellar",
+  "version": "0.0.0",
+  "type": "module",
+  "private": false,
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",

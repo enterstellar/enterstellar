@@ -1,9 +1,14 @@
 {
   "name": "@enterstellar-ai/normalizer",
-  "version": "0.0.0",
-  "private": true,
-  "type": "module",
   "description": "Protocol-agnostic intake — normalizes AG-UI, A2UI, MCP, and custom protocols to ComponentIntent.",
+  "author": "Enterstellar",
+  "version": "0.0.0",
+  "type": "module",
+  "private": false,
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",

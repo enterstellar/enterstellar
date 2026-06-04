@@ -1,9 +1,14 @@
 {
   "name": "@enterstellar-ai/cloud",
-  "version": "0.1.0",
-  "private": true,
-  "type": "module",
   "description": "Enterstellar Cloud SDK client — IPU metering, ForgeSignal ingestion, trace aggregation.",
+  "author": "Enterstellar",
+  "version": "0.0.0",
+  "type": "module",
+  "private": false,
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",

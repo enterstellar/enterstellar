@@ -31,17 +31,13 @@ export const docsImageRoute = '/og';
 export const docsContentRoute = '/llms.mdx';
 
 /**
- * GitHub repository configuration for the Enterstellar compiler repo.
+ * GitHub repository configuration for the Enterstellar OSS repo.
  *
  * Used by the feedback system (GitHub Discussions via Octokit) and
- * "Edit on GitHub" / "View Source" links in the docs UI.
- *
- * @remarks
- * Values are tentative — update `user` and `repo` when the final
- * GitHub organization and repository names are confirmed.
+ * \"Edit on GitHub\" / \"View Source\" links in the docs UI.
  */
 export const gitConfig = {
-  user: 'enterstellar',
-  repo: 'compiler',
+  user: 'enterstellar-ai',
+  repo: 'enterstellar',
   branch: 'main',
 };

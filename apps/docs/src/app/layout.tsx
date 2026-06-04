@@ -38,16 +38,17 @@ import { NextProvider } from 'fumadocs-core/framework/next';
 /**
  * Root-level metadata for the Enterstellar documentation site.
  *
- * Sets the title template (`%s | Enterstellar Docs`), default title, description,
+ * Sets the title template (`%s | Enterstellar`), default title, description,
  * and `metadataBase` for resolving relative OG image URLs. Per-page
  * metadata is merged on top of these defaults by `createMetadata()`.
  */
 export const metadata = createMetadata({
   title: {
-    template: '%s | Enterstellar Docs',
-    default: 'Enterstellar Docs',
+    template: '%s | Enterstellar',
+    default: 'Enterstellar — The TypeScript of Generative UI',
   },
-  description: 'Documentation for the Enterstellar compiler engine.',
+  description:
+    'Type-safe, deterministic, observable AI-generated interfaces. The compiler layer between AI and your screen.',
   metadataBase: baseUrl,
 });
 

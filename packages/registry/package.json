@@ -1,9 +1,14 @@
 {
   "name": "@enterstellar-ai/registry",
-  "version": "0.0.0",
-  "private": true,
-  "type": "module",
   "description": "Component contract registry — defineComponent(), createRegistry(), validation rules.",
+  "author": "Enterstellar",
+  "version": "0.0.0",
+  "type": "module",
+  "private": false,
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
