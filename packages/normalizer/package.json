@@ -1,11 +1,29 @@
 {
   "name": "@enterstellar-ai/normalizer",
-  "description": "Protocol-agnostic intake — normalizes AG-UI, A2UI, MCP, and custom protocols to ComponentIntent.",
-  "author": "Enterstellar",
+  "description": "Protocol normalizer — converts AG-UI, A2UI, MCP, and custom events to ComponentIntent.",
   "version": "0.0.0",
+  "author": "Enterstellar",
+  "license": "Apache-2.0",
+  "homepage": "https://enterstellar.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/enterstellar-ai/enterstellar.git",
+    "directory": "packages/normalizer"
+  },
+  "bugs": {
+    "url": "https://github.com/enterstellar-ai/enterstellar/issues"
+  },
+  "keywords": [
+    "normalizer",
+    "ag-ui",
+    "a2ui",
+    "mcp",
+    "generative-ui",
+    "enterstellar"
+  ],
   "type": "module",
   "private": false,
-  "license": "Apache-2.0",
+  "sideEffects": false,
   "publishConfig": {
     "access": "public"
   },

@@ -1,11 +1,29 @@
 {
   "name": "@enterstellar-ai/agent-sdk",
-  "description": "AI agent SDK with MCP server — 7 tools (6 atomic + 1 composite) for component search, compose, validate, analyze, forge, schema, and build.",
-  "author": "Enterstellar",
+  "description": "AI agent SDK — MCP server with tools for component search, forge, validate, and analyze.",
   "version": "0.0.0",
+  "author": "Enterstellar",
+  "license": "Apache-2.0",
+  "homepage": "https://enterstellar.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/enterstellar-ai/enterstellar.git",
+    "directory": "packages/agent-sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/enterstellar-ai/enterstellar/issues"
+  },
+  "keywords": [
+    "mcp",
+    "agent",
+    "sdk",
+    "ai",
+    "generative-ui",
+    "enterstellar"
+  ],
   "type": "module",
   "private": false,
-  "license": "Apache-2.0",
+  "sideEffects": false,
   "publishConfig": {
     "access": "public"
   },

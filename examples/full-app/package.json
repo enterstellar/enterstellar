@@ -1,11 +1,26 @@
 {
   "name": "@enterstellar-ai/examples-full-app",
-  "description": "Enterstellar full-app example — complete Next.js app with all Enterstellar features.",
-  "author": "Enterstellar",
+  "description": "Full-app example — complete Next.js application showcasing all Enterstellar features.",
   "version": "0.0.0",
+  "author": "Enterstellar",
+  "license": "Apache-2.0",
+  "homepage": "https://enterstellar.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/enterstellar-ai/enterstellar.git",
+    "directory": "examples/full-app"
+  },
+  "bugs": {
+    "url": "https://github.com/enterstellar-ai/enterstellar/issues"
+  },
+  "keywords": [
+    "example",
+    "full-app",
+    "generative-ui",
+    "enterstellar"
+  ],
   "type": "module",
   "private": true,
-  "license": "Apache-2.0",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",

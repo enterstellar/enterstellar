@@ -1,11 +1,28 @@
 {
   "name": "@enterstellar-ai/registry",
-  "description": "Component contract registry — defineComponent(), createRegistry(), validation rules.",
-  "author": "Enterstellar",
+  "description": "Component contract registry — defineComponent(), createRegistry(), and validation rules.",
   "version": "0.0.0",
+  "author": "Enterstellar",
+  "license": "Apache-2.0",
+  "homepage": "https://enterstellar.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/enterstellar-ai/enterstellar.git",
+    "directory": "packages/registry"
+  },
+  "bugs": {
+    "url": "https://github.com/enterstellar-ai/enterstellar/issues"
+  },
+  "keywords": [
+    "registry",
+    "component-contract",
+    "zod",
+    "generative-ui",
+    "enterstellar"
+  ],
   "type": "module",
   "private": false,
-  "license": "Apache-2.0",
+  "sideEffects": false,
   "publishConfig": {
     "access": "public"
   },

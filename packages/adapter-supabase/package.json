@@ -1,11 +1,29 @@
 {
   "name": "@enterstellar-ai/adapter-supabase",
-  "description": "Supabase adapter — Auth + Data adapters for Supabase (Bible §4.15, P0 priority).",
-  "author": "Enterstellar",
+  "description": "Supabase adapter — Auth and Data adapter implementations for Supabase.",
   "version": "0.0.0",
+  "author": "Enterstellar",
+  "license": "Apache-2.0",
+  "homepage": "https://enterstellar.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/enterstellar-ai/enterstellar.git",
+    "directory": "packages/adapter-supabase"
+  },
+  "bugs": {
+    "url": "https://github.com/enterstellar-ai/enterstellar/issues"
+  },
+  "keywords": [
+    "supabase",
+    "adapter",
+    "auth",
+    "data",
+    "generative-ui",
+    "enterstellar"
+  ],
   "type": "module",
   "private": false,
-  "license": "Apache-2.0",
+  "sideEffects": false,
   "publishConfig": {
     "access": "public"
   },

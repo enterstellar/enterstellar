@@ -1,11 +1,28 @@
 {
   "name": "@enterstellar-ai/cli",
-  "description": "Enterstellar CLI — interactive project scaffolding (enterstellar init) and component generation (enterstellar add component).",
-  "author": "Enterstellar",
+  "description": "Enterstellar CLI — project scaffolding (enterstellar init) and component generation.",
   "version": "0.0.0",
+  "author": "Enterstellar",
+  "license": "Apache-2.0",
+  "homepage": "https://enterstellar.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/enterstellar-ai/enterstellar.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/enterstellar-ai/enterstellar/issues"
+  },
+  "keywords": [
+    "cli",
+    "scaffolding",
+    "create-app",
+    "generative-ui",
+    "enterstellar"
+  ],
   "type": "module",
   "private": false,
-  "license": "Apache-2.0",
+  "sideEffects": false,
   "publishConfig": {
     "access": "public"
   },

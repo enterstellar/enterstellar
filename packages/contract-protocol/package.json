@@ -1,11 +1,28 @@
 {
   "name": "@enterstellar-ai/contract-protocol",
-  "description": "Language-agnostic JSON Schema definitions of Enterstellar's core data contracts — ComponentContract, ComponentIntent, CompilationResult, AgentTrace, ForgeSignal, UserSignal, ZoneConfig, and DesignTokens. The Enterstellar Protocol Spec for non-TypeScript renderers.",
-  "author": "Enterstellar",
+  "description": "JSON Schema protocol spec — language-agnostic definitions for non-TypeScript renderers.",
   "version": "0.0.0",
+  "author": "Enterstellar",
+  "license": "Apache-2.0",
+  "homepage": "https://enterstellar.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/enterstellar-ai/enterstellar.git",
+    "directory": "packages/contract-protocol"
+  },
+  "bugs": {
+    "url": "https://github.com/enterstellar-ai/enterstellar/issues"
+  },
+  "keywords": [
+    "json-schema",
+    "protocol",
+    "spec",
+    "generative-ui",
+    "enterstellar"
+  ],
   "type": "module",
   "private": false,
-  "license": "Apache-2.0",
+  "sideEffects": false,
   "publishConfig": {
     "access": "public"
   },

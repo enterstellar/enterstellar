@@ -1,11 +1,28 @@
 {
   "name": "@enterstellar-ai/forge",
-  "description": "Component forge — LocalForge (templates) and CloudForge (LLM-powered) contract generation.",
-  "author": "Enterstellar",
+  "description": "Component forge — LocalForge (templates) and CloudForge (LLM) contract generation.",
   "version": "0.0.0",
+  "author": "Enterstellar",
+  "license": "Apache-2.0",
+  "homepage": "https://enterstellar.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/enterstellar-ai/enterstellar.git",
+    "directory": "packages/forge"
+  },
+  "bugs": {
+    "url": "https://github.com/enterstellar-ai/enterstellar/issues"
+  },
+  "keywords": [
+    "forge",
+    "component-generation",
+    "llm",
+    "generative-ui",
+    "enterstellar"
+  ],
   "type": "module",
   "private": false,
-  "license": "Apache-2.0",
+  "sideEffects": false,
   "publishConfig": {
     "access": "public"
   },

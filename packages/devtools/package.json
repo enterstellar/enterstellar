@@ -1,11 +1,28 @@
 {
   "name": "@enterstellar-ai/devtools",
-  "description": "Embedded DevTools panel for inspecting, debugging, and profiling Enterstellar GenUI pipelines.",
-  "author": "Enterstellar",
+  "description": "Embedded DevTools panel — trace inspector, component inspector, cache dashboard, replay.",
   "version": "0.0.0",
+  "author": "Enterstellar",
+  "license": "Apache-2.0",
+  "homepage": "https://enterstellar.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/enterstellar-ai/enterstellar.git",
+    "directory": "packages/devtools"
+  },
+  "bugs": {
+    "url": "https://github.com/enterstellar-ai/enterstellar/issues"
+  },
+  "keywords": [
+    "devtools",
+    "debugging",
+    "trace",
+    "generative-ui",
+    "enterstellar"
+  ],
   "type": "module",
   "private": false,
-  "license": "Apache-2.0",
+  "sideEffects": true,
   "publishConfig": {
     "access": "public"
   },

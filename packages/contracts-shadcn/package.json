@@ -1,11 +1,28 @@
 {
   "name": "@enterstellar-ai/contracts-shadcn",
-  "description": "Pre-converted Enterstellar ComponentContracts for shadcn/ui components.",
-  "author": "Enterstellar",
+  "description": "shadcn/ui component contracts — pre-built ComponentContracts for shadcn/ui components.",
   "version": "0.0.0",
+  "author": "Enterstellar",
+  "license": "Apache-2.0",
+  "homepage": "https://enterstellar.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/enterstellar-ai/enterstellar.git",
+    "directory": "packages/contracts-shadcn"
+  },
+  "bugs": {
+    "url": "https://github.com/enterstellar-ai/enterstellar/issues"
+  },
+  "keywords": [
+    "shadcn",
+    "contracts",
+    "components",
+    "generative-ui",
+    "enterstellar"
+  ],
   "type": "module",
   "private": false,
-  "license": "Apache-2.0",
+  "sideEffects": false,
   "publishConfig": {
     "access": "public"
   },

@@ -1,11 +1,28 @@
 {
   "name": "@enterstellar-ai/connection",
-  "description": "Transport convenience layer — WebSocket/SSE/polling with auto-reconnect and backpressure.",
-  "author": "Enterstellar",
+  "description": "Agent connection factory — WebSocket/SSE/polling with auto-reconnect and backpressure.",
   "version": "0.0.0",
+  "author": "Enterstellar",
+  "license": "Apache-2.0",
+  "homepage": "https://enterstellar.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/enterstellar-ai/enterstellar.git",
+    "directory": "packages/connection"
+  },
+  "bugs": {
+    "url": "https://github.com/enterstellar-ai/enterstellar/issues"
+  },
+  "keywords": [
+    "websocket",
+    "sse",
+    "transport",
+    "generative-ui",
+    "enterstellar"
+  ],
   "type": "module",
   "private": false,
-  "license": "Apache-2.0",
+  "sideEffects": false,
   "publishConfig": {
     "access": "public"
   },

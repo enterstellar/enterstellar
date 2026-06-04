@@ -1,11 +1,26 @@
 {
   "name": "@enterstellar-ai/examples-basic",
-  "description": "Enterstellar basic example — minimal registry + compiler + 3 demo components.",
-  "author": "Enterstellar",
+  "description": "Basic example — minimal registry, compiler, and three demo ComponentContracts.",
   "version": "0.0.0",
+  "author": "Enterstellar",
+  "license": "Apache-2.0",
+  "homepage": "https://enterstellar.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/enterstellar-ai/enterstellar.git",
+    "directory": "examples/basic"
+  },
+  "bugs": {
+    "url": "https://github.com/enterstellar-ai/enterstellar/issues"
+  },
+  "keywords": [
+    "example",
+    "starter",
+    "generative-ui",
+    "enterstellar"
+  ],
   "type": "module",
   "private": true,
-  "license": "Apache-2.0",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",

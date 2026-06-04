@@ -1,11 +1,29 @@
 {
   "name": "@enterstellar-ai/adapter-firebase",
-  "description": "Firebase adapter — Auth + Data adapters for Firebase (Bible §4.15, P1 priority).",
-  "author": "Enterstellar",
+  "description": "Firebase adapter — Auth and Data adapter implementations for Firebase.",
   "version": "0.0.0",
+  "author": "Enterstellar",
+  "license": "Apache-2.0",
+  "homepage": "https://enterstellar.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/enterstellar-ai/enterstellar.git",
+    "directory": "packages/adapter-firebase"
+  },
+  "bugs": {
+    "url": "https://github.com/enterstellar-ai/enterstellar/issues"
+  },
+  "keywords": [
+    "firebase",
+    "adapter",
+    "auth",
+    "data",
+    "generative-ui",
+    "enterstellar"
+  ],
   "type": "module",
   "private": false,
-  "license": "Apache-2.0",
+  "sideEffects": false,
   "publishConfig": {
     "access": "public"
   },

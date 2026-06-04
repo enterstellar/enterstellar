@@ -1,11 +1,28 @@
 {
   "name": "@enterstellar-ai/lifecycle",
-  "description": "Framework-agnostic lifecycle state machine: loading → streaming → ready → error → empty.",
-  "author": "Enterstellar",
+  "description": "Component lifecycle state machine — loading, streaming, ready, error, and empty states.",
   "version": "0.0.0",
+  "author": "Enterstellar",
+  "license": "Apache-2.0",
+  "homepage": "https://enterstellar.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/enterstellar-ai/enterstellar.git",
+    "directory": "packages/lifecycle"
+  },
+  "bugs": {
+    "url": "https://github.com/enterstellar-ai/enterstellar/issues"
+  },
+  "keywords": [
+    "lifecycle",
+    "state-machine",
+    "streaming",
+    "generative-ui",
+    "enterstellar"
+  ],
   "type": "module",
   "private": false,
-  "license": "Apache-2.0",
+  "sideEffects": false,
   "publishConfig": {
     "access": "public"
   },

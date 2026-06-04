@@ -1,11 +1,26 @@
 {
   "name": "@enterstellar-ai/examples-dashboard",
-  "description": "Enterstellar dashboard example — multi-zone clinical dashboard with design tokens.",
-  "author": "Enterstellar",
+  "description": "Dashboard example — multi-zone clinical dashboard with design tokens and adapters.",
   "version": "0.0.0",
+  "author": "Enterstellar",
+  "license": "Apache-2.0",
+  "homepage": "https://enterstellar.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/enterstellar-ai/enterstellar.git",
+    "directory": "examples/dashboard"
+  },
+  "bugs": {
+    "url": "https://github.com/enterstellar-ai/enterstellar/issues"
+  },
+  "keywords": [
+    "example",
+    "dashboard",
+    "generative-ui",
+    "enterstellar"
+  ],
   "type": "module",
   "private": true,
-  "license": "Apache-2.0",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
