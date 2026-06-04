@@ -1,7 +1,7 @@
 {
   "name": "@enterstellar-ai/lifecycle",
   "description": "Component lifecycle state machine — loading, streaming, ready, error, and empty states.",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "author": "Enterstellar",
   "license": "Apache-2.0",
   "homepage": "https://enterstellar.dev",

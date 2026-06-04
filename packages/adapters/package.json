@@ -1,7 +1,7 @@
 {
   "name": "@enterstellar-ai/adapters",
   "description": "Infrastructure adapter interfaces — auth, data, error handling, and analytics contracts.",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "author": "Enterstellar",
   "license": "Apache-2.0",
   "homepage": "https://enterstellar.dev",

@@ -1,7 +1,7 @@
 {
   "name": "@enterstellar-ai/migration",
   "description": "Component migration pipeline — AST extraction, LLM enrichment, and contract assembly.",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "author": "Enterstellar",
   "license": "Apache-2.0",
   "homepage": "https://enterstellar.dev",

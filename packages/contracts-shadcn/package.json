@@ -1,7 +1,7 @@
 {
   "name": "@enterstellar-ai/contracts-shadcn",
   "description": "shadcn/ui component contracts — pre-built ComponentContracts for shadcn/ui components.",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "author": "Enterstellar",
   "license": "Apache-2.0",
   "homepage": "https://enterstellar.dev",

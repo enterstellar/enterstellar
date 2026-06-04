@@ -1,7 +1,7 @@
 {
   "name": "@enterstellar-ai/adapter-firebase",
   "description": "Firebase adapter — Auth and Data adapter implementations for Firebase.",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "author": "Enterstellar",
   "license": "Apache-2.0",
   "homepage": "https://enterstellar.dev",
