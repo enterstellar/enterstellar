@@ -1,7 +1,7 @@
 {
   "name": "@enterstellar-ai/types",
   "description": "Shared type definitions, Zod schemas, and type guards for the Enterstellar ecosystem.",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "author": "Enterstellar",
   "license": "Apache-2.0",
   "homepage": "https://enterstellar.dev",

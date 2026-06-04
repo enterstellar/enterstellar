@@ -1,7 +1,7 @@
 {
   "name": "@enterstellar-ai/compiler",
   "description": "Deterministic GenUI compiler — schema validation, design token enforcement, accessibility audits, and self-correction.",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "author": "Enterstellar",
   "license": "Apache-2.0",
   "homepage": "https://enterstellar.dev",

@@ -1,7 +1,7 @@
 {
   "name": "@enterstellar-ai/state",
   "description": "Framework-agnostic persistent state — snapshot/restore, cross-device sync, migrations.",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "author": "Enterstellar",
   "license": "Apache-2.0",
   "homepage": "https://enterstellar.dev",
