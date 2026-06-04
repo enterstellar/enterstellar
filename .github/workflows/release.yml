@@ -63,10 +63,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node.js 20
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           # Configure npm registry for publishing.
           # NODE_AUTH_TOKEN (set to NPM_TOKEN below) is used by npm publish.
           registry-url: 'https://registry.npmjs.org'
