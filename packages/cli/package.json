@@ -1,7 +1,7 @@
 {
   "name": "@enterstellar-ai/cli",
   "description": "Enterstellar CLI — project scaffolding (enterstellar init) and component generation.",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "author": "Enterstellar",
   "license": "Apache-2.0",
   "homepage": "https://enterstellar.dev",

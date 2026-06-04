@@ -1,7 +1,7 @@
 {
   "name": "@enterstellar-ai/registry",
   "description": "Component contract registry — defineComponent(), createRegistry(), and validation rules.",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "author": "Enterstellar",
   "license": "Apache-2.0",
   "homepage": "https://enterstellar.dev",

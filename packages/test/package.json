@@ -1,7 +1,7 @@
 {
   "name": "@enterstellar-ai/test",
   "description": "Intent-based testing framework — deterministic harness, assertion helpers, VCR fixtures.",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "author": "Enterstellar",
   "license": "Apache-2.0",
   "homepage": "https://enterstellar.dev",
