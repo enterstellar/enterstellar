@@ -1,6 +1,6 @@
 # @enterstellar-ai/cli
 
-## 1.0.0
+## 0.1.0
 
 ### Minor Changes
 
@@ -9,5 +9,5 @@
 ### Patch Changes
 
 - Updated dependencies [[`e4898c2`](https://github.com/enterstellar-ai/enterstellar/commit/e4898c275757d904655b3dc1f2190a5edf67e43a)]:
-  - @enterstellar-ai/migration@1.0.0
+  - @enterstellar-ai/migration@0.1.0
   - @enterstellar-ai/types@0.1.0

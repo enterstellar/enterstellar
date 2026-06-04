@@ -1,7 +1,7 @@
 {
   "name": "@enterstellar-ai/global-index",
   "description": "Federated contract registry — discover and publish ComponentContracts globally.",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "author": "Enterstellar",
   "license": "Apache-2.0",
   "homepage": "https://enterstellar.dev",

@@ -1,7 +1,7 @@
 {
   "name": "@enterstellar-ai/devtools",
   "description": "Embedded DevTools panel — trace inspector, component inspector, cache dashboard, replay.",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "author": "Enterstellar",
   "license": "Apache-2.0",
   "homepage": "https://enterstellar.dev",
