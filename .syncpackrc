@@ -1,17 +1,7 @@
 {
   "customTypes": {},
-  "dependencyTypes": [
-    "dev",
-    "overrides",
-    "peer",
-    "pnpmOverrides",
-    "prod",
-    "resolutions"
-  ],
-  "filter": ".",
   "indent": "  ",
   "semverGroups": [],
-  "semverRange": "",
   "sortAz": [
     "contributors",
     "dependencies",
