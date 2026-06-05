@@ -40,13 +40,13 @@
  */
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import type { PlaygroundMode, SceneIntentResult } from '@/enterstellar/agent-connection';
 import type { PlaygroundScene } from '@/enterstellar/scenes/types';
 import type { ZoneTrace, CompilationProvenance, CompilationError } from '@enterstellar-ai/types';
-import { useEnterstellar } from '@enterstellar-ai/react';
+import { EnterstellarContext } from '@enterstellar-ai/react';
 import { playgroundContracts } from '@/enterstellar/registry';
 import { sceneOpenCanvas } from '@/enterstellar/scenes/scene-open-canvas';
 
@@ -114,9 +114,7 @@ export function PlaygroundShell(): React.JSX.Element {
    * Clicking when open closes it; clicking when closed opens it.
    */
   const toggleBehindTheScenes = useCallback(() => {
-    setActiveTab((current) =>
-      current === 'behind-the-scenes' ? null : 'behind-the-scenes',
-    );
+    setActiveTab((current) => (current === 'behind-the-scenes' ? null : 'behind-the-scenes'));
   }, []);
 
   /**
@@ -137,7 +135,9 @@ export function PlaygroundShell(): React.JSX.Element {
    * synthetic `ZoneTrace` objects from the API result and append them to
    * the store's `'traces'` key. DevTools picks them up automatically.
    */
-  const { store, cache } = useEnterstellar();
+  const context = useContext(EnterstellarContext);
+  const store = context && typeof context === 'object' ? context.store : null;
+  const cache = context && typeof context === 'object' ? context.cache : null;
   const traceCounterRef = useRef(0);
 
   /**
@@ -160,7 +160,6 @@ export function PlaygroundShell(): React.JSX.Element {
         const zoneName = scene.zones[i]?.name ?? `zone-${String(i)}`;
         const traceId = `${zoneName}-${String(++traceCounterRef.current)}-${String(Date.now())}`;
 
-
         const provenance: CompilationProvenance = {
           agent: 'GPT OSS 120B',
           registry: 'playground',
@@ -171,9 +170,7 @@ export function PlaygroundShell(): React.JSX.Element {
         // ── Real Schema Pre-Validation ────────────────────────────────
         // Run the same Zod safeParse the compiler uses in parse-step.ts.
         // This produces accurate trace data for the educational console.
-        const contract = playgroundContracts.find(
-          (c) => c.name === intent.component,
-        );
+        const contract = playgroundContracts.find((c) => c.name === intent.component);
 
         let compilationStatus: 'pass' | 'fail' = 'pass';
         let compilationErrors: CompilationError[] = [];
@@ -181,11 +178,13 @@ export function PlaygroundShell(): React.JSX.Element {
         if (contract === undefined) {
           // Component name doesn't exist in registry → ENS-3004
           compilationStatus = 'fail';
-          compilationErrors = [{
-            code: 'ENS-3004',
-            message: `Component "${intent.component}" not found in registry`,
-            path: 'component',
-          }];
+          compilationErrors = [
+            {
+              code: 'ENS-3004',
+              message: `Component "${intent.component}" not found in registry`,
+              path: 'component',
+            },
+          ];
         } else {
           // Run the real Zod schema validation
           const parseResult = contract.props.safeParse(intent.props);
@@ -227,47 +226,49 @@ export function PlaygroundShell(): React.JSX.Element {
       // Write hallucinated traces with status 'fail' for DevTools
       // dual-trace comparison. These show in the timeline alongside
       // healthy 'pass' traces, visualizing what the compiler caught.
-      const hallucinatedTraces: ZoneTrace[] = (result.hallucinatedIntents ?? []).map((intent, i) => {
-        const zoneName = `hallucinated-zone-${String(i)}`;
-        const traceId = `${zoneName}-${String(++traceCounterRef.current)}-${String(Date.now())}`;
+      const hallucinatedTraces: ZoneTrace[] = (result.hallucinatedIntents ?? []).map(
+        (intent, i) => {
+          const zoneName = `hallucinated-zone-${String(i)}`;
+          const traceId = `${zoneName}-${String(++traceCounterRef.current)}-${String(Date.now())}`;
 
-
-        return {
-          id: traceId,
-          intent: {
-            component: intent.component,
-            props: intent.props,
-            confidence: intent.confidence,
-            _source: {
-              protocol: 'custom' as const,
-              rawEventId: `playground-${scene.id}-hallucinated-${zoneName}`,
-            },
-          },
-          compilation: {
-            status: 'fail' as const,
-            errors: [
-              {
-                code: 'ENS-3004',
-                message: `Hallucinated component "${intent.component}" — no registry match`,
-                path: 'component',
+          return {
+            id: traceId,
+            intent: {
+              component: intent.component,
+              props: intent.props,
+              confidence: intent.confidence,
+              _source: {
+                protocol: 'custom' as const,
+                rawEventId: `playground-${scene.id}-hallucinated-${zoneName}`,
               },
-            ],
-            selfCorrectionAttempts: 0,
-          },
-          provenance: {
-            agent: 'GPT OSS 120B (sabotaged)',
-            registry: 'playground',
-            compilerVersion: '0.1.0',
-            compiledAt: new Date().toISOString(),
-          },
-          metrics: {
-            totalMs: result.durationMs,
-            retryAttempt: 0,
-          },
-          timestamp: new Date().toISOString(),
-        };
-      });
+            },
+            compilation: {
+              status: 'fail' as const,
+              errors: [
+                {
+                  code: 'ENS-3004',
+                  message: `Hallucinated component "${intent.component}" — no registry match`,
+                  path: 'component',
+                },
+              ],
+              selfCorrectionAttempts: 0,
+            },
+            provenance: {
+              agent: 'GPT OSS 120B (sabotaged)',
+              registry: 'playground',
+              compilerVersion: '0.1.0',
+              compiledAt: new Date().toISOString(),
+            },
+            metrics: {
+              totalMs: result.durationMs,
+              retryAttempt: 0,
+            },
+            timestamp: new Date().toISOString(),
+          };
+        },
+      );
 
+      if (!store) return;
       const existingTraces = store.get<ZoneTrace[]>('traces') ?? [];
       store.set('traces', [...existingTraces, ...newTraces, ...hallucinatedTraces]);
     },
@@ -300,9 +301,7 @@ export function PlaygroundShell(): React.JSX.Element {
       // If the user clicked a domain chip, handleSelectScene already set
       // activeScene. Here we only override for quick scenes (single-zone
       // atomic demos) which can't sensibly host multi-component prompts.
-      const effectiveScene = activeScene.category === 'quick'
-        ? sceneOpenCanvas
-        : activeScene;
+      const effectiveScene = activeScene.category === 'quick' ? sceneOpenCanvas : activeScene;
 
       // Update the visible scene to Open Canvas if we switched
       if (effectiveScene.id !== activeScene.id) {
@@ -323,17 +322,12 @@ export function PlaygroundShell(): React.JSX.Element {
       }
 
       try {
-        const result = await connection.sendSceneIntent(
-          effectiveScene,
-          intentText,
-          mode,
-        );
+        const result = await connection.sendSceneIntent(effectiveScene, intentText, mode);
         setLastResult(result);
         writeTracesToStore(result, effectiveScene);
         setPipelineState('compiled');
       } catch (err: unknown) {
-        const message =
-          err instanceof Error ? err.message : 'Unknown error occurred';
+        const message = err instanceof Error ? err.message : 'Unknown error occurred';
         setErrorMessage(message);
         setPipelineState('error');
       }
@@ -371,17 +365,12 @@ export function PlaygroundShell(): React.JSX.Element {
           void (async () => {
             setPipelineState('loading');
             try {
-              const result = await connection.sendSceneIntent(
-                scene,
-                firstIntent,
-                mode,
-              );
+              const result = await connection.sendSceneIntent(scene, firstIntent, mode);
               setLastResult(result);
               writeTracesToStore(result, scene);
               setPipelineState('compiled');
             } catch (err: unknown) {
-              const message =
-                err instanceof Error ? err.message : 'Unknown error occurred';
+              const message = err instanceof Error ? err.message : 'Unknown error occurred';
               setErrorMessage(message);
               setPipelineState('error');
             }
@@ -427,11 +416,7 @@ export function PlaygroundShell(): React.JSX.Element {
             transition={{ duration: 0.3, ease: 'easeOut' }}
             className="h-full"
           >
-            <SceneGrid
-              scene={activeScene}
-              pipelineState={pipelineState}
-              mode={mode}
-            />
+            <SceneGrid scene={activeScene} pipelineState={pipelineState} mode={mode} />
           </motion.div>
         </AnimatePresence>
       </div>
@@ -474,7 +459,9 @@ export function PlaygroundShell(): React.JSX.Element {
         <motion.button
           type="button"
           onClick={() => {
-            const toggle = document.querySelector<HTMLButtonElement>('[data-enterstellar-devtools-toggle]');
+            const toggle = document.querySelector<HTMLButtonElement>(
+              '[data-enterstellar-devtools-toggle]',
+            );
             if (toggle !== null) toggle.click();
           }}
           whileHover={{ scale: 1.05 }}

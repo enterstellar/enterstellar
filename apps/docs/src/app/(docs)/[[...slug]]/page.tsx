@@ -55,10 +55,18 @@ import * as Preview from '@/components/preview';
 import { createMetadata } from '@/lib/metadata';
 import { getPageImage, getPageMarkdownUrl, source } from '@/lib/source';
 import { Wrapper } from '@/components/preview/wrapper';
-import { Mermaid } from '@/components/mdx/mermaid';
+import dynamic from 'next/dynamic';
+
+const Mermaid = dynamic(() => import('@/components/mdx/mermaid').then((mod) => mod.Mermaid), {
+  ssr: false,
+});
 import { Feedback, FeedbackBlock } from '@/components/feedback/client';
 import { onBlockFeedbackAction, onPageFeedbackAction, owner, repo } from '@/lib/github';
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/layouts/menu-hover-card';
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '@/components/layouts/menu-hover-card';
 import Link from 'fumadocs-core/link';
 import { findSiblings } from 'fumadocs-core/page-tree';
 import { Card, Cards } from 'fumadocs-ui/components/card';
@@ -66,11 +74,7 @@ import { getMDXComponents } from '@/components/mdx';
 import { Banner } from 'fumadocs-ui/components/banner';
 import { Installation } from '@/components/preview/installation';
 import { Customisation } from '@/components/preview/customisation';
-import {
-  DocsPage,
-  PageLastUpdate,
-  MarkdownCopyButton,
-} from 'fumadocs-ui/layouts/docs/page';
+import { DocsPage, PageLastUpdate, MarkdownCopyButton } from 'fumadocs-ui/layouts/docs/page';
 import { ViewOptionsPopover } from '@/components/layouts/view-options';
 import { NotFound } from '@/components/layouts/not-found';
 import { getSuggestions } from './suggestions';
@@ -165,9 +169,9 @@ export const revalidate = false;
  * @param props - Next.js page props containing route `params`.
  * @returns The rendered documentation page or a not-found view.
  */
-export default async function Page(
-  props: { params: Promise<{ slug?: string[] }> },
-): Promise<ReactNode> {
+export default async function Page(props: {
+  params: Promise<{ slug?: string[] }>;
+}): Promise<ReactNode> {
   const params = await props.params;
   const page = source.getPage(params.slug);
 
@@ -251,7 +255,7 @@ export default async function Page(
 
             // --- Core UI Components ---
             Banner,
-            Mermaid,
+            Mermaid: (props: ComponentProps<typeof Mermaid>) => <Mermaid {...props} />,
             TypeTable,
             Step,
             Steps,
@@ -305,9 +309,9 @@ export default async function Page(
  * @returns A `Metadata` object for the current page, or a minimal
  *   "Not Found" metadata if the slug doesn't match any page.
  */
-export async function generateMetadata(
-  props: { params: Promise<{ slug?: string[] }> },
-): Promise<Metadata> {
+export async function generateMetadata(props: {
+  params: Promise<{ slug?: string[] }>;
+}): Promise<Metadata> {
   const { slug = [] } = await props.params;
   const page = source.getPage(slug);
 

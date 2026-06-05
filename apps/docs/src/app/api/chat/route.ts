@@ -17,13 +17,7 @@
 
 import { createGroq } from '@ai-sdk/groq';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import {
-  convertToModelMessages,
-  stepCountIs,
-  streamText,
-  tool,
-  type UIMessage,
-} from 'ai';
+import { convertToModelMessages, stepCountIs, streamText, tool, type UIMessage } from 'ai';
 import { z } from 'zod';
 import { source } from '@/lib/source';
 import { Document, type DocumentData } from 'flexsearch';
@@ -304,10 +298,17 @@ async function chunkedAll<O>(promises: Promise<O>[]): Promise<O[]> {
  * with full document content for RAG grounding.
  */
 const searchTool = tool({
-  description: 'Search the Enterstellar documentation and return relevant results. Use this before answering questions to ground your response in actual documentation.',
+  description:
+    'Search the Enterstellar documentation and return relevant results. Use this before answering questions to ground your response in actual documentation.',
   inputSchema: z.object({
     query: z.string().describe('The search query to find relevant documentation'),
-    limit: z.number().int().min(1).max(100).default(10).describe('Maximum number of results to return'),
+    limit: z
+      .number()
+      .int()
+      .min(1)
+      .max(100)
+      .default(10)
+      .describe('Maximum number of results to return'),
   }),
   async execute({ query, limit }) {
     const search = await searchServer;
@@ -365,24 +366,22 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   // ── Build Messages ──────────────────────────────────────────────────────
-  const messages = [
-    { role: 'system' as const, content: systemPrompt },
-    ...(await convertToModelMessages<ChatUIMessage>(
-      (reqJson.messages ?? []) as ChatUIMessage[],
-      {
-        convertDataPart(part) {
-          return {
-            type: 'text' as const,
-            text: `[Client Context: ${JSON.stringify(part.data)}]`,
-          };
-        },
+  const messages = await convertToModelMessages<ChatUIMessage>(
+    (reqJson.messages ?? []) as ChatUIMessage[],
+    {
+      convertDataPart(part) {
+        return {
+          type: 'text' as const,
+          text: `[Client Context: ${JSON.stringify(part.data)}]`,
+        };
       },
-    )),
-  ];
+    },
+  );
 
   const streamConfig = {
     stopWhen: stepCountIs(5),
     tools: { search: searchTool },
+    system: systemPrompt,
     messages,
     toolChoice: 'auto' as const,
   };
@@ -397,8 +396,7 @@ export async function POST(req: Request): Promise<Response> {
     return result.toUIMessageStreamResponse();
   } catch (primaryErr: unknown) {
     // Log the primary provider failure for observability
-    const primaryMessage =
-      primaryErr instanceof Error ? primaryErr.message : 'Unknown Groq error';
+    const primaryMessage = primaryErr instanceof Error ? primaryErr.message : 'Unknown Groq error';
     console.warn(
       `[ENS-5001] Groq primary provider failed, falling back to Google AI: ${primaryMessage}`,
     );

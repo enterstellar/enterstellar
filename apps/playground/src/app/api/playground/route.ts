@@ -83,10 +83,7 @@ interface PlaygroundErrorResponse {
  *
  * @internal
  */
-function errorResponse(
-  status: number,
-  error: PlaygroundErrorResponse,
-): Response {
+function errorResponse(status: number, error: PlaygroundErrorResponse): Response {
   return new Response(JSON.stringify(error), {
     status,
     headers: { 'Content-Type': 'application/json' },
@@ -231,7 +228,7 @@ async function loadDataContext(theme: string): Promise<string | undefined> {
     const message = err instanceof Error ? err.message : 'Unknown read error';
     console.warn(
       `[ENS-5106] Data context file not found or unreadable for theme "${theme}": ${message}. ` +
-      'Proceeding without data context (degraded fidelity).',
+        'Proceeding without data context (degraded fidelity).',
     );
     return undefined;
   }
@@ -262,23 +259,93 @@ function detectDomainFromIntent(intent: string): string | undefined {
   const heuristics: readonly { readonly theme: string; readonly keywords: readonly string[] }[] = [
     {
       theme: 'medical',
-      keywords: ['patient', 'vitals', 'medication', 'clinical', 'hospital', 'diagnosis', 'treatment', 'nurse', 'doctor', 'healthcare', 'ehr', 'prescription', 'lab result'],
+      keywords: [
+        'patient',
+        'vitals',
+        'medication',
+        'clinical',
+        'hospital',
+        'diagnosis',
+        'treatment',
+        'nurse',
+        'doctor',
+        'healthcare',
+        'ehr',
+        'prescription',
+        'lab result',
+      ],
     },
     {
       theme: 'finance',
-      keywords: ['revenue', 'transaction', 'ledger', 'compliance', 'portfolio', 'banking', 'fintech', 'payment', 'invoice', 'cash flow', 'audit', 'tax', 'accounting'],
+      keywords: [
+        'revenue',
+        'transaction',
+        'ledger',
+        'compliance',
+        'portfolio',
+        'banking',
+        'fintech',
+        'payment',
+        'invoice',
+        'cash flow',
+        'audit',
+        'tax',
+        'accounting',
+      ],
     },
     {
       theme: 'commerce',
-      keywords: ['product', 'catalog', 'order', 'shipping', 'cart', 'inventory', 'ecommerce', 'e-commerce', 'customer segment', 'storefront', 'merchant', 'sku'],
+      keywords: [
+        'product',
+        'catalog',
+        'order',
+        'shipping',
+        'cart',
+        'inventory',
+        'ecommerce',
+        'e-commerce',
+        'customer segment',
+        'storefront',
+        'merchant',
+        'sku',
+      ],
     },
     {
       theme: 'saas',
-      keywords: ['subscription', 'churn', 'mrr', 'arr', 'onboarding', 'feature flag', 'tenant', 'usage', 'seat', 'engagement', 'cohort', 'saas', 'ltv', 'pipeline'],
+      keywords: [
+        'subscription',
+        'churn',
+        'mrr',
+        'arr',
+        'onboarding',
+        'feature flag',
+        'tenant',
+        'usage',
+        'seat',
+        'engagement',
+        'cohort',
+        'saas',
+        'ltv',
+        'pipeline',
+      ],
     },
     {
       theme: 'education',
-      keywords: ['student', 'course', 'grade', 'curriculum', 'enrollment', 'assignment', 'classroom', 'campus', 'gpa', 'tutor', 'syllabus', 'edtech', 'learning'],
+      keywords: [
+        'student',
+        'course',
+        'grade',
+        'curriculum',
+        'enrollment',
+        'assignment',
+        'classroom',
+        'campus',
+        'gpa',
+        'tutor',
+        'syllabus',
+        'edtech',
+        'learning',
+      ],
     },
   ];
 
@@ -324,8 +391,7 @@ export async function POST(req: Request): Promise<Response> {
       code: 'ENS-5102',
       module: '@enterstellar-ai/playground/playground',
       recoverable: true,
-      message:
-        'Rate limit exceeded. Please wait a moment before sending another request.',
+      message: 'Rate limit exceeded. Please wait a moment before sending another request.',
     });
   }
 
@@ -334,8 +400,7 @@ export async function POST(req: Request): Promise<Response> {
   try {
     body = await req.json();
   } catch (err: unknown) {
-    const message =
-      err instanceof Error ? err.message : 'Invalid request body';
+    const message = err instanceof Error ? err.message : 'Invalid request body';
     return errorResponse(400, {
       code: 'ENS-5103',
       module: '@enterstellar-ai/playground/playground',
@@ -345,15 +410,12 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   // Validate required fields
-  if (
-    body.intent.trim() === ''
-  ) {
+  if (body.intent.trim() === '') {
     return errorResponse(400, {
       code: 'ENS-5104',
       module: '@enterstellar-ai/playground/playground',
       recoverable: false,
-      message:
-        'Request body must include: intent (non-empty string), scene, and mode.',
+      message: 'Request body must include: intent (non-empty string), scene, and mode.',
     });
   }
 
@@ -379,7 +441,13 @@ export async function POST(req: Request): Promise<Response> {
     // Dual mode: `systemPrompt` above is sabotaged (mode='hallucinating'
     // routes to buildSabotagedPrompt which ignores data context). Build
     // the correct one explicitly WITH the data context for side-by-side.
-    const correctPrompt = buildSystemPrompt(manifest, scene, 'healthy', playgroundContracts, dataContext);
+    const correctPrompt = buildSystemPrompt(
+      manifest,
+      scene,
+      'healthy',
+      playgroundContracts,
+      dataContext,
+    );
     return handleHallucinatingMode(correctPrompt, scene, intent);
   }
 
@@ -401,27 +469,21 @@ export async function POST(req: Request): Promise<Response> {
  *
  * @internal
  */
-function handleStreamingMode(
-  systemPrompt: string,
-  userIntent: string,
-): Response {
-  const messages = [
-    { role: 'system' as const, content: systemPrompt },
-    { role: 'user' as const, content: userIntent },
-  ];
+function handleStreamingMode(systemPrompt: string, userIntent: string): Response {
+  const messages = [{ role: 'user' as const, content: userIntent }];
 
   // ── Primary: Groq ───────────────────────────────────────────────────
   try {
     const result = streamText({
       model: groq(PRIMARY_MODEL),
+      system: systemPrompt,
       messages,
       maxOutputTokens: 8192,
     });
 
     return result.toTextStreamResponse();
   } catch (primaryErr: unknown) {
-    const primaryMessage =
-      primaryErr instanceof Error ? primaryErr.message : 'Unknown Groq error';
+    const primaryMessage = primaryErr instanceof Error ? primaryErr.message : 'Unknown Groq error';
 
     console.warn(
       `[ENS-5101] Groq primary provider failed, falling back to Google AI: ${primaryMessage}`,
@@ -431,6 +493,7 @@ function handleStreamingMode(
     try {
       const fallbackResult = streamText({
         model: google(FALLBACK_MODEL),
+        system: systemPrompt,
         messages,
         maxOutputTokens: 8192,
       });
@@ -438,9 +501,7 @@ function handleStreamingMode(
       return fallbackResult.toTextStreamResponse();
     } catch (fallbackErr: unknown) {
       const fallbackMessage =
-        fallbackErr instanceof Error
-          ? fallbackErr.message
-          : 'Unknown Google AI error';
+        fallbackErr instanceof Error ? fallbackErr.message : 'Unknown Google AI error';
 
       console.error(
         `[ENS-5101] Both providers failed. Groq: ${primaryMessage}. Google: ${fallbackMessage}`,
@@ -450,8 +511,7 @@ function handleStreamingMode(
         code: 'ENS-5101',
         module: '@enterstellar-ai/playground/playground',
         recoverable: true,
-        message:
-          'AI service is temporarily unavailable. Please try again in a few moments.',
+        message: 'AI service is temporarily unavailable. Please try again in a few moments.',
       });
     }
   }
@@ -485,23 +545,21 @@ async function handleHallucinatingMode(
 ): Promise<Response> {
   const sabotagedPrompt = buildSystemPrompt(manifest, scene, 'hallucinating');
 
-  const healthyMessages = [
-    { role: 'system' as const, content: correctPrompt },
-    { role: 'user' as const, content: userIntent },
-  ];
-
-  const hallucinatedMessages = [
-    { role: 'system' as const, content: sabotagedPrompt },
-    { role: 'user' as const, content: userIntent },
-  ];
+  const messages = [{ role: 'user' as const, content: userIntent }];
 
   // ── Primary Provider: Groq (dual concurrent) ─────────────────────────
   try {
     const [healthyResult, hallucinatedResult] = await Promise.all([
-      generateText({ model: groq(PRIMARY_MODEL), messages: healthyMessages, maxOutputTokens: 8192 }),
       generateText({
         model: groq(PRIMARY_MODEL),
-        messages: hallucinatedMessages,
+        system: correctPrompt,
+        messages,
+        maxOutputTokens: 8192,
+      }),
+      generateText({
+        model: groq(PRIMARY_MODEL),
+        system: sabotagedPrompt,
+        messages,
         maxOutputTokens: 8192,
       }),
     ]);
@@ -511,8 +569,7 @@ async function handleHallucinatingMode(
       hallucinated: hallucinatedResult.text,
     });
   } catch (primaryErr: unknown) {
-    const primaryMessage =
-      primaryErr instanceof Error ? primaryErr.message : 'Unknown Groq error';
+    const primaryMessage = primaryErr instanceof Error ? primaryErr.message : 'Unknown Groq error';
 
     console.warn(
       `[ENS-5101] Groq dual-concurrent failed, falling back to Google AI: ${primaryMessage}`,
@@ -523,12 +580,14 @@ async function handleHallucinatingMode(
       const [healthyResult, hallucinatedResult] = await Promise.all([
         generateText({
           model: google(FALLBACK_MODEL),
-          messages: healthyMessages,
+          system: correctPrompt,
+          messages,
           maxOutputTokens: 8192,
         }),
         generateText({
           model: google(FALLBACK_MODEL),
-          messages: hallucinatedMessages,
+          system: sabotagedPrompt,
+          messages,
           maxOutputTokens: 8192,
         }),
       ]);
@@ -539,9 +598,7 @@ async function handleHallucinatingMode(
       });
     } catch (fallbackErr: unknown) {
       const fallbackMessage =
-        fallbackErr instanceof Error
-          ? fallbackErr.message
-          : 'Unknown Google AI error';
+        fallbackErr instanceof Error ? fallbackErr.message : 'Unknown Google AI error';
 
       console.error(
         `[ENS-5101] Both providers failed in dual-concurrent mode. Groq: ${primaryMessage}. Google: ${fallbackMessage}`,
@@ -551,8 +608,7 @@ async function handleHallucinatingMode(
         code: 'ENS-5101',
         module: '@enterstellar-ai/playground/playground',
         recoverable: true,
-        message:
-          'AI service is temporarily unavailable. Please try again in a few moments.',
+        message: 'AI service is temporarily unavailable. Please try again in a few moments.',
       });
     }
   }

@@ -107,35 +107,15 @@ const nextConfig: NextConfig = {
    * @see Validation: apps/docs/src/ runtime scan (June 2026)
    */
   serverExternalPackages: [
-    // TypeScript / Twoslash toolchain (build-time MDX transforms)
-    'ts-morph',
-    'typescript',
-    'twoslash',
-    'fumadocs-twoslash',
-    'fumadocs-typescript',
-    // Shiki syntax highlighting (build-time via source.config.ts;
-    // runtime usage is 'use client' → browser bundle, not Worker)
-    'shiki',
-    '@shikijs/core',
-    '@shikijs/langs',
-    '@shikijs/themes',
-    '@shikijs/types',
-    // Mermaid diagram renderer ('use client', lazy browser import)
-    'mermaid',
-    // Force-directed graph ('use client', lazy browser import)
-    'react-force-graph-2d',
-    'd3-force',
-    // OG image generation (generateStaticParams + revalidate=false → static)
+    // OG image generation (uses WASM / native dependencies at runtime)
     '@takumi-rs/image-response',
     '@vercel/og',
-    // Search / data engine not used in any Worker-runtime path
-    // NOTE: @orama/orama is NOT listed here — it IS used at runtime by
-    // `api/search/route.ts` via `fumadocs-core/search/server` and must be bundled.
-    // KaTeX: NOT listed here — rehype-katex is only imported via
-    // `await import('rehype-katex')` in source.config.ts (build-time, invisible to
-    // webpack). Listing katex here would cause Turbopack to warn about
-    // `katex/dist/katex.min.css` which is not a valid Node.js external module.
-    // It stays in outputFileTracingExcludes to prevent nft from tracing it.
+    // ⚠️ WARNING: Build-time packages (typescript, ts-morph, shiki, mermaid, etc.)
+    // must NOT be listed here. If listed, Webpack is forced to emit external
+    // require() calls, which OpenNext's esbuild step resolves from the monorepo root
+    // node_modules and bundles into handler.mjs, causing severe bloat (44+ MiB).
+    // Instead, they are completely excluded from the server compilation graph
+    // by using `{ ssr: false }` client components or dynamic imports on the server.
   ],
 
   /**

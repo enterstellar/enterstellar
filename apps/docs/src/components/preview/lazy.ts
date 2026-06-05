@@ -1,7 +1,7 @@
 'use client';
 import dynamic from 'next/dynamic';
 
-export const DynamicCodeBlock = dynamic(() => import('./dynamic-codeblock'));
+export const DynamicCodeBlock = dynamic(() => import('./dynamic-codeblock'), { ssr: false });
 export const Banner = dynamic(() =>
   import('fumadocs-ui/components/banner').then((res) => res.Banner),
 );
@@ -19,6 +19,7 @@ export const ImageZoom = dynamic(() =>
   import('fumadocs-ui/components/image-zoom').then((res) => res.ImageZoom),
 );
 
-export const GraphView = dynamic(() =>
-  import('@/components/graph-view').then((res) => res.GraphView),
+export const GraphView = dynamic(
+  () => import('@/components/graph-view').then((res) => res.GraphView),
+  { ssr: false },
 );
