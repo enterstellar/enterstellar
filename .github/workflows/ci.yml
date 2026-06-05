@@ -22,7 +22,7 @@
 # @see agent/06-enterstellar-setup.md — CI Pipeline Order
 # @see agent/05-enterstellar-coding-rules.md — Per-PR Checklist
 
-name: CI
+name: 'CI: Validate & Test'
 
 on:
   push:
@@ -31,6 +31,10 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch: {}
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 # Cancel in-progress runs for the same branch on new pushes.
 # Prevents wasted runner minutes when developers push rapidly.
@@ -82,13 +86,14 @@ jobs:
         run: pnpm syncpack:check
 
       # -----------------------------------------------------------------------
-      # Stage 2 — Lint
-      # Runs ESLint across all packages via Turborepo.
-      # Enforces: L15 (no engine → framework imports), @typescript-eslint/no-explicit-any,
-      # eslint-plugin-unused-imports (auto-catches dead import type statements).
+      # Stage 2 — Build
+      # Builds all packages in dependency order via Turborepo.
+      # This step also runs //#copy-licenses (see turbo.json) which copies the
+      # canonical LICENSE and NOTICE files into each package directory.
+      # A failing build here blocks the release workflow from running.
       # -----------------------------------------------------------------------
-      - name: Lint all packages
-        run: pnpm turbo run lint
+      - name: Build
+        run: pnpm turbo run build
 
       # -----------------------------------------------------------------------
       # Stage 3 — Type check
@@ -100,19 +105,18 @@ jobs:
         run: pnpm turbo run typecheck
 
       # -----------------------------------------------------------------------
-      # Stage 4 — Test
+      # Stage 4 — Lint
+      # Runs ESLint across all packages via Turborepo.
+      # Enforces: L15 (no engine → framework imports), @typescript-eslint/no-explicit-any,
+      # eslint-plugin-unused-imports (auto-catches dead import type statements).
+      # -----------------------------------------------------------------------
+      - name: Lint all packages
+        run: pnpm turbo run lint
+
+      # -----------------------------------------------------------------------
+      # Stage 5 — Test
       # Runs Vitest across all packages. Coverage threshold ≥90% per coding rules.
       # Turbo caches test results — only re-runs tests for changed packages.
       # -----------------------------------------------------------------------
       - name: Run tests
         run: pnpm turbo run test
-
-      # -----------------------------------------------------------------------
-      # Stage 5 — Build
-      # Builds all packages in dependency order via Turborepo.
-      # This step also runs //#copy-licenses (see turbo.json) which copies the
-      # canonical LICENSE and NOTICE files into each package directory.
-      # A failing build here blocks the release workflow from running.
-      # -----------------------------------------------------------------------
-      - name: Build all packages
-        run: pnpm turbo run build

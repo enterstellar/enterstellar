@@ -32,6 +32,9 @@ on:
     branches:
       - main
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 # No concurrency cancellation — a release in progress must complete.
 # Two concurrent releases would create conflicting git tags and npm publishes.
 concurrency:
