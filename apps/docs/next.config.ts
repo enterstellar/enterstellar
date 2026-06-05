@@ -147,4 +147,4 @@ export default withBundleAnalyzer(withMDX(nextConfig));
  * @see https://opennext.js.org/cloudflare/bindings#local-access-to-bindings
  */
 import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare';
-initOpenNextCloudflareForDev();
+void initOpenNextCloudflareForDev();

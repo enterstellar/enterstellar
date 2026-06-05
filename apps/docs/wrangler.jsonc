@@ -1,7 +1,7 @@
 /**
- * Enterstellar Cloud Docs — Wrangler Configuration
+ * Enterstellar Docs — Wrangler Configuration
  *
- * Cloudflare Workers deployment config for the Enterstellar Cloud docs site.
+ * Cloudflare Workers deployment config for the Enterstellar Docuementation site.
  * Deployed via @opennextjs/cloudflare adapter (WP3).
  *
  * Route: enterstellar.dev/* (catch-all, lowest priority — WP5)
