@@ -76,6 +76,8 @@ export default [
             'packages/*/tsup.config.ts',
             'apps/*/src/**/*.ts',
             'apps/*/src/**/*.tsx',
+            'apps/*/next.config.ts',
+            'apps/*/open-next.config.ts',
             'examples/*/src/**/*.ts',
             'examples/*/src/**/*.tsx',
         ],
@@ -83,7 +85,7 @@ export default [
             parser: tsParser,
             parserOptions: {
                 projectService: {
-                    allowDefaultProject: ['*.ts', 'packages/*/*.ts', 'apps/*/*.ts', 'examples/*/*.ts'],
+                    allowDefaultProject: ['*.ts', 'packages/*/*.ts', 'examples/*/*.ts'],
                     defaultProject: 'tsconfig.base.json'
                 },
                 tsconfigRootDir: import.meta.dirname,

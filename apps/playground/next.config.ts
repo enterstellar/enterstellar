@@ -30,6 +30,13 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   reactCompiler: true,
+  transpilePackages: [
+    '@enterstellar-ai/cache',
+    '@enterstellar-ai/devtools',
+    '@enterstellar-ai/react',
+    '@enterstellar-ai/registry',
+    '@enterstellar-ai/types',
+  ],
 };
 
 // ---------------------------------------------------------------------------
@@ -52,4 +59,4 @@ export default nextConfig;
  * @see https://opennext.js.org/cloudflare/bindings#local-access-to-bindings
  */
 import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare';
-initOpenNextCloudflareForDev();
+void initOpenNextCloudflareForDev();
