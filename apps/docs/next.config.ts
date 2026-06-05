@@ -78,23 +78,98 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
 
   /**
-   * Exclude Node-specific packages from the Cloudflare Worker bundle.
+   * Exclude build-time-only packages from the Cloudflare Worker bundle.
    *
-   * These packages use `fs`, `child_process`, or WASM binaries that are
-   * incompatible with the Workers runtime. They are only needed during
-   * `next build` (Node.js environment) for:
-   * - `ts-morph` / `typescript` — Twoslash type annotations
-   * - `twoslash` — TypeScript code block hover types
-   * - `shiki` — Syntax highlighting with WASM-based grammars
-   * - `@takumi-rs/image-response` — OG image generation (build-time only)
+   * These packages are used exclusively during `next build` (Node.js
+   * environment) for MDX processing, syntax highlighting, and type annotation.
+   * They are NEVER called at edge runtime because:
+   *
+   * - `ts-morph`, `typescript`, `fumadocs-twoslash`, `fumadocs-typescript`:
+   *   Used in `source.config.ts` via dynamic `await import()` — build-time only.
+   * - `twoslash`: Pulled in transitively by `fumadocs-twoslash` — build-time only.
+   * - `shiki`, `@shikijs/core`, `@shikijs/langs`, `@shikijs/themes`:
+   *   `source.config.ts` configures the Shiki highlighter at build time.
+   *   The `bundledLanguages` import in `dynamic-codeblock.tsx` is a
+   *   `'use client'` component — it runs in the browser, never the Worker.
+   * - `mermaid`: `components/mdx/mermaid.tsx` is `'use client'` with a
+   *   lazy `import('mermaid')` — runs in the browser, never the Worker.
+   * - `react-force-graph-2d`, `d3-force`: `graph-view.tsx` is `'use client'`
+   *   with a lazy `import('react-force-graph-2d')` — browser-only.
+   * - `@orama/orama`: Not imported in any server/Worker path.
+   * - `katex`, `rehype-katex`, `remark-math`: Build-time MDX remark/rehype plugins.
+   * - `@takumi-rs/image-response`, `@vercel/og`: OG image generation; the
+   *   `/og/[[...slug]]` route uses `generateStaticParams()` and
+   *   `revalidate = false` — all images are pre-rendered at build time.
+   *
+   * ⚠️ `flexsearch` is NOT listed here — it runs at Worker runtime inside
+   * `/api/chat/route.ts` (the AI chat endpoint) and must be bundled.
+   *
+   * @see Validation: apps/docs/src/ runtime scan (June 2026)
    */
   serverExternalPackages: [
+    // TypeScript / Twoslash toolchain (build-time MDX transforms)
     'ts-morph',
     'typescript',
     'twoslash',
+    'fumadocs-twoslash',
+    'fumadocs-typescript',
+    // Shiki syntax highlighting (build-time via source.config.ts;
+    // runtime usage is 'use client' → browser bundle, not Worker)
     'shiki',
+    '@shikijs/core',
+    '@shikijs/langs',
+    '@shikijs/themes',
+    '@shikijs/types',
+    // Mermaid diagram renderer ('use client', lazy browser import)
+    'mermaid',
+    // Force-directed graph ('use client', lazy browser import)
+    'react-force-graph-2d',
+    'd3-force',
+    // OG image generation (generateStaticParams + revalidate=false → static)
     '@takumi-rs/image-response',
+    '@vercel/og',
+    // Search / data engine not used in any Worker-runtime path
+    // NOTE: @orama/orama is NOT listed here — it IS used at runtime by
+    // `api/search/route.ts` via `fumadocs-core/search/server` and must be bundled.
+    // KaTeX: NOT listed here — rehype-katex is only imported via
+    // `await import('rehype-katex')` in source.config.ts (build-time, invisible to
+    // webpack). Listing katex here would cause Turbopack to warn about
+    // `katex/dist/katex.min.css` which is not a valid Node.js external module.
+    // It stays in outputFileTracingExcludes to prevent nft from tracing it.
   ],
+
+  /**
+   * Prevent build-time-only dependencies from entering the standalone
+   * output directory that OpenNext bundles into `handler.mjs`.
+   *
+   * `outputFileTracingExcludes` runs during Next.js's file-tracing phase
+   * (which populates `.next/standalone`). Excluding these paths here means
+   * OpenNext's esbuild step never encounters them, preventing re-bundling.
+   *
+   * The list mirrors `serverExternalPackages` above. Keeping both in sync
+   * ensures defence-in-depth: webpack doesn't bundle them AND the tracer
+   * doesn't copy them into standalone.
+   */
+  outputFileTracingExcludes: {
+    '*': [
+      'node_modules/ts-morph/**',
+      'node_modules/typescript/**',
+      'node_modules/twoslash/**',
+      'node_modules/fumadocs-twoslash/**',
+      'node_modules/fumadocs-typescript/**',
+      'node_modules/shiki/**',
+      'node_modules/@shikijs/**',
+      'node_modules/mermaid/**',
+      'node_modules/react-force-graph-2d/**',
+      'node_modules/d3-force/**',
+      'node_modules/@takumi-rs/image-response/**',
+      'node_modules/@vercel/og/**',
+      // NOTE: @orama/orama is NOT excluded — it runs at Worker runtime in
+      // api/search/route.ts via fumadocs-core/search/server.
+      'node_modules/katex/**',
+      'node_modules/**/*.wasm',
+    ],
+  },
 
   /** Log full fetch URLs in the dev server console for debugging. */
   logging: {

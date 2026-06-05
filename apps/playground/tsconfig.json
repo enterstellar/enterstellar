@@ -77,8 +77,7 @@
     // @/* → ./src/* for clean imports within the app.
     // ==========================================
     "paths": {
-      "@/*": ["./src/*"],
-      "@enterstellar-ai/*": ["../../packages/*/src"]
+      "@/*": ["./src/*"]
     },
     // ==========================================
     // Cloudflare Workers Types
