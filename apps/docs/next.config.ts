@@ -87,47 +87,6 @@ const nextConfig: NextConfig = {
   basePath: '/docs',
 
   /**
-   * Exclude build-time-only packages from the Cloudflare Worker bundle.
-   *
-   * These packages are used exclusively during `next build` (Node.js
-   * environment) for MDX processing, syntax highlighting, and type annotation.
-   * They are NEVER called at edge runtime because:
-   *
-   * - `ts-morph`, `typescript`, `fumadocs-twoslash`, `fumadocs-typescript`:
-   *   Used in `source.config.ts` via dynamic `await import()` — build-time only.
-   * - `twoslash`: Pulled in transitively by `fumadocs-twoslash` — build-time only.
-   * - `shiki`, `@shikijs/core`, `@shikijs/langs`, `@shikijs/themes`:
-   *   `source.config.ts` configures the Shiki highlighter at build time.
-   *   The `bundledLanguages` import in `dynamic-codeblock.tsx` is a
-   *   `'use client'` component — it runs in the browser, never the Worker.
-   * - `mermaid`: `components/mdx/mermaid.tsx` is `'use client'` with a
-   *   lazy `import('mermaid')` — runs in the browser, never the Worker.
-   * - `react-force-graph-2d`, `d3-force`: `graph-view.tsx` is `'use client'`
-   *   with a lazy `import('react-force-graph-2d')` — browser-only.
-   * - `@orama/orama`: Not imported in any server/Worker path.
-   * - `katex`, `rehype-katex`, `remark-math`: Build-time MDX remark/rehype plugins.
-   * - `@takumi-rs/image-response`, `@vercel/og`: OG image generation; the
-   *   `/og/[[...slug]]` route uses `generateStaticParams()` and
-   *   `revalidate = false` — all images are pre-rendered at build time.
-   *
-   * ⚠️ `flexsearch` is NOT listed here — it runs at Worker runtime inside
-   * `/api/chat/route.ts` (the AI chat endpoint) and must be bundled.
-   *
-   * @see Validation: apps/docs/src/ runtime scan (June 2026)
-   */
-  serverExternalPackages: [
-    // OG image generation (uses WASM / native dependencies at runtime)
-    '@takumi-rs/image-response',
-    '@vercel/og',
-    // ⚠️ WARNING: Build-time packages (typescript, ts-morph, shiki, mermaid, etc.)
-    // must NOT be listed here. If listed, Webpack is forced to emit external
-    // require() calls, which OpenNext's esbuild step resolves from the monorepo root
-    // node_modules and bundles into handler.mjs, causing severe bloat (44+ MiB).
-    // Instead, they are completely excluded from the server compilation graph
-    // by using `{ ssr: false }` client components or dynamic imports on the server.
-  ],
-
-  /**
    * Prevent build-time-only dependencies from entering the standalone
    * output directory that OpenNext bundles into `handler.mjs`.
    *
@@ -135,9 +94,9 @@ const nextConfig: NextConfig = {
    * (which populates `.next/standalone`). Excluding these paths here means
    * OpenNext's esbuild step never encounters them, preventing re-bundling.
    *
-   * The list mirrors `serverExternalPackages` above. Keeping both in sync
-   * ensures defence-in-depth: webpack doesn't bundle them AND the tracer
-   * doesn't copy them into standalone.
+   * Build-time-only packages (like `typescript`, `shiki`, `mermaid`, etc.) are
+   * completely excluded from the server compilation graph by using `{ ssr: false }`
+   * client components, client-side dynamic imports, or build-time MDX plugins.
    */
   outputFileTracingExcludes: {
     '*': [
@@ -149,12 +108,6 @@ const nextConfig: NextConfig = {
       'node_modules/shiki/**',
       'node_modules/@shikijs/**',
       'node_modules/mermaid/**',
-      'node_modules/react-force-graph-2d/**',
-      'node_modules/d3-force/**',
-      'node_modules/@takumi-rs/image-response/**',
-      'node_modules/@vercel/og/**',
-      // NOTE: @orama/orama is NOT excluded — it runs at Worker runtime in
-      // api/search/route.ts via fumadocs-core/search/server.
       'node_modules/katex/**',
       'node_modules/**/*.wasm',
     ],

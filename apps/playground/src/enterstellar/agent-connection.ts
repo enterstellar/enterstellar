@@ -85,7 +85,7 @@ export type SceneIntentResult = {
 const ZONE_STAGGER_MS = 250;
 
 /** API endpoint for the playground route handler. */
-const API_ENDPOINT = '/api/playground';
+const API_ENDPOINT = '/playground/api/playground';
 
 // ---------------------------------------------------------------------------
 // LiveAgentConnection
@@ -168,10 +168,7 @@ export class LiveAgentConnection implements EnterstellarAgentConnection {
    * @param _signal - Ignored.
    * @param _options - Ignored.
    */
-  async dispatch(
-    _signal: UserSignal,
-    _options?: { readonly immediate?: boolean },
-  ): Promise<void> {
+  async dispatch(_signal: UserSignal, _options?: { readonly immediate?: boolean }): Promise<void> {
     // No-op: playground has no real bidirectional agent
   }
 
@@ -273,7 +270,7 @@ export class LiveAgentConnection implements EnterstellarAgentConnection {
     const decoder = new TextDecoder();
     let rawText = '';
 
-    for (; ;) {
+    for (;;) {
       const { done, value } = await reader.read();
       if (done) break;
 
@@ -428,9 +425,8 @@ export class LiveAgentConnection implements EnterstellarAgentConnection {
 
       // Determine target zone name — use the intent's zone field,
       // falling back to the scene's zone definition by index
-      const targetZone = zoneIntent.zone !== ''
-        ? zoneIntent.zone
-        : scene.zones[i]?.name ?? `zone-${String(i)}`;
+      const targetZone =
+        zoneIntent.zone !== '' ? zoneIntent.zone : (scene.zones[i]?.name ?? `zone-${String(i)}`);
 
       // Emit to all 'intent' subscribers — Zone filters by zone name
       this.emit('intent', { zone: targetZone, intent: componentIntent });
@@ -482,8 +478,7 @@ export class LiveAgentConnection implements EnterstellarAgentConnection {
 
       // Target the hallucinated zone name — either from explicit
       // hallucinatedZones or auto-mirrored with 'hallucinated-' prefix
-      const targetZone = hallucinatedZones[i]?.name
-        ?? `hallucinated-zone-${String(i)}`;
+      const targetZone = hallucinatedZones[i]?.name ?? `hallucinated-zone-${String(i)}`;
 
       // Emit to 'intent' subscribers — the hallucinated Zone
       // compiles this through the REAL pipeline, producing failures

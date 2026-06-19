@@ -33,7 +33,6 @@
  * - `fumadocs-twoslash`, `twoslash` — only in `source.config.ts` (build-time)
  * - `fumadocs-typescript`, `ts-morph`, `typescript` — only `source.config.ts`
  * - `mermaid` — `mermaid.tsx` is `'use client'` with lazy `import('mermaid')`
- * - `react-force-graph-2d`, `d3-force` — `graph-view.tsx` is `'use client'`
  * - `katex`, `rehype-katex`, `remark-math` — build-time MDX plugins only
  * - `@orama/orama` — EXCLUDED from exclusion list: used in `api/search/route.ts`
  *   via `fumadocs-core/search/server` → must be bundled

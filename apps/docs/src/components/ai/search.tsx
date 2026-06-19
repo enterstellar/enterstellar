@@ -97,7 +97,9 @@ export function AISearchPanelHeader({ className, ...props }: ComponentProps<'div
             className: 'text-fd-muted-foreground rounded-full',
           }),
         )}
-        onClick={() => { setOpen(false); }}
+        onClick={() => {
+          setOpen(false);
+        }}
       >
         <X />
       </button>
@@ -146,7 +148,9 @@ export function AISearchInputActions(): ReactElement | null {
             className: 'rounded-full',
           }),
         )}
-        onClick={() => { setMessages([]); }}
+        onClick={() => {
+          setMessages([]);
+        }}
       >
         Clear Chat
       </button>
@@ -347,7 +351,10 @@ const roleName: Record<string, string> = {
  * @param props.message - The AI SDK chat message with typed parts.
  * @returns The rendered message element.
  */
-function Message({ message, ...props }: { message: ChatUIMessage } & ComponentProps<'div'>): ReactElement {
+function Message({
+  message,
+  ...props
+}: { message: ChatUIMessage } & ComponentProps<'div'>): ReactElement {
   let markdown = '';
   const searchCalls: UIToolInvocation<SearchTool>[] = [];
 
@@ -367,7 +374,12 @@ function Message({ message, ...props }: { message: ChatUIMessage } & ComponentPr
   }
 
   return (
-    <div onClick={(e) => { e.stopPropagation(); }} {...props}>
+    <div
+      onClick={(e) => {
+        e.stopPropagation();
+      }}
+      {...props}
+    >
       <p
         className={cn(
           'mb-1 text-sm font-medium text-fd-muted-foreground',
@@ -415,7 +427,7 @@ export function AISearch({ children }: { children: ReactNode }): ReactElement {
   const chat = useChat<ChatUIMessage>({
     id: 'search',
     transport: new DefaultChatTransport({
-      api: '/api/chat',
+      api: '/docs/api/chat',
     }),
   });
 
@@ -452,7 +464,9 @@ export function AISearchTrigger({
         ],
         className,
       )}
-      onClick={() => { setOpen(!open); }}
+      onClick={() => {
+        setOpen(!open);
+      }}
       {...props}
     >
       {props.children}
@@ -497,7 +511,9 @@ export function AISearchPanel(): ReactElement {
         <div
           data-state={open ? 'open' : 'closed'}
           className="fixed inset-0 z-30 backdrop-blur-xs bg-fd-overlay data-[state=open]:animate-fd-fade-in data-[state=closed]:animate-fd-fade-out lg:hidden"
-          onClick={() => { setOpen(false); }}
+          onClick={() => {
+            setOpen(false);
+          }}
         />
       </Presence>
       <Presence present={open}>
@@ -536,7 +552,11 @@ export function AISearchPanel(): ReactElement {
  * @param props - Standard `div` props. `className` and `style` are merged.
  * @returns The message list element.
  */
-export function AISearchPanelList({ className, style, ...props }: ComponentProps<'div'>): ReactElement {
+export function AISearchPanelList({
+  className,
+  style,
+  ...props
+}: ComponentProps<'div'>): ReactElement {
   const chat = useChatContext();
   const messages = chat.messages.filter((msg) => msg.role !== 'system');
 
@@ -553,7 +573,13 @@ export function AISearchPanelList({ className, style, ...props }: ComponentProps
       {messages.length === 0 ? (
         <div className="text-sm text-fd-muted-foreground/80 size-full flex flex-col items-center justify-center text-center gap-2">
           <MessageCircleIcon fill="currentColor" stroke="none" />
-          <p onClick={(e) => { e.stopPropagation(); }}>Start a new chat below.</p>
+          <p
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            Start a new chat below.
+          </p>
         </div>
       ) : (
         <div className="flex flex-col px-3 gap-4">
@@ -599,7 +625,9 @@ export function useHotKey(): void {
 
   useEffect(() => {
     window.addEventListener('keydown', onKeyPress);
-    return () => { window.removeEventListener('keydown', onKeyPress); };
+    return () => {
+      window.removeEventListener('keydown', onKeyPress);
+    };
   }, []);
 }
 

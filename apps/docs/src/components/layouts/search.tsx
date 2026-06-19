@@ -99,7 +99,7 @@ export default function CustomSearchDialog(props: SharedProps): ReactElement {
   const [tag, setTag] = useState<string | undefined>();
   const { search, setSearch, query } = useDocsSearch({
     type: 'fetch',
-    api: '/api/search',
+    api: '/docs/api/search',
     ...(tag ? { tag } : {}),
   });
   const { full } = useTreeContext();
@@ -169,9 +169,9 @@ export default function CustomSearchDialog(props: SharedProps): ReactElement {
           items={
             query.data !== 'empty' || pageTreeAction
               ? [
-                ...(pageTreeAction ? [pageTreeAction] : []),
-                ...(Array.isArray(query.data) ? query.data : []),
-              ]
+                  ...(pageTreeAction ? [pageTreeAction] : []),
+                  ...(Array.isArray(query.data) ? query.data : []),
+                ]
               : null
           }
         />
