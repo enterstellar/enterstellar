@@ -44,17 +44,55 @@ import { NextProvider } from 'fumadocs-core/framework/next';
  * metadata is merged on top of these defaults by `createMetadata()`.
  */
 export const metadata = createMetadata({
+  metadataBase: baseUrl,
   title: {
-    template: '%s | Enterstellar',
-    default: 'Enterstellar — The TypeScript of Generative UI',
+    default: 'Enterstellar Docs',
+    template: '%s | Enterstellar Docs',
   },
   description:
     'Type-safe, deterministic, observable AI-generated interfaces. The compiler layer between AI and your screen.',
-  metadataBase: baseUrl,
+  openGraph: {
+    type: 'website',
+    siteName: 'Enterstellar Docs',
+    locale: 'en_US',
+    title: 'Enterstellar Docs',
+    description:
+      'Type-safe, deterministic, observable AI-generated interfaces. The compiler layer between AI and your screen.',
+    images: [
+      {
+        url: '/assets/images/opengraph/compiler.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Enterstellar Docs',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    creator: '@enterstellaros',
+    title: 'Enterstellar Docs',
+    description:
+      'Type-safe, deterministic, observable AI-generated interfaces. The compiler layer between AI and your screen.',
+    images: ['/assets/images/opengraph/compiler.jpg'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  verification: {
+    google: 'kd0DplgZbQTe3RpVJamrwtJ21zgBehTfYBpPyb0ahEk',
+  },
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-icon.png',
+  },
+  alternates: {
+    canonical: 'https://enterstellar.dev',
+  },
 });
 
 // Enterstellar Design System Swatch Constants for Browser Viewport Theming
-const SWATCH_BLACK = '#080808';      // Matches `--swatch--black`
+const SWATCH_BLACK = '#080808'; // Matches `--swatch--black`
 const SWATCH_WHITE_SMOKE = '#f6f7f8'; // Matches `--swatch--bg-whte-smoke`
 
 /**

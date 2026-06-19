@@ -22,6 +22,7 @@
 
 import { createGroq } from '@ai-sdk/groq';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import type { LanguageModel } from 'ai';
 
 // ---------------------------------------------------------------------------
 // Provider Instances
@@ -31,27 +32,31 @@ import { createGoogleGenerativeAI } from '@ai-sdk/google';
  * Primary LLM provider: Groq.
  *
  * Groq provides ultra-fast inference via LPU hardware.
- * API key is read lazily from `process.env['GROQ_API_KEY']`.
+ * API key is read lazily from `process.env['GROQ_API_KEY']` at request time
+ * to prevent empty key binding during module load on Cloudflare Workers.
  *
  * @see https://console.groq.com/docs/api — Groq API documentation
  */
-export const groq = createGroq({
-  apiKey: process.env['GROQ_API_KEY'] ?? '',
-});
+export const groq = (modelId: string): LanguageModel => {
+  const apiKey = process.env['GROQ_API_KEY'];
+  return createGroq(apiKey ? { apiKey } : {})(modelId);
+};
 
 /**
  * Fallback LLM provider: Google AI (via Google AI Studio).
  *
  * Google AI provides reliable, large-context inference.
- * API key is read lazily from `process.env['GOOGLE_GENERATIVE_AI_API_KEY']`.
+ * API key is read lazily from `process.env['GOOGLE_GENERATIVE_AI_API_KEY']` at request time
+ * to prevent empty key binding during module load on Cloudflare Workers.
  *
  * @remarks Uses `@ai-sdk/google` (Google AI Studio API key), NOT
  * `@ai-sdk/google-vertex` (GCP service account). Migration to Vertex
  * for production GCP deployments is deferred to future cycles.
  */
-export const google = createGoogleGenerativeAI({
-  apiKey: process.env['GOOGLE_GENERATIVE_AI_API_KEY'] ?? '',
-});
+export const google = (modelId: string): LanguageModel => {
+  const apiKey = process.env['GOOGLE_GENERATIVE_AI_API_KEY'];
+  return createGoogleGenerativeAI(apiKey ? { apiKey } : {})(modelId);
+};
 
 // ---------------------------------------------------------------------------
 // Model Identifiers
@@ -65,8 +70,7 @@ export const google = createGoogleGenerativeAI({
  *
  * @see .env.example — `GROQ_MODEL_ID`
  */
-export const PRIMARY_MODEL: string =
-  process.env['GROQ_MODEL_ID'] ?? 'openai/gpt-oss-120b';
+export const PRIMARY_MODEL: string = process.env['GROQ_MODEL_ID'] ?? 'openai/gpt-oss-120b';
 
 /**
  * Fallback model identifier — Gemini Flash 3.0.
@@ -76,5 +80,4 @@ export const PRIMARY_MODEL: string =
  *
  * @see .env.example — `GOOGLE_MODEL_ID`
  */
-export const FALLBACK_MODEL: string =
-  process.env['GOOGLE_MODEL_ID'] ?? 'gemini-3-flash';
+export const FALLBACK_MODEL: string = process.env['GOOGLE_MODEL_ID'] ?? 'gemini-3-flash';

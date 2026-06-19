@@ -33,7 +33,11 @@ import {
   useDeferredValue,
 } from 'react';
 import { Fragment, jsx, jsxs } from 'react/jsx-runtime';
-import { DynamicCodeBlock } from 'fumadocs-ui/components/dynamic-codeblock';
+import dynamic from 'next/dynamic';
+const DynamicCodeBlock = dynamic(
+  () => import('fumadocs-ui/components/dynamic-codeblock').then((mod) => mod.DynamicCodeBlock),
+  { ssr: false },
+);
 import defaultMdxComponents from 'fumadocs-ui/mdx';
 import { visit } from 'unist-util-visit';
 import type { ElementContent, Root, RootContent } from 'hast';

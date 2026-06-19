@@ -59,22 +59,36 @@ export const metadata: Metadata = {
     type: 'website',
     siteName: 'Enterstellar Playground',
     locale: 'en_US',
+    title: 'Enterstellar Playground',
+    description:
+      'Interactive Enterstellar Compiler playground. Try type-safe GenUI with live AI demos — MetricCards, DataTables, multi-zone dashboards, and more.',
     images: [
       {
-        url: '/og-image.png',
+        url: '/assets/images/opengraph/compiler.jpg',
         width: 1200,
         height: 630,
-        alt: 'Enterstellar Playground — The Intelligence Backend for GenUI',
+        alt: 'Enterstellar Playground',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
     creator: '@enterstellaros',
+    title: 'Enterstellar Playground',
+    description:
+      'Interactive Enterstellar Compiler playground. Try type-safe GenUI with live AI demos — MetricCards, DataTables, multi-zone dashboards, and more.',
+    images: ['/assets/images/opengraph/compiler.jpg'],
   },
   robots: {
     index: true,
     follow: true,
+  },
+  verification: {
+    google: 'kd0DplgZbQTe3RpVJamrwtJ21zgBehTfYBpPyb0ahEk',
+  },
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-icon.png',
   },
   alternates: {
     canonical: 'https://enterstellar.dev',

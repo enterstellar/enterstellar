@@ -113,6 +113,22 @@ const nextConfig: NextConfig = {
     ],
   },
 
+  /**
+   * Exclude Node-specific and heavy build-time packages from Next.js server chunks compilation.
+   * Tells Webpack NOT to inline these packages into the compiled server components.
+   */
+  serverExternalPackages: [
+    'ts-morph',
+    'typescript',
+    'twoslash',
+    'fumadocs-twoslash',
+    'fumadocs-typescript',
+    'shiki',
+    '@shikijs/twoslash',
+    'mermaid',
+    'katex',
+  ],
+
   /** Log full fetch URLs in the dev server console for debugging. */
   logging: {
     fetches: {
@@ -164,4 +180,6 @@ export default withBundleAnalyzer(withMDX(nextConfig));
  * @see https://opennext.js.org/cloudflare/bindings#local-access-to-bindings
  */
 import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare';
-void initOpenNextCloudflareForDev();
+if (process.env.NODE_ENV === 'development') {
+  void initOpenNextCloudflareForDev();
+}

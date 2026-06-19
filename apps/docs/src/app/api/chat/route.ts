@@ -17,7 +17,14 @@
 
 import { createGroq } from '@ai-sdk/groq';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import { convertToModelMessages, stepCountIs, streamText, tool, type UIMessage } from 'ai';
+import {
+  convertToModelMessages,
+  stepCountIs,
+  streamText,
+  tool,
+  type UIMessage,
+  type LanguageModel,
+} from 'ai';
 import { z } from 'zod';
 import { source } from '@/lib/source';
 import { Document, type DocumentData } from 'flexsearch';
@@ -168,9 +175,10 @@ function checkRateLimit(ip: string): boolean {
  *
  * @remarks API key is read lazily on first request, not at module load.
  */
-const groq = createGroq({
-  apiKey: process.env['GROQ_API_KEY'] ?? '',
-});
+const groq = (modelId: string): LanguageModel => {
+  const apiKey = process.env['GROQ_API_KEY'];
+  return createGroq(apiKey ? { apiKey } : {})(modelId);
+};
 
 /**
  * Fallback LLM provider: Google AI (via Google AI Studio)
@@ -181,9 +189,10 @@ const groq = createGroq({
  * @remarks Uses `@ai-sdk/google` (Google AI Studio API key), NOT `@ai-sdk/google-vertex`
  * (GCP service account). Migration to Vertex for production GCP deployments is deferred.
  */
-const google = createGoogleGenerativeAI({
-  apiKey: process.env['GOOGLE_GENERATIVE_AI_API_KEY'] ?? '',
-});
+const google = (modelId: string): LanguageModel => {
+  const apiKey = process.env['GOOGLE_GENERATIVE_AI_API_KEY'];
+  return createGoogleGenerativeAI(apiKey ? { apiKey } : {})(modelId);
+};
 
 /** Primary model identifier */
 const PRIMARY_MODEL = 'openai/gpt-oss-120b';
