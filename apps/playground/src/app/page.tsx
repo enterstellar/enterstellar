@@ -1,49 +1,50 @@
 /**
- * Enterstellar Playground — Root Page (Placeholder)
+ * Enterstellar Playground — Playground Page
  *
- * Minimal placeholder for the root route. The full landing page
- * design is handled by other developers on the enterstellar-web team.
+ * Renders the `PlaygroundShell` which orchestrates the controls bar,
+ * prompt bar, and scene grid.
  *
- * Currently shows a centered card with the Enterstellar logo, tagline,
- * and a prominent link to the Playground.
+ * This is a **server component** — it simply renders the client-side
+ * `PlaygroundShell`. All state management lives in the shell.
+ * The Enterstellar engine context (registry, connection, renderers) is
+ * provided by `PlaygroundProviders` in the parent layout.
  *
- * @see implementation_plan.md §5.4 — Root page placeholder
+ * **Route architecture:**
+ * - `/playground` is the ONLY playground route (no `/playground/demo/X`)
+ * - Quick demos = 1-zone scenes selected via ⚡ chips
+ * - Domain dashboards = 4-zone scenes selected via 💡 chips
+ * - Freestyle = user types anything → LLM selects component for 1 zone
+ *
+ * @see implementation_plan.md §4.7 — Unified playground page
+ * @see PlaygroundShell — the client-side state orchestrator
  */
 
-import Link from 'next/link';
+import { PlaygroundShell } from '@/components/playground/playground-shell';
 
-export default function HomePage(): React.JSX.Element {
-  return (
-    <div className="flex flex-col items-center justify-center min-h-dvh bg-neutral-950 text-neutral-50 px-6">
-      {/* Logo + Tagline */}
-      <div className="text-center space-y-4 max-w-lg">
-        <h1 className="text-4xl font-bold tracking-tight">
-          <span className="bg-gradient-to-r from-blue-400 via-primary-400 to-purple-400 bg-clip-text text-transparent">
-            Enterstellar
-          </span>{' '}
-          Cloud
-        </h1>
-        <p className="text-lg text-neutral-400 leading-relaxed">
-          The compiler-driven UI engine that transforms natural language
-          into production-grade, type-safe user interfaces.
-        </p>
+/**
+ * Opt out of static prerendering.
+ *
+ * The playground tree calls `useEnterstellar()` (ENS-3001 guard) which
+ * requires a live `<Provider>` in the React tree. Next.js SSG attempts
+ * to execute the full component tree server-side at build time, but no
+ * `EnterstellarContext` can exist outside the client lifecycle.
+ *
+ * `force-dynamic` tells Next.js to render this route on-demand per
+ * request (dynamic rendering) instead of statically at build time.
+ * This is correct for an interactive AI playground — there is no
+ * meaningful static shell to prerender here.
+ *
+ * @see https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#dynamic
+ */
+export const dynamic = 'force-dynamic';
 
-        {/* CTA → Playground */}
-        <div className="pt-4">
-          <Link
-            href="/playground"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary-500/20 text-primary-400 border border-primary-500/30 font-semibold text-sm hover:bg-primary-500/30 hover:border-primary-500/50 transition-all duration-200"
-          >
-            <span>⚡</span>
-            <span>Try the Playground</span>
-            <span className="text-primary-400/60">→</span>
-          </Link>
-        </div>
-
-        <p className="text-xs text-neutral-600 pt-6">
-          Full landing page coming soon — this is a development placeholder.
-        </p>
-      </div>
-    </div>
-  );
+/**
+ * `/playground` page component.
+ *
+ * Renders the full playground experience: controls bar (sticky),
+ * prompt bar (intent input + scene chips), and scene grid
+ * (90%+ of viewport).
+ */
+export default function PlaygroundPage(): React.JSX.Element {
+  return <PlaygroundShell />;
 }

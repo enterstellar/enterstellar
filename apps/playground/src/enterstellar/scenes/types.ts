@@ -4,7 +4,7 @@
  *
  * The `PlaygroundScene` is the **universal abstraction** for all playground
  * content. A single-component inspection is a Scene with 1 zone. A multi-zone
- * dashboard is a Scene with 4–6 zones. One route (`/playground`), zero UX fork,
+ * dashboard is a Scene with 4–6 zones. One route (`/`), zero UX fork,
  * zero code duplication.
  *
  * **Key design principle:** Quick demos and Domain dashboards share the same
@@ -116,12 +116,7 @@ export type ZoneDefinition = {
  * - `sidebar-left` — Large main zone with smaller sidebar zones.
  * - `dashboard` — Flexible CSS Grid with explicit row/col positioning.
  */
-export type SceneLayout =
-  | 'single'
-  | 'grid-2col'
-  | 'grid-3col'
-  | 'sidebar-left'
-  | 'dashboard';
+export type SceneLayout = 'single' | 'grid-2col' | 'grid-3col' | 'sidebar-left' | 'dashboard';
 
 // ---------------------------------------------------------------------------
 // Scene Category
@@ -318,11 +313,15 @@ export function getHallucinatedZones(scene: PlaygroundScene): readonly ZoneDefin
   }
 
   // Auto-mirror standard zones with 'hallucinated-' prefix
-  return scene.zones.map((zone): ZoneDefinition => ({
-    name: `hallucinated-${zone.name}`,
-    position: zone.position,
-    // exactOptionalPropertyTypes: only include expectedComponent when defined
-    ...(zone.expectedComponent !== undefined ? { expectedComponent: zone.expectedComponent } : {}),
-    intentHint: zone.intentHint,
-  }));
+  return scene.zones.map(
+    (zone): ZoneDefinition => ({
+      name: `hallucinated-${zone.name}`,
+      position: zone.position,
+      // exactOptionalPropertyTypes: only include expectedComponent when defined
+      ...(zone.expectedComponent !== undefined
+        ? { expectedComponent: zone.expectedComponent }
+        : {}),
+      intentHint: zone.intentHint,
+    }),
+  );
 }

@@ -78,6 +78,15 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
 
   /**
+   * Subpath deployment prefix.
+   *
+   * Mounts the application under the `/docs` subdirectory at build and
+   * runtime, ensuring all generated CSS, JS bundles, dynamic links, and
+   * assets resolve relative to this path.
+   */
+  basePath: '/docs',
+
+  /**
    * Exclude build-time-only packages from the Cloudflare Worker bundle.
    *
    * These packages are used exclusively during `next build` (Node.js

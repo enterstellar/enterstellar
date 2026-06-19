@@ -55,11 +55,7 @@ import * as Preview from '@/components/preview';
 import { createMetadata } from '@/lib/metadata';
 import { getPageImage, getPageMarkdownUrl, source } from '@/lib/source';
 import { Wrapper } from '@/components/preview/wrapper';
-import dynamic from 'next/dynamic';
-
-const Mermaid = dynamic(() => import('@/components/mdx/mermaid').then((mod) => mod.Mermaid), {
-  ssr: false,
-});
+import { Mermaid } from '@/components/mdx/mermaid';
 import { Feedback, FeedbackBlock } from '@/components/feedback/client';
 import { onBlockFeedbackAction, onPageFeedbackAction, owner, repo } from '@/lib/github';
 import {

@@ -1,20 +1,19 @@
 /**
  * Enterstellar Playground — Root Layout
  *
- * The root layout for the Enterstellar Playground marketing site at `enterstellar.dev`.
- * Provides global SEO metadata (OG, Twitter, robots), font loading
- * via next/font/google (Inter + JetBrains Mono — matching our token
- * system), and the shared page shell.
+ * The root layout for the Enterstellar Playground. Provides global SEO metadata
+ * (OG, Twitter, robots), font loading via next/font/google (Inter + JetBrains Mono),
+ * full-dark-mode background wrapper, and client-side `PlaygroundProviders`
+ * (Provider + LiveAgentConnection) for the playground experience.
  *
- * All child pages inherit this layout's metadata via Next.js's
- * built-in metadata merging. Pages can override with their own
- * `metadata` or `generateMetadata` exports.
+ * This is a server component so that Next.js can statically extract `metadata`.
+ * The actual client-side Enterstellar context is provided by `PlaygroundProviders`.
  *
- * @see archive/CORE/enterstellar-web-implementation-plan.md §4.13 — SEO Configuration
- * @see archive/CORE/enterstellar-web-presence-appendix.md — WP5 (subpath routing)
+ * @see PlaygroundProviders — client-side Enterstellar context wrapper
  */
 import type { Metadata } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
+import { PlaygroundProviders } from '@/components/playground/playground-providers';
 import './globals.css';
 
 /**
@@ -40,11 +39,10 @@ const fontMono = JetBrains_Mono({
 });
 
 /**
- * Global SEO metadata for the Enterstellar Playground marketing site.
+ * Global SEO metadata for the Enterstellar Playground.
  *
  * - `metadataBase` resolves all relative OG/Twitter image URLs
- * - `title.template` appends ` | Enterstellar Playground` to page-level titles
- * - `robots` explicitly allows indexing (defense against accidental noindex)
+ * - `robots` explicitly allows indexing
  * - `alternates.canonical` consolidates domain authority to `enterstellar.dev`
  *
  * @see https://nextjs.org/docs/app/api-reference/functions/generate-metadata
@@ -56,7 +54,7 @@ export const metadata: Metadata = {
     template: '%s | Enterstellar Playground',
   },
   description:
-    'The intelligence backend for AI-generated user interfaces. Type-safe, deterministic, production-grade GenUI.',
+    'Interactive Enterstellar Compiler playground. Try type-safe GenUI with live AI demos — MetricCards, DataTables, multi-zone dashboards, and more.',
   openGraph: {
     type: 'website',
     siteName: 'Enterstellar Playground',
@@ -88,7 +86,8 @@ export const metadata: Metadata = {
  *
  * Applies Inter (sans) and JetBrains Mono (mono) font CSS variables
  * to the `<html>` element, enabling `font-sans` and `font-mono`
- * Tailwind utilities site-wide via the token system.
+ * utilities site-wide, and wraps children with `PlaygroundProviders`
+ * for the playground context.
  */
 export default function RootLayout({
   children,
@@ -101,7 +100,11 @@ export default function RootLayout({
       className={`${fontSans.variable} ${fontMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <div className="min-h-dvh bg-playground-bg text-neutral-100 flex flex-col">
+          <PlaygroundProviders>{children}</PlaygroundProviders>
+        </div>
+      </body>
     </html>
   );
 }

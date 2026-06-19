@@ -6,7 +6,7 @@
  * cross-Worker sitemap discovery** — it declares all three sitemaps
  * hosted on this domain:
  *
- * - `enterstellar.dev/sitemap.xml` — Marketing pages (this Worker)
+ * - `enterstellar.dev/sitemap.xml` — Playground pages (this Worker)
  * - `enterstellar.dev/blog/sitemap.xml` — Blog posts, collections, tags (`compiler-blog` Worker)
  * - `enterstellar.dev/docs/sitemap.xml` — Documentation pages (`compiler-docs` Worker, in this repo)
  *

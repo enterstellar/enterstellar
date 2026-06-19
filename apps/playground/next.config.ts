@@ -33,6 +33,15 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
 
   /**
+   * Subpath deployment prefix.
+   *
+   * Mounts the application under the `/playground` subdirectory at build and
+   * runtime, ensuring all generated CSS, JS bundles, dynamic links, and
+   * assets resolve relative to this path.
+   */
+  basePath: '/playground',
+
+  /**
    * Pin Next.js's file tracer to the monorepo root.
    *
    * `opennextjs-cloudflare` detects the monorepo root by walking upward
