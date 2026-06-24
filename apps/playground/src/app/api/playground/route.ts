@@ -98,7 +98,7 @@ function errorResponse(status: number, error: PlaygroundErrorResponse): Response
  * In-memory sliding window rate limiter.
  *
  * Window: 60 seconds. Max: 20 requests per IP per window.
- * On Cloudflare Workers, the Map resets on cold start — acceptable
+ * On Vercel, the Map resets on cold start — acceptable
  * for v1 burst protection without external infrastructure.
  *
  * @internal
@@ -109,7 +109,7 @@ const ipWindows = new Map<string, number[]>();
 
 /**
  * Extracts the client IP address from the request.
- * Uses `x-forwarded-for` header (Cloudflare/proxy) with fallback.
+ * Uses `x-forwarded-for` header (Vercel/proxy) with fallback.
  *
  * @internal
  */
@@ -398,7 +398,7 @@ export async function POST(req: Request): Promise<Response> {
   // ── Parse Request ─────────────────────────────────────────────────────
   let body: PlaygroundRequest;
   try {
-    body = await req.json();
+    body = (await req.json()) as PlaygroundRequest;
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Invalid request body';
     return errorResponse(400, {

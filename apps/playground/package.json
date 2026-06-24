@@ -26,15 +26,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit",
-    "cf-build": "turbo run build --filter=\"@enterstellar-ai/playground^...\" && opennextjs-cloudflare build",
-    "deploy": "pnpm run cf-build && opennextjs-cloudflare deploy",
-    "upload": "pnpm run cf-build && opennextjs-cloudflare upload",
-    "preview": "pnpm run cf-build && opennextjs-cloudflare preview",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv ./cloudflare-env.d.ts"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@opennextjs/cloudflare": "^1.18.0",
     "@enterstellar-ai/cache": "workspace:*",
     "@enterstellar-ai/devtools": "workspace:*",
     "@enterstellar-ai/react": "workspace:*",
@@ -48,7 +42,7 @@
     "lucide-react": "^1.7.0",
     "framer-motion": "^12.38.0",
     "motion": "^12.38.0",
-    "next": "16.2.1",
+    "next": "16.2.9",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "tailwind-merge": "^3.5.0",
@@ -61,7 +55,6 @@
     "@types/react-dom": "^19.2.3",
     "babel-plugin-react-compiler": "1.0.0",
     "tailwindcss": "^4.2.2",
-    "typescript": "^5.9.3",
-    "wrangler": "^4.77.0"
+    "typescript": "^5.9.3"
   }
 }

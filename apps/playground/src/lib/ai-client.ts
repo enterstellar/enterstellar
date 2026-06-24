@@ -13,7 +13,7 @@
  * not here. This module only creates the provider instances.
  *
  * **API keys:** Read lazily from `process.env` — not available at build time
- * on Cloudflare Workers. The `?? ''` fallback ensures the SDK initializes
+ * on Vercel. The `?? ''` fallback ensures the SDK initializes
  * without throwing; errors surface when the first API call is made.
  *
  * @see apps/docs/src/app/api/chat/route.ts L177–198 — identical pattern
@@ -33,7 +33,7 @@ import type { LanguageModel } from 'ai';
  *
  * Groq provides ultra-fast inference via LPU hardware.
  * API key is read lazily from `process.env['GROQ_API_KEY']` at request time
- * to prevent empty key binding during module load on Cloudflare Workers.
+ * to prevent empty key binding during module load on Vercel.
  *
  * @see https://console.groq.com/docs/api — Groq API documentation
  */

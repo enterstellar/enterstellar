@@ -20,8 +20,8 @@
  * **Why are blog/docs sitemaps listed here?**
  * Google discovers sitemaps exclusively via `robots.txt` on the root
  * domain or direct submission in Google Search Console. The blog and
- * docs Workers cannot serve their own `robots.txt` because Cloudflare
- * Workers Routes routes `/blog/*` and `/docs/*` — not the root path.
+ * docs apps cannot serve their own `robots.txt` because Vercel
+ * Routes routes `/blog/*` and `/docs/*` — not the root path.
  * This `robots.txt` at `enterstellar.dev/robots.txt` is the single declaration
  * point for all sitemaps on the domain.
  *

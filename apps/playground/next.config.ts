@@ -3,15 +3,8 @@
  *
  * Central configuration for the Enterstellar playground app. Handles:
  *
- * 1. **React Compiler** — `reactCompiler: true` enables automatic
+ * **React Compiler** — `reactCompiler: true` enables automatic
  *    memoization via Babel's React Compiler plugin.
- *
- * **Deployment:**
- * The app is deployed via `@opennextjs/cloudflare`. The
- * `initOpenNextCloudflareForDev()` call at the bottom enables local
- * access to Cloudflare bindings (KV, D1, etc.) during `next dev`.
- *
- * @see open-next.config.ts — OpenNext Cloudflare adapter configuration
  *
  * @module
  */
@@ -44,8 +37,7 @@ const nextConfig: NextConfig = {
   /**
    * Pin Next.js's file tracer to the monorepo root.
    *
-   * `opennextjs-cloudflare` detects the monorepo root by walking upward
-   * from CWD looking for `pnpm-lock.yaml`. When Cloudflare Workers Builds
+   * When Vercel Builds
    * sets `Root directory: /apps/playground`, the parent directories that
    * contain the lock file are invisible, so OpenNext concludes
    * `monorepoRoot = appPath` and sets:
@@ -77,19 +69,3 @@ const nextConfig: NextConfig = {
 // ---------------------------------------------------------------------------
 
 export default nextConfig;
-
-// ---------------------------------------------------------------------------
-// Cloudflare Dev Bindings
-// ---------------------------------------------------------------------------
-
-/**
- * Enable calling `getCloudflareContext()` in `next dev`.
- *
- * This initializes the OpenNext Cloudflare adapter's dev-time binding
- * proxy, allowing local development to access Cloudflare bindings
- * (KV, D1, R2, etc.) without deploying to Workers.
- *
- * @see https://opennext.js.org/cloudflare/bindings#local-access-to-bindings
- */
-import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare';
-void initOpenNextCloudflareForDev();

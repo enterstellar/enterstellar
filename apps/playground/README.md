@@ -28,7 +28,7 @@ pnpm --filter playground typecheck
 # 4. Production build (OpenNext configuration)
 pnpm turbo run build --filter=playground
 
-# 5. Deploy to Cloudflare Workers
+# 5. Deploy to Vercel
 pnpm --filter playground deploy
 ```
 

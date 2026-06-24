@@ -314,7 +314,7 @@ export class LiveAgentConnection implements EnterstellarAgentConnection {
     scene: PlaygroundScene,
     startTime: number,
   ): Promise<SceneIntentResult> {
-    const json: { healthy: string; hallucinated: string } = await response.json();
+    const json = (await response.json()) as { healthy: string; hallucinated: string };
 
     const healthyIntents = this.parseZoneIntents(json.healthy);
     const hallucinatedIntents = this.parseZoneIntents(json.hallucinated);

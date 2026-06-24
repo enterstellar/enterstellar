@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 
 export function middleware(): NextResponse {
-  // Pass-through middleware strictly required by OpenNext Cloudflare adapter.
+  // Pass-through middleware strictly required by Vercel.
   // Next 16 doesn't output server/middleware.js without a defined middleware,
-  // which crashes the @opennextjs/cloudflare bundle process.
+  // which crashes the Vercel bundle process.
   return NextResponse.next();
 }
 
