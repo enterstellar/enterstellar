@@ -12,9 +12,10 @@
  * Provider cascade logic (try/catch fallback) lives in the route handler,
  * not here. This module only creates the provider instances.
  *
- * **API keys:** Read lazily from `process.env` — not available at build time
- * on Vercel. The `?? ''` fallback ensures the SDK initializes
- * without throwing; errors surface when the first API call is made.
+ * **API keys:** Read lazily from `process.env` at request time — runtime-only
+ * on Vercel, so keys are not bound during `next build`. An empty provider
+ * config when the key is unset lets the SDK factory initialize without
+ * throwing; errors surface on the first API call.
  *
  * @see apps/docs/src/app/api/chat/route.ts L177–198 — identical pattern
  * @see implementation_plan.md §2.2 — Provider Cascade
@@ -33,7 +34,7 @@ import type { LanguageModel } from 'ai';
  *
  * Groq provides ultra-fast inference via LPU hardware.
  * API key is read lazily from `process.env['GROQ_API_KEY']` at request time
- * to prevent empty key binding during module load on Vercel.
+ * so the provider is not initialized with a missing key during `next build`.
  *
  * @see https://console.groq.com/docs/api — Groq API documentation
  */
@@ -47,7 +48,7 @@ export const groq = (modelId: string): LanguageModel => {
  *
  * Google AI provides reliable, large-context inference.
  * API key is read lazily from `process.env['GOOGLE_GENERATIVE_AI_API_KEY']` at request time
- * to prevent empty key binding during module load on Cloudflare Workers.
+ * so the provider is not initialized with a missing key during `next build`.
  *
  * @remarks Uses `@ai-sdk/google` (Google AI Studio API key), NOT
  * `@ai-sdk/google-vertex` (GCP service account). Migration to Vertex

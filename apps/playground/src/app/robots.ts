@@ -2,13 +2,13 @@
  * Enterstellar Playground — robots.txt
  *
  * Serves the `robots.txt` file for the `enterstellar.dev` domain from the
- * catch-all Worker (`playground`). This is the **sole mechanism for
- * cross-Worker sitemap discovery** — it declares all three sitemaps
+ * catch-all server (`playground`). This is the **sole mechanism for
+ * cross-server sitemap discovery** — it declares all three sitemaps
  * hosted on this domain:
  *
- * - `enterstellar.dev/sitemap.xml` — Playground pages (this Worker)
- * - `enterstellar.dev/blog/sitemap.xml` — Blog posts, collections, tags (`compiler-blog` Worker)
- * - `enterstellar.dev/docs/sitemap.xml` — Documentation pages (`compiler-docs` Worker, in this repo)
+ * - `enterstellar.dev/sitemap.xml` — Playground pages (this server)
+ * - `enterstellar.dev/blog/sitemap.xml` — Blog posts, collections, tags (`compiler-blog` server)
+ * - `enterstellar.dev/docs/sitemap.xml` — Documentation pages (`compiler-docs` server, in this repo)
  *
  * **Crawl policy:**
  * All crawlers are allowed unrestricted access. Enterstellar does NOT block
@@ -20,8 +20,9 @@
  * **Why are blog/docs sitemaps listed here?**
  * Google discovers sitemaps exclusively via `robots.txt` on the root
  * domain or direct submission in Google Search Console. The blog and
- * docs apps cannot serve their own `robots.txt` because Vercel
- * Routes routes `/blog/*` and `/docs/*` — not the root path.
+ * docs apps cannot serve their own `robots.txt` because each subpath app
+ * is a separate Vercel project — only the playground project owns the
+ * root path (`enterstellar.dev/robots.txt`).
  * This `robots.txt` at `enterstellar.dev/robots.txt` is the single declaration
  * point for all sitemaps on the domain.
  *

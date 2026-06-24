@@ -48,7 +48,7 @@ interface ErrorPageProps {
  */
 export default function ErrorPage({ error, reset }: ErrorPageProps): ReactElement {
   // ── Error Logging ────────────────────────────────────────────────────
-  // Log to console for local debugging and Vercel tail logs.
+  // Log to console for local debugging and Vercel runtime logs.
   // In production, `error.message` is sanitized by Next.js.
   useEffect(() => {
     console.error('[Enterstellar Docs] Unhandled error:', error);

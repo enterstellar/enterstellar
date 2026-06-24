@@ -10,7 +10,7 @@
  * 2. **Content Negotiation** — Sending an `Accept` header preferring markdown.
  *    Example: `Accept: text/markdown` on `/getting-started`
  *
- * This function should be invoked from the main Next.js `middleware.ts`.
+ * Next.js invokes this file automatically as the app's network proxy (Next.js 16+).
  *
  * @see app/llms.mdx/[slug]/route.ts — Destination route handling the markdown exports
  * @see lib/shared.ts — Source string constants for routing rules

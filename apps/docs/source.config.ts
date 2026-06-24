@@ -125,9 +125,9 @@ export const docs = defineDocs({
     async: true,
     async mdxOptions(environment) {
       // -----------------------------------------------------------------
-      // Dynamic imports — loaded at build time only.
+      // Dynamic imports — evaluated during MDX compilation at build time.
       // Each import is async to avoid bundling these heavy Node.js
-      // packages into Vercel's runtime.
+      // packages into the production server bundle on Vercel.
       // -----------------------------------------------------------------
       const { rehypeCodeDefaultOptions } = await import('fumadocs-core/mdx-plugins/rehype-code');
       const { remarkSteps } = await import('fumadocs-core/mdx-plugins/remark-steps');

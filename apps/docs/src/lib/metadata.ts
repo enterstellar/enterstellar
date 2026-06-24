@@ -11,8 +11,10 @@
  * - `app/sitemap.ts` — `baseUrl` for canonical URL generation
  *
  * **Design decisions:**
- * - `baseUrl` uses Vercel's `VERCEL_PROJECT_PRODUCTION_URL` deployments.
- *   Falls back to the canonical domain `https://enterstellar.dev` if the env var is absent.
+ * - `baseUrl` uses Vercel's `VERCEL_PROJECT_PRODUCTION_URL` env var (hostname
+ *   only, no `https://` scheme) in non-development environments, prefixed with
+ *   `https://`. Falls back to `https://enterstellar.dev` when unset (e.g. local
+ *   `next build`).
  * - RSS/Atom alternate is NOT included — blog feeds live in `enterstellar-web`
  *   per WP10 (docs and blogs are separate apps in separate repos).
  * - `getPageImage()` is NOT exported from this module — the canonical
@@ -29,9 +31,10 @@ import type { Metadata } from 'next/types';
 /**
  * Canonical base URL for the Enterstellar documentation site.
  *
- * Uses Vercel's `VERCEL_PROJECT_PRODUCTION_URL` in production,
- * falls back to `https://enterstellar.dev` for SSG/ISR builds, and uses
- * `localhost:3000` during local development.
+ * Uses Vercel's `VERCEL_PROJECT_PRODUCTION_URL` env var (hostname only, no scheme)
+ * in non-development environments, prefixed with `https://`. Falls back to
+ * `https://enterstellar.dev` when unset, and `http://localhost:3000` during
+ * local development.
  *
  * The resulting `URL` object is consumed by Next.js `metadataBase` to
  * resolve relative OG image paths and canonical URLs.
@@ -39,7 +42,11 @@ import type { Metadata } from 'next/types';
 export const baseUrl =
   process.env.NODE_ENV === 'development'
     ? new URL('http://localhost:3000')
-    : new URL(process.env['VERCEL_PROJECT_PRODUCTION_URL'] || 'https://enterstellar.dev');
+    : new URL(
+        process.env['VERCEL_PROJECT_PRODUCTION_URL']
+          ? `https://${process.env['VERCEL_PROJECT_PRODUCTION_URL']}`
+          : 'https://enterstellar.dev',
+      );
 
 /**
  * Create a `Metadata` object with Enterstellar-branded defaults.

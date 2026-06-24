@@ -69,7 +69,7 @@ export async function GET(
  *
  * Each page's slug segments (with the `image.png` suffix appended by
  * `getPageImage()`) become a static route, ensuring every doc page
- * has a pre-generated OG image in the Vercel bundle.
+ * has a pre-generated OG image in the Vercel deployment.
  *
  * @returns Array of static params for all doc pages.
  */

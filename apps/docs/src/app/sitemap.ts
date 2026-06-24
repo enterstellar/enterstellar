@@ -18,8 +18,9 @@
  *
  * **Deployment:**
  * `revalidate = false` ensures the sitemap is generated once at build
- * time and served as a static asset from the Vercel bundle.
- * The `baseUrl` is derived from `@/lib/metadata` (Vercel-compatible).
+ * time and served as a static asset from the Vercel deployment.
+ * The `baseUrl` is derived from `@/lib/metadata` (reads
+ * `VERCEL_PROJECT_PRODUCTION_URL` on Vercel).
  *
  * **Exclusions:**
  * - `/showcase` — Upstream entry, not applicable to Enterstellar.

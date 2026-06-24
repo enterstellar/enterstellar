@@ -37,29 +37,15 @@ const nextConfig: NextConfig = {
   /**
    * Pin Next.js's file tracer to the monorepo root.
    *
-   * When Vercel Builds
-   * sets `Root directory: /apps/playground`, the parent directories that
-   * contain the lock file are invisible, so OpenNext concludes
-   * `monorepoRoot = appPath` and sets:
+   * When Vercel builds with Root Directory set to `apps/playground`, the
+   * file tracer defaults to the app directory and can miss workspace packages
+   * in `packages/<name>/dist/`, causing "Module not found" for `@enterstellar-ai/*`
+   * imports in serverless functions.
    *
-   *   process.env.NEXT_PRIVATE_OUTPUT_TRACE_ROOT = options.monorepoRoot
-   *                                              = /apps/playground  ← WRONG
+   * Setting `outputFileTracingRoot` to the repo root ensures all workspace
+   * packages are within tracing scope and included in the serverless bundle.
    *
-   * With the wrong tracing root, Next.js's file tracer excludes
-   * `../../packages/[name]/dist/` from the standalone output, causing esbuild
-   * to fail with "Module not found" for all `@enterstellar-ai/*` imports.
-   *
-   * Setting `outputFileTracingRoot` here overrides
-   * `process.env.NEXT_PRIVATE_OUTPUT_TRACE_ROOT` via the config field:
-   *
-   *   const outputFileTracingRoot = config.outputFileTracingRoot || dir;
-   *
-   * This pins the tracing root to the repo root, ensuring all workspace
-   * packages in `packages/[name]/dist/` are within scope and copied into the
-   * standalone output regardless of CWD.
-   *
-   * @see next/dist/build/index.js:841 — config.outputFileTracingRoot || dir
-   * @see @opennextjs/aws/build/buildNextApp.js — setStandaloneBuildMode()
+   * @see https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats
    */
   outputFileTracingRoot: path.join(__dirname, '../../'),
 };

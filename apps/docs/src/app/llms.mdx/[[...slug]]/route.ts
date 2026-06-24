@@ -12,8 +12,8 @@
  *
  * **Static generation:**
  * `generateStaticParams()` pre-renders markdown for every page at build
- * time. Combined with `revalidate = false`, all exports are bundled as
- * static assets into Vercel — no runtime processing.
+ * time. Combined with `revalidate = false`, all exports are pre-rendered at
+ * build time as static assets — no runtime MDX processing on Vercel.
  *
  * **Differences from `llms-full.txt`:**
  * - `llms-full.txt` returns ALL pages concatenated in one response.
@@ -70,7 +70,7 @@ export async function GET(
  *
  * Each page's URL segments (with the `content.md` suffix appended by
  * `getPageMarkdownUrl()`) become a static route, ensuring every doc page
- * has a pre-generated markdown export in Vercel.
+ * has a pre-generated markdown export in the Vercel deployment.
  *
  * @returns Array of static params for all doc pages.
  */

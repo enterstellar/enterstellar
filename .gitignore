@@ -27,15 +27,8 @@ dist/
 # === Velite (blog content build cache) ===
 .velite/
 
-# === OpenNext (Cloudflare Workers build output) ===
-.open-next/
-
 # === Turborepo ===
 .turbo/
-
-# === Wrangler (Cloudflare local dev) ===
-.wrangler/
-.dev.vars
 
 # === Vitest ===
 __snapshots__/

@@ -118,7 +118,7 @@ const ipWindows = new Map<string, number[]>();
 
 /**
  * Extracts the client IP address from the request.
- * Vercel populate `x-forwarded-for`; falls back to 'unknown'.
+ * Vercel populates `x-forwarded-for`; falls back to 'unknown'.
  */
 function getClientIp(req: Request): string {
   const forwarded = req.headers.get('x-forwarded-for');

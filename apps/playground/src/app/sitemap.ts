@@ -2,7 +2,7 @@
  * Enterstellar Playground — Sitemap
  *
  * Generates the XML sitemap for the Enterstellar Playground at `enterstellar.dev`.
- * Lists the main playground page URL. Cross-Worker sitemap discovery
+ * Lists the main playground page URL. Cross-server sitemap discovery
  * (blog at `enterstellar.dev/blog/`, docs at `enterstellar.dev/docs/`) is handled
  * exclusively by `robots.txt` `Sitemap:` directives — NOT by listing
  * `.xml` URLs in this sitemap's `<urlset>`, which would cause Google

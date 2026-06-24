@@ -4,11 +4,11 @@
 
 ## Purpose
 
-`playground` is the Enterstellar Playground marketing site served at `enterstellar.dev`. It is the catch-all Worker for the `enterstellar.dev` domain — all paths not matched by more specific Workers (`/blog/*`, `/docs/*`) route here.
+`playground` is the Enterstellar Playground marketing site served at `enterstellar.dev`. It is the catch-all server for the `enterstellar.dev` domain — all paths not matched by more specific servers (`/blog/*`, `/docs/*`) route here.
 
 Most importantly, this application houses the **Enterstellar Compiler Playground** (`/playground`), a live GenUI engineering environment where users can submit natural-language intents to an LLM via the Vercel AI SDK and witness the strict `@enterstellar-ai/compiler` independently intercept, validate, self-correct, and render UI natively in the browser.
 
-This Worker also serves the domain's `robots.txt` — the **sole mechanism for cross-Worker sitemap discovery** across all `enterstellar.dev` subpath Workers.
+This server also serves the domain's `robots.txt` — the **sole mechanism for cross-server sitemap discovery** across all `enterstellar.dev` subpath servers.
 
 ---
 
@@ -88,9 +88,9 @@ Static sitemap listing all marketing pages with fixed `LAST_UPDATED` date consta
 Serves `robots.txt` via Next.js Metadata API. Declares all three sitemaps on the `enterstellar.dev` domain:
 
 ```
-Sitemap: https://enterstellar.dev/sitemap.xml          # This Worker (marketing)
-Sitemap: https://enterstellar.dev/blog/sitemap.xml     # compiler-blog Worker
-Sitemap: https://enterstellar.dev/docs/sitemap.xml     # compiler-docs Worker (in this repo)
+Sitemap: https://enterstellar.dev/sitemap.xml          # This app (marketing)
+Sitemap: https://enterstellar.dev/blog/sitemap.xml     # compiler-blog app
+Sitemap: https://enterstellar.dev/docs/sitemap.xml     # compiler-docs app (in this repo)
 ```
 
 All crawlers (including AI crawlers — GPTBot, ClaudeBot, PerplexityBot) are allowed unrestricted access.
@@ -98,16 +98,6 @@ All crawlers (including AI crawlers — GPTBot, ClaudeBot, PerplexityBot) are al
 ---
 
 ## Configuration
-
-### Wrangler (`wrangler.jsonc`)
-
-| Field                 | Value                                                   |
-| :-------------------- | :------------------------------------------------------ |
-| `name`                | `playground`                                            |
-| `main`                | `.open-next/worker.js`                                  |
-| `compatibility_date`  | `2025-09-27`                                            |
-| `compatibility_flags` | `nodejs_compat`, `global_fetch_strictly_public`         |
-| Route                 | `enterstellar.dev/*` (catch-all, lowest priority — WP5) |
 
 ### Environment Variables
 
