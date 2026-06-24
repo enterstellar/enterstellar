@@ -7,6 +7,6 @@
  * @see agent/06-enterstellar-setup.md — DX Tooling Chain
  */
 export default {
-    '*.{ts,tsx}': ['eslint --fix --max-warnings=0', 'prettier --write'],
+    '*.{ts,tsx}': ['eslint --fix --max-warnings=0 --no-warn-ignored', 'prettier --write'],
     '*.{json,md,yaml,yml}': ['prettier --write'],
 };

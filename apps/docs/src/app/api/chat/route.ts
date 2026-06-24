@@ -104,13 +104,13 @@ function errorResponse(status: number, error: ChatErrorResponse): Response {
  * In-memory sliding window rate limiter.
  *
  * Tracks request timestamps per IP address. Evicts expired entries on each check.
- * On Cloudflare Workers, the Map resets on cold start — acceptable for v1
+ * On Vercel, the Map resets on cold start — acceptable for v1
  * since it provides burst protection without external infrastructure.
  *
  * @remarks
  * - Window: 60 seconds
  * - Max requests per IP per window: 20
- * - IP extraction: `x-forwarded-for` header (Cloudflare/proxy) → `'unknown'` fallback
+ * - IP extraction: `x-forwarded-for` header (Vercel/proxy) → `'unknown'` fallback
  */
 const RATE_LIMIT_MAX_PER_IP = 20;
 const RATE_LIMIT_WINDOW_MS = 60_000;
@@ -118,7 +118,7 @@ const ipWindows = new Map<string, number[]>();
 
 /**
  * Extracts the client IP address from the request.
- * Cloudflare Workers populate `x-forwarded-for`; falls back to 'unknown'.
+ * Vercel populate `x-forwarded-for`; falls back to 'unknown'.
  */
 function getClientIp(req: Request): string {
   const forwarded = req.headers.get('x-forwarded-for');
@@ -363,7 +363,7 @@ export async function POST(req: Request): Promise<Response> {
   // ── Parse Request ───────────────────────────────────────────────────────
   let reqJson: { messages?: unknown };
   try {
-    reqJson = await req.json();
+    reqJson = (await req.json()) as { messages?: unknown };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Invalid request body';
     return errorResponse(400, {

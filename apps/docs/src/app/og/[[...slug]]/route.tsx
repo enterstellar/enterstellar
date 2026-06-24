@@ -8,7 +8,7 @@
  * **Static generation:**
  * `generateStaticParams()` pre-renders all OG images at build time.
  * Combined with `revalidate = false`, images are bundled as static
- * assets into the Cloudflare Worker deployment — no runtime image
+ * assets into the Vercel deployment — no runtime image
  * generation occurs.
  *
  * **Route pattern:** `/og/{...slug}/image.png`
@@ -69,7 +69,7 @@ export async function GET(
  *
  * Each page's slug segments (with the `image.png` suffix appended by
  * `getPageImage()`) become a static route, ensuring every doc page
- * has a pre-generated OG image in the Cloudflare Worker bundle.
+ * has a pre-generated OG image in the Vercel bundle.
  *
  * @returns Array of static params for all doc pages.
  */

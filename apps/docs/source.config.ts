@@ -127,7 +127,7 @@ export const docs = defineDocs({
       // -----------------------------------------------------------------
       // Dynamic imports — loaded at build time only.
       // Each import is async to avoid bundling these heavy Node.js
-      // packages into the Cloudflare Worker runtime.
+      // packages into Vercel's runtime.
       // -----------------------------------------------------------------
       const { rehypeCodeDefaultOptions } = await import('fumadocs-core/mdx-plugins/rehype-code');
       const { remarkSteps } = await import('fumadocs-core/mdx-plugins/remark-steps');
@@ -162,28 +162,28 @@ export const docs = defineDocs({
         rehypeCodeOptions: isLint
           ? false
           : {
-            langs: ['ts', 'js', 'html', 'tsx', 'mdx'],
-            inline: 'tailing-curly-colon',
-            themes: {
-              light: 'catppuccin-latte',
-              dark: 'catppuccin-mocha',
-            },
-            transformers: [
-              // Default Core transformers (line numbers, etc.)
-              ...(rehypeCodeDefaultOptions.transformers ?? []),
-              // Twoslash — inline type annotations with FS-cached types.
-              transformerTwoslash({
-                typesCache: createFileSystemTypesCache(),
-                twoslashOptions: {
-                  compilerOptions: {
-                    types: ['@types/node'],
+              langs: ['ts', 'js', 'html', 'tsx', 'mdx'],
+              inline: 'tailing-curly-colon',
+              themes: {
+                light: 'catppuccin-latte',
+                dark: 'catppuccin-mocha',
+              },
+              transformers: [
+                // Default Core transformers (line numbers, etc.)
+                ...(rehypeCodeDefaultOptions.transformers ?? []),
+                // Twoslash — inline type annotations with FS-cached types.
+                transformerTwoslash({
+                  typesCache: createFileSystemTypesCache(),
+                  twoslashOptions: {
+                    compilerOptions: {
+                      types: ['@types/node'],
+                    },
                   },
-                },
-              }),
-              // Unescape `[\!code` → `[!code` for meta-documentation.
-              transformerEscape(),
-            ],
-          },
+                }),
+                // Unescape `[\!code` → `[!code` for meta-documentation.
+                transformerEscape(),
+              ],
+            },
 
         // --- Code Tab Configuration ---
         // Enables MDX-aware code tab parsing for TS/JS dual tabs.
@@ -199,22 +199,19 @@ export const docs = defineDocs({
         remarkStructureOptions: {
           stringify: {
             filterElement(node) {
-              switch (node.type) {
-                case 'mdxJsxFlowElement':
-                case 'mdxJsxTextElement':
-                  switch (node.name) {
-                    // These components have meaningful searchable text
-                    // content that should be preserved in the index.
-                    case 'File':
-                    case 'TypeTable':
-                    case 'Callout':
-                    case 'Card':
-                    case 'Custom':
-                      return true;
-                  }
-                  // All other MDX components: extract children text only,
-                  // discarding the component wrapper itself.
-                  return 'children-only';
+              if (node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement') {
+                if (
+                  node.name === 'File' ||
+                  node.name === 'TypeTable' ||
+                  node.name === 'Callout' ||
+                  node.name === 'Card' ||
+                  node.name === 'Custom'
+                ) {
+                  return true;
+                }
+                // All other MDX components: extract children text only,
+                // discarding the component wrapper itself.
+                return 'children-only';
               }
 
               return true;
@@ -237,12 +234,12 @@ export const docs = defineDocs({
         remarkPlugins: isLint
           ? [remarkElementIds]
           : [
-            remarkSteps,
-            remarkMath,
-            remarkFeedbackBlock,
-            [remarkAutoTypeTable, typeTableOptions],
-            remarkTypeScriptToJavaScript,
-          ],
+              remarkSteps,
+              remarkMath,
+              remarkFeedbackBlock,
+              [remarkAutoTypeTable, typeTableOptions],
+              remarkTypeScriptToJavaScript,
+            ],
 
         // --- Rehype Plugins ---
         // KaTeX is prepended to the default rehype plugins to ensure
@@ -317,11 +314,10 @@ function transformerEscape(): ShikiTransformer {
 function remarkElementIds(): Transformer<Root, Root> {
   return (tree, file) => {
     // Initialize the elementIds array if not already present.
-    file.data ??= {};
     file.data['elementIds'] ??= [];
 
     visit(tree, 'mdxJsxFlowElement', (element) => {
-      if (!element.name || !element.attributes) return;
+      if (!element.name) return;
 
       // Find the `id` attribute on the JSX element.
       const idAttr = element.attributes.find(

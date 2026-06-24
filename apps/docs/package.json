@@ -28,19 +28,13 @@
     "lint": "eslint",
     "lint:links": "LINT=1 fumadocs-mdx && node --import tsx --import ./scripts/register-mdx.js scripts/lint.ts",
     "typecheck": "fumadocs-mdx && next typegen && tsc --noEmit",
-    "postinstall": "fumadocs-mdx",
-    "cf-build": "opennextjs-cloudflare build",
-    "deploy": "pnpm run cf-build && opennextjs-cloudflare deploy",
-    "upload": "pnpm run cf-build && opennextjs-cloudflare upload",
-    "preview": "pnpm run cf-build && opennextjs-cloudflare preview",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv ./cloudflare-env.d.ts"
+    "postinstall": "fumadocs-mdx"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.55",
     "@ai-sdk/google-vertex": "^4.0.99",
     "@ai-sdk/groq": "^3.0.32",
     "@ai-sdk/react": "^3.0.145",
-    "@opennextjs/cloudflare": "^1.18.0",
     "@radix-ui/react-hover-card": "^1.1.15",
     "@radix-ui/react-presence": "^1.1.5",
     "@radix-ui/react-tooltip": "^1.2.8",
@@ -57,7 +51,7 @@
     "katex": "0.16.43",
     "lucide-react": "^1.7.0",
     "mermaid": "^11.13.0",
-    "next": "16.2.1",
+    "next": "16.2.9",
     "next-themes": "^0.4.6",
     "octokit": "^5.0.5",
     "react": "^19.2.4",
@@ -89,7 +83,6 @@
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.9.3",
     "tsx": "^4.21.0",
-    "unified": "^11.0.5",
-    "wrangler": "^4.77.0"
+    "unified": "^11.0.5"
   }
 }

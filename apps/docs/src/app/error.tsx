@@ -48,7 +48,7 @@ interface ErrorPageProps {
  */
 export default function ErrorPage({ error, reset }: ErrorPageProps): ReactElement {
   // ── Error Logging ────────────────────────────────────────────────────
-  // Log to console for local debugging and Cloudflare Workers tail logs.
+  // Log to console for local debugging and Vercel tail logs.
   // In production, `error.message` is sanitized by Next.js.
   useEffect(() => {
     console.error('[Enterstellar Docs] Unhandled error:', error);
@@ -57,9 +57,7 @@ export default function ErrorPage({ error, reset }: ErrorPageProps): ReactElemen
   return (
     <div className="flex flex-1 flex-col items-center justify-center text-center gap-6 p-8">
       {/* ── Error Indicator ──────────────────────────────────────────── */}
-      <p className="text-6xl font-bold font-mono text-fd-muted-foreground/50">
-        Error
-      </p>
+      <p className="text-6xl font-bold font-mono text-fd-muted-foreground/50">Error</p>
 
       {/* ── Message ────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-2">
@@ -77,20 +75,10 @@ export default function ErrorPage({ error, reset }: ErrorPageProps): ReactElemen
 
       {/* ── Actions ────────────────────────────────────────────────── */}
       <div className="flex flex-row items-center gap-3 mt-2">
-        <button
-          onClick={reset}
-          className={cn(
-            buttonVariants({ variant: 'secondary' }),
-          )}
-        >
+        <button onClick={reset} className={cn(buttonVariants({ variant: 'secondary' }))}>
           Try Again
         </button>
-        <Link
-          href="/"
-          className={cn(
-            buttonVariants({ variant: 'ghost' }),
-          )}
-        >
+        <Link href="/" className={cn(buttonVariants({ variant: 'ghost' }))}>
           Return to Documentation
         </Link>
       </div>

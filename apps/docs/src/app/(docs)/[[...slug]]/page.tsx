@@ -35,7 +35,7 @@
  * **Static generation:**
  * All pages are pre-rendered at build time via `generateStaticParams()`.
  * `revalidate = false` ensures pages are only regenerated on the next
- * `next build`, which is correct for Cloudflare Workers (no ISR runtime).
+ * `next build`, which is correct for Vercel (no ISR runtime).
  *
  * @see lib/source.ts — `source` API for page tree, page lookup.
  * @see lib/github/feedback.ts — `owner`, `repo`, feedback server actions.

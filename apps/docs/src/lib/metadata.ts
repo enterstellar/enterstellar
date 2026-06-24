@@ -11,16 +11,15 @@
  * - `app/sitemap.ts` — `baseUrl` for canonical URL generation
  *
  * **Design decisions:**
- * - `baseUrl` uses `CF_PAGES_URL` for Cloudflare Pages/Workers deployments
- *   (NOT Vercel's `VERCEL_PROJECT_PRODUCTION_URL`). Falls back to the
- *   canonical domain `https://enterstellar.dev` if the env var is absent.
+ * - `baseUrl` uses Vercel's `VERCEL_PROJECT_PRODUCTION_URL` deployments.
+ *   Falls back to the canonical domain `https://enterstellar.dev` if the env var is absent.
  * - RSS/Atom alternate is NOT included — blog feeds live in `enterstellar-web`
  *   per WP10 (docs and blogs are separate apps in separate repos).
  * - `getPageImage()` is NOT exported from this module — the canonical
  *   version lives in `@/lib/source` and matches the actual OG image
  *   route at `og/[[...slug]]/route.tsx`.
  *
- * @see archive/CORE/enterstellar-web-presence-appendix.md — WP3 (Cloudflare deployment)
+ * @see archive/CORE/enterstellar-web-presence-appendix.md — WP3 (Vercel deployment)
  * @see archive/CORE/enterstellar-web-presence-appendix.md — WP10 (docs in product repos)
  *
  * @module
@@ -30,7 +29,7 @@ import type { Metadata } from 'next/types';
 /**
  * Canonical base URL for the Enterstellar documentation site.
  *
- * Uses `CF_PAGES_URL` in production (set by Cloudflare Pages/Workers),
+ * Uses Vercel's `VERCEL_PROJECT_PRODUCTION_URL` in production,
  * falls back to `https://enterstellar.dev` for SSG/ISR builds, and uses
  * `localhost:3000` during local development.
  *
@@ -40,7 +39,7 @@ import type { Metadata } from 'next/types';
 export const baseUrl =
   process.env.NODE_ENV === 'development'
     ? new URL('http://localhost:3000')
-    : new URL(process.env['CF_PAGES_URL'] || 'https://enterstellar.dev');
+    : new URL(process.env['VERCEL_PROJECT_PRODUCTION_URL'] || 'https://enterstellar.dev');
 
 /**
  * Create a `Metadata` object with Enterstellar-branded defaults.
@@ -81,6 +80,6 @@ export function createMetadata(override: Metadata): Metadata {
       images: '/banner.avif',
       ...override.twitter,
     },
-    ...override.alternates ? { alternates: override.alternates } : {},
+    ...(override.alternates ? { alternates: override.alternates } : {}),
   };
 }

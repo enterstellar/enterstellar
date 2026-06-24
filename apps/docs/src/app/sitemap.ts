@@ -18,9 +18,8 @@
  *
  * **Deployment:**
  * `revalidate = false` ensures the sitemap is generated once at build
- * time and served as a static asset from the Cloudflare Worker bundle.
- * The `baseUrl` is derived from `@/lib/metadata` (Cloudflare-compatible,
- * NOT Vercel).
+ * time and served as a static asset from the Vercel bundle.
+ * The `baseUrl` is derived from `@/lib/metadata` (Vercel-compatible).
  *
  * **Exclusions:**
  * - `/showcase` — Upstream entry, not applicable to Enterstellar.

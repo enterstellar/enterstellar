@@ -13,7 +13,7 @@
  * **Static generation:**
  * `generateStaticParams()` pre-renders markdown for every page at build
  * time. Combined with `revalidate = false`, all exports are bundled as
- * static assets into the Cloudflare Worker — no runtime processing.
+ * static assets into Vercel — no runtime processing.
  *
  * **Differences from `llms-full.txt`:**
  * - `llms-full.txt` returns ALL pages concatenated in one response.
@@ -70,7 +70,7 @@ export async function GET(
  *
  * Each page's URL segments (with the `content.md` suffix appended by
  * `getPageMarkdownUrl()`) become a static route, ensuring every doc page
- * has a pre-generated markdown export in the Cloudflare Worker bundle.
+ * has a pre-generated markdown export in Vercel.
  *
  * @returns Array of static params for all doc pages.
  */

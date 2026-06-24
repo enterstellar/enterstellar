@@ -15,7 +15,7 @@
  *
  * **Performance:**
  * The search index is built once per cold start and shared across
- * requests within the same Worker instance. On Cloudflare Workers,
+ * requests within the same Worker instance. On Vercel,
  * this means the index is rebuilt on each deployment or cold start.
  *
  * @see components/layouts/search.tsx — Client-side search UI consumer

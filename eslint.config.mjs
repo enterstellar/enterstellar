@@ -61,6 +61,7 @@ export default [
             '**/.next/**',
             '**/.changeset/**',
             'storybook-static/**',
+            '**/next-env.d.ts',
         ],
     },
 
@@ -77,7 +78,7 @@ export default [
             'apps/*/src/**/*.ts',
             'apps/*/src/**/*.tsx',
             'apps/*/next.config.ts',
-            'apps/*/open-next.config.ts',
+            'apps/*/source.config.ts',
             'examples/*/src/**/*.ts',
             'examples/*/src/**/*.tsx',
         ],
