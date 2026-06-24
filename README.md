@@ -10,9 +10,9 @@
 
 [![npm](https://img.shields.io/npm/v/@enterstellar-ai/react?style=flat-square&color=0f172a&labelColor=0f172a&logo=npm&logoColor=white)](https://www.npmjs.com/package/@enterstellar-ai/react)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square&logo=typescript&logoColor=white&labelColor=0f172a)](https://www.typescriptlang.org)
-[![License](https://img.shields.io/github/license/enterstellar-ai/enterstellar?style=flat-square&color=0f172a&labelColor=0f172a)](./LICENSE)
+[![License](https://img.shields.io/github/license/enterstellar/enterstellar?style=flat-square&color=0f172a&labelColor=0f172a)](./LICENSE)
 
-[Documentation](https://enterstellar.dev) · [Issues](https://github.com/enterstellar-ai/enterstellar/issues) · [Changelog](./CHANGELOG.md)
+[Documentation](https://enterstellar.dev/docs) · [Issues](https://github.com/enterstellar/enterstellar/issues) · [Changelog](./CHANGELOG.md)
 
 </div>
 
